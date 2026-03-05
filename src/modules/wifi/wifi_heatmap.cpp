@@ -11,14 +11,14 @@ void wifiHeatmap() {
     if (n == 0) {
         displayTextLine("Nenhum AP encontrado.");
     } else {
-        tft.fillScreen(bruceConfig.bgColor);
+        tft.fillScreen(willyConfig.bgColor);
         drawMainBorderWithTitle("WIFI HEATMAP");
         for (int i = 0; i < n && i < 8; ++i) {
             int rssi = WiFi.RSSI(i);
             uint16_t color = (rssi > -50) ? TFT_GREEN : (rssi > -70) ? TFT_YELLOW : TFT_RED;
             
             tft.setCursor(10, 30 + (i * 20));
-            tft.setTextColor(color, bruceConfig.bgColor);
+            tft.setTextColor(color, willyConfig.bgColor);
             tft.printf("%s: %d dBm", WiFi.SSID(i).c_str(), rssi);
             
             // Draw a simple bar

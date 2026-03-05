@@ -35,9 +35,9 @@ ScrollableTextArea::~ScrollableTextArea() {
 }
 
 void ScrollableTextArea::setup() {
-    _scrollBuffer.setTextColor(bruceConfig.priColor);
+    _scrollBuffer.setTextColor(willyConfig.priColor);
     _scrollBuffer.setTextSize(_fontSize);
-    _scrollBuffer.fillRect(_startX, _startY, _width, _height, bruceConfig.bgColor);
+    _scrollBuffer.fillRect(_startX, _startY, _width, _height, willyConfig.bgColor);
 
     _maxCharactersPerLine = floor(_width / _scrollBuffer.textWidth("w", _fontSize));
     _pixelsPerLine = _scrollBuffer.fontHeight() + 2;
@@ -174,8 +174,8 @@ void ScrollableTextArea::addLine(const String &text) {
 void ScrollableTextArea::draw(bool force) {
     if (!_redraw && !force) return;
 
-    _scrollBuffer.fillRect(_startX, _startY, _width, _height, bruceConfig.bgColor);
-    _scrollBuffer.setTextColor(bruceConfig.priColor);
+    _scrollBuffer.fillRect(_startX, _startY, _width, _height, willyConfig.bgColor);
+    _scrollBuffer.setTextColor(willyConfig.priColor);
     uint8_t _fSize = tft.getTextSize();
     tft.setTextSize(FP);
 

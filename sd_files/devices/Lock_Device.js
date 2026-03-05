@@ -61,7 +61,7 @@ var fileSystem = "littlefs";
  */
 function detectFileSystem() {
     try {
-        var confData = storage.read({ fs: "sd", path: "/bruce.conf" });
+        var confData = storage.read({ fs: "sd", path: "/willy.conf" });
         fileSystem = confData ? "sd" : "littlefs";
     } catch (e) {
         fileSystem = "littlefs";
@@ -79,7 +79,7 @@ var password = config.password || setupNewPassword();
 
 
 // Fill display with UI background color
-display.fill(BRUCE_BGCOLOR);
+display.fill(WILLY_BGCOLOR);
 
 // Main application loop
 while (!exitApp) {
@@ -121,7 +121,7 @@ while (!exitApp) {
             forceUpdateDisplay = false;
 
             // Clear display
-            display.fill(BRUCE_BGCOLOR);
+            display.fill(WILLY_BGCOLOR);
 
             // Display status bar (battery and time)
             drawStatusBar();
@@ -130,7 +130,7 @@ while (!exitApp) {
             // Set text alignment to center
             display.setTextAlign('center', 'middle');
             display.setTextSize(2 + fontScale);
-            display.setTextColor(BRUCE_PRICOLOR);
+            display.setTextColor(WILLY_PRICOLOR);
             display.drawText("Device", displayWidth / 2, displayHeight / 6 * 2);
             display.drawText("Locked", displayWidth / 2, displayHeight / 6 * 2.8);
 
@@ -145,7 +145,7 @@ while (!exitApp) {
             } else {
                 // Display instructions
                 display.setTextSize(1 + fontScale);
-                display.setTextColor(BRUCE_SECCOLOR);
+                display.setTextColor(WILLY_SECCOLOR);
                 display.drawText("Press SELECT key", displayWidth / 2, displayHeight / 6 * 4.2);
                 display.drawText("to unlock", displayWidth / 2, displayHeight / 6 * 5);
             }
@@ -156,7 +156,7 @@ while (!exitApp) {
             var remainingTime = Math.ceil((timeoutEndTime - currentTime) / 1000);
 
             // Clear just the countdown line area
-            display.drawFillRect(0, displayHeight / 6 * 5 - 10, displayWidth, 20, BRUCE_BGCOLOR);
+            display.drawFillRect(0, displayHeight / 6 * 5 - 10, displayWidth, 20, WILLY_BGCOLOR);
 
             // Redraw the countdown text
             display.setTextAlign('center', 'middle');
@@ -241,14 +241,14 @@ function loadOrSetupPassword() {
  * Setup a new password and save it to file
  */
 function setupNewPassword() {
-    display.fill(BRUCE_BGCOLOR);
+    display.fill(WILLY_BGCOLOR);
     display.setTextAlign('center', 'middle');
     display.setTextSize(2 + fontScale);
-    display.setTextColor(BRUCE_PRICOLOR);
+    display.setTextColor(WILLY_PRICOLOR);
     display.drawText("Password Setup", displayWidth / 2, displayHeight / 4);
 
     display.setTextSize(1 + fontScale);
-    display.setTextColor(BRUCE_SECCOLOR);
+    display.setTextColor(WILLY_SECCOLOR);
     display.drawText("First time setup", displayWidth / 2, displayHeight / 2 - 20 * fontScale);
     display.drawText("Press any key to", displayWidth / 2, displayHeight / 2 + 20 * fontScale);
     display.drawText("create password", displayWidth / 2, displayHeight / 2 + 20 * 2 * fontScale);
@@ -293,12 +293,12 @@ function createPasswordWithConfirmation(initialPrompt) {
             return newPassword; // Success
         } else {
             // Passwords don't match, show error and try again
-            display.fill(BRUCE_BGCOLOR);
+            display.fill(WILLY_BGCOLOR);
             display.setTextAlign('center', 'middle');
             display.setTextSize(1 + fontScale);
             display.setTextColor(colours[3]); // Red
             display.drawText("Passwords don't match!", displayWidth / 2, displayHeight / 2 - 10);
-            display.setTextColor(BRUCE_SECCOLOR);
+            display.setTextColor(WILLY_SECCOLOR);
             display.drawText("Try again...", displayWidth / 2, displayHeight / 2 + 10);
             delay(2000);
         }
@@ -329,7 +329,7 @@ function savePassword(pwd) {
  */
 function enterSettingsMode() {
     // Show "entering settings" screen
-    display.fill(BRUCE_BGCOLOR);
+    display.fill(WILLY_BGCOLOR);
     display.setTextAlign('center', 'middle');
     display.setTextSize(2 + fontScale);
     display.setTextColor(colours[4]); // Yellow
@@ -352,7 +352,7 @@ function enterSettingsMode() {
         forceUpdateDisplay = true;
     } else {
         // Wrong password or cancelled
-        display.fill(BRUCE_BGCOLOR);
+        display.fill(WILLY_BGCOLOR);
         display.setTextAlign('center', 'middle');
         display.setTextSize(1 + fontScale);
         display.setTextColor(colours[3]); // Red
@@ -401,12 +401,12 @@ function handleSettingsMode() {
  * Draw the settings menu
  */
 function drawSettingsMenu() {
-    display.fill(BRUCE_BGCOLOR);
+    display.fill(WILLY_BGCOLOR);
     display.setTextAlign('center', 'middle');
 
     // Title
     display.setTextSize(2 + fontScale);
-    display.setTextColor(BRUCE_PRICOLOR);
+    display.setTextColor(WILLY_PRICOLOR);
     display.drawText("Settings", displayWidth / 2, displayHeight / 6);
 
     // Menu options
@@ -444,7 +444,7 @@ function changePassword() {
     saveConfiguration();
 
     // Show success message
-    display.fill(BRUCE_BGCOLOR);
+    display.fill(WILLY_BGCOLOR);
     display.setTextAlign('center', 'middle');
     display.setTextSize(1 + fontScale);
     display.setTextColor(colours[6]); // Green
@@ -468,12 +468,12 @@ function configureTimeout() {
         // Only redraw when needed
         if (needsUpdate) {
             // Draw timeout configuration menu
-            display.fill(BRUCE_BGCOLOR);
+            display.fill(WILLY_BGCOLOR);
             display.setTextAlign('center', 'middle');
 
             // Title
             display.setTextSize(2 + fontScale);
-            display.setTextColor(BRUCE_PRICOLOR);
+            display.setTextColor(WILLY_PRICOLOR);
             display.drawText("Timeout Settings", displayWidth / 2, displayHeight / 8);
 
             // Current values display
@@ -539,7 +539,7 @@ function configureBaseTimeout() {
             saveConfiguration();
 
             // Show success
-            display.fill(BRUCE_BGCOLOR);
+            display.fill(WILLY_BGCOLOR);
             display.setTextAlign('center', 'middle');
             display.setTextSize(1 + fontScale);
             display.setTextColor(colours[6]);
@@ -566,7 +566,7 @@ function configureMaxTimeout() {
             saveConfiguration();
 
             // Show success
-            display.fill(BRUCE_BGCOLOR);
+            display.fill(WILLY_BGCOLOR);
             display.setTextAlign('center', 'middle');
             display.setTextSize(1 + fontScale);
             display.setTextColor(colours[6]);
@@ -583,7 +583,7 @@ function configureMaxTimeout() {
  * Show timeout configuration error
  */
 function showTimeoutError(message) {
-    display.fill(BRUCE_BGCOLOR);
+    display.fill(WILLY_BGCOLOR);
     display.setTextAlign('center', 'middle');
     display.setTextSize(1 + fontScale);
     display.setTextColor(colours[3]); // Red
@@ -608,13 +608,13 @@ function drawStatusBar() {
         // Draw time on the left
         display.setTextAlign('left', 'top');
         display.setTextSize(1 + fontScale);
-        display.setTextColor(BRUCE_SECCOLOR);
+        display.setTextColor(WILLY_SECCOLOR);
         display.drawText(timeString, 5, 5);
     }
 
     // Draw battery on the right
     display.setTextAlign('right', 'top');
-    var batteryColor = batteryLevel > 20 ? BRUCE_SECCOLOR : colours[3]; // White or red if low
+    var batteryColor = batteryLevel > 20 ? WILLY_SECCOLOR : colours[3]; // White or red if low
     display.setTextColor(batteryColor);
     display.drawText(batteryString, displayWidth - 40, 5);
 

@@ -105,9 +105,9 @@ void SensorBatteryDrainFlood() {
     padprintln("Alvo: " + String(selected_code.frequency / 1000000.0) + " MHz");
     padprintln("Pacotes a cada 200ms");
     padprintln("");
-    tft.setTextColor(getColorVariation(bruceConfig.priColor), bruceConfig.bgColor);
+    tft.setTextColor(getColorVariation(willyConfig.priColor), willyConfig.bgColor);
     padprintln("Pressione [ESC] para sair.");
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
     uint32_t packetsSent = 0;
 
@@ -120,7 +120,7 @@ void SensorBatteryDrainFlood() {
         packetsSent++;
 
         // Print progress
-        tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20, bruceConfig.bgColor);
+        tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20, willyConfig.bgColor);
         tft.setCursor(10, tftHeight / 2 + 20);
         tft.print("Enviados: ");
         tft.print(packetsSent);
@@ -160,7 +160,7 @@ void PredictiveGarageBrute() {
     uint32_t endKey = 0xFFFFFF;
     uint32_t currentKey = startKey;
 
-    tft.setTextColor(getColorVariation(bruceConfig.priColor), bruceConfig.bgColor);
+    tft.setTextColor(getColorVariation(willyConfig.priColor), willyConfig.bgColor);
     uint32_t atkStart = millis();
 
     // Disable default UI in sendRfCommand so it doesn't redraw screen
@@ -172,7 +172,7 @@ void PredictiveGarageBrute() {
 
         // Print progress
         if (currentKey % 10 == 0) {
-            tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20, bruceConfig.bgColor);
+            tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20, willyConfig.bgColor);
             tft.setCursor(10, tftHeight / 2 + 20);
             tft.print("Testando Chave: 0x");
             tft.print(currentKey, HEX);
@@ -194,7 +194,7 @@ void StealthLowPowerExfilBeacon() {
     padprintln("");
     padprintln("Pressione [ESC] para sair.");
 
-    String payload = bruceConfig.wifiAp.ssid + ":" + bruceConfig.wifiAp.pwd;
+    String payload = willyConfig.wifiAp.ssid + ":" + willyConfig.wifiAp.pwd;
     String rawData = "";
 
     // Modulacao RAW OOK simples para os dados (Pwm)
@@ -217,7 +217,7 @@ void StealthLowPowerExfilBeacon() {
     beaconCode.preset = "FuriHalSubGhzPresetOok270Async";
     beaconCode.data = rawData;
 
-    tft.setTextColor(getColorVariation(bruceConfig.priColor), bruceConfig.bgColor);
+    tft.setTextColor(getColorVariation(willyConfig.priColor), willyConfig.bgColor);
 
     uint32_t beaconsSent = 0;
     uint32_t atkStart = millis();
@@ -234,7 +234,7 @@ void StealthLowPowerExfilBeacon() {
         sendRfCommand(beaconCode, true);
         beaconsSent++;
 
-        tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20, bruceConfig.bgColor);
+        tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20, willyConfig.bgColor);
         tft.setCursor(10, tftHeight / 2 + 20);
         tft.print("Beacons Enviados: ");
         tft.print(beaconsSent);
@@ -313,7 +313,7 @@ void ProtocolFuzzerSmart() {
     uint8_t fuzzBits = 8;
     uint32_t fuzzedDone = 0;
 
-    tft.setTextColor(getColorVariation(bruceConfig.priColor), bruceConfig.bgColor);
+    tft.setTextColor(getColorVariation(willyConfig.priColor), willyConfig.bgColor);
 
     while (fuzzedDone < (1U << fuzzBits)) {
         if (check(EscPress)) break;
@@ -324,7 +324,7 @@ void ProtocolFuzzerSmart() {
         fuzzedDone++;
 
         if (fuzzedDone % 5 == 0) {
-            tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20, bruceConfig.bgColor);
+            tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20, willyConfig.bgColor);
             tft.setCursor(10, tftHeight / 2 + 20);
             tft.print("Fuzz: 0x");
             tft.print(baseCode.key, HEX);
@@ -400,7 +400,7 @@ void TPMSSpoofChaos() {
         uint32_t randomId = random(0x100000, 0xFFFFFF);
         tpmsFrame.data = randomId;
 
-        tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20, bruceConfig.bgColor);
+        tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20, willyConfig.bgColor);
         tft.setCursor(10, tftHeight / 2 + 20);
         tft.print("ID: 0x");
         tft.print(randomId, HEX);
@@ -428,10 +428,10 @@ void RollingCodeLearnerReplay() {
     ELECHOUSE_cc1101.SetRx();
 
     RCSwitch rcswitch = RCSwitch();
-    if (bruceConfigPins.CC1101_bus.io0 != GPIO_NUM_NC) {
-        rcswitch.enableReceive(bruceConfigPins.CC1101_bus.io0);
+    if (willyConfigPins.CC1101_bus.io0 != GPIO_NUM_NC) {
+        rcswitch.enableReceive(willyConfigPins.CC1101_bus.io0);
     } else {
-        rcswitch.enableReceive(bruceConfigPins.rfRx);
+        rcswitch.enableReceive(willyConfigPins.rfRx);
     }
 
     struct RfCodes captured;
@@ -458,11 +458,11 @@ void RollingCodeLearnerReplay() {
                     captureTime = millis();
                     rcswitch.resetAvailable();
 
-                    tft.fillRect(10, tftHeight / 2 - 10, tftWidth - 20, 60, bruceConfig.bgColor);
+                    tft.fillRect(10, tftHeight / 2 - 10, tftWidth - 20, 60, willyConfig.bgColor);
                     tft.setCursor(10, tftHeight / 2 - 10);
-                    tft.setTextColor(TFT_GREEN, bruceConfig.bgColor);
+                    tft.setTextColor(TFT_GREEN, willyConfig.bgColor);
                     tft.print("SINAL CAPTURADO!");
-                    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+                    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
                     tft.setCursor(10, tftHeight / 2 + 10);
                     tft.print("Hex: 0x");
                     tft.print(val, HEX);
@@ -474,25 +474,25 @@ void RollingCodeLearnerReplay() {
             if (millis() - captureTime > 2000) {
                 rcswitch.disableReceive();
 
-                tft.fillRect(10, tftHeight / 2 - 10, tftWidth - 20, 60, bruceConfig.bgColor);
+                tft.fillRect(10, tftHeight / 2 - 10, tftWidth - 20, 60, willyConfig.bgColor);
                 tft.setCursor(10, tftHeight / 2 - 10);
-                tft.setTextColor(TFT_RED, bruceConfig.bgColor);
+                tft.setTextColor(TFT_RED, willyConfig.bgColor);
                 tft.print("REPLAYING AGORA...");
-                tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+                tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
                 sendRfCommand(captured, true);
 
                 capturedSignal = false;
 
-                tft.fillRect(10, tftHeight / 2 - 10, tftWidth - 20, 60, bruceConfig.bgColor);
+                tft.fillRect(10, tftHeight / 2 - 10, tftWidth - 20, 60, willyConfig.bgColor);
                 tft.setCursor(10, tftHeight / 2);
                 tft.print("Pronto p/ nova captura.");
 
                 ELECHOUSE_cc1101.SetRx();
-                if (bruceConfigPins.CC1101_bus.io0 != GPIO_NUM_NC) {
-                    rcswitch.enableReceive(bruceConfigPins.CC1101_bus.io0);
+                if (willyConfigPins.CC1101_bus.io0 != GPIO_NUM_NC) {
+                    rcswitch.enableReceive(willyConfigPins.CC1101_bus.io0);
                 } else {
-                    rcswitch.enableReceive(bruceConfigPins.rfRx);
+                    rcswitch.enableReceive(willyConfigPins.rfRx);
                 }
             }
         }
@@ -537,8 +537,8 @@ void SpectrumTargetLock() {
     while (millis() - atkStart < 300000) {
         if (check(EscPress)) break;
 
-        tft.fillRect(x_start, y_base - height - 15, width, height + 16, bruceConfig.bgColor);
-        tft.drawRect(x_start - 1, y_base - height - 1, width + 2, height + 2, bruceConfig.priColor);
+        tft.fillRect(x_start, y_base - height - 15, width, height + 16, willyConfig.bgColor);
+        tft.drawRect(x_start - 1, y_base - height - 1, width + 2, height + 2, willyConfig.priColor);
 
         int peak_x = 0;
         int max_h = 0;
@@ -577,9 +577,9 @@ void SpectrumTargetLock() {
         if (max_h > 0) {
             tft.drawFastVLine(x_start + peak_x, y_base - height, height, TFT_RED);
             tft.setCursor(x_start + peak_x - 30, y_base - height - 10);
-            tft.setTextColor(TFT_RED, bruceConfig.bgColor);
+            tft.setTextColor(TFT_RED, willyConfig.bgColor);
             tft.print(String(peak_freq, 2) + "M LOCK");
-            tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+            tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
         }
 
         delay(10);

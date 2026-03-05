@@ -13,8 +13,8 @@ uint32_t toneCallback(cmd *c) {
     strFreq.trim();
     strDur.trim();
 
-    bool soundEnabled = bruceConfig.soundEnabled;
-    bruceConfig.soundEnabled = true;
+    bool soundEnabled = willyConfig.soundEnabled;
+    willyConfig.soundEnabled = true;
 
     unsigned long frequency = std::stoul(strFreq.c_str());
     unsigned long duration = std::stoul(strDur.c_str());
@@ -25,7 +25,7 @@ uint32_t toneCallback(cmd *c) {
 
     _tone(frequency, duration);
 
-    bruceConfig.soundEnabled = soundEnabled;
+    willyConfig.soundEnabled = soundEnabled;
     return true;
 }
 
@@ -43,8 +43,8 @@ uint32_t playCallback(cmd *c) {
     String song = arg.getValue();
     song.trim();
 
-    bool soundEnabled = bruceConfig.soundEnabled;
-    bruceConfig.soundEnabled = true;
+    bool soundEnabled = willyConfig.soundEnabled;
+    willyConfig.soundEnabled = true;
 
     if (song.indexOf(":") != -1) return playAudioRTTTLString(song);
 
@@ -62,7 +62,7 @@ uint32_t playCallback(cmd *c) {
         return playAudioFile(fs, song);
     }
 
-    bruceConfig.soundEnabled = soundEnabled;
+    willyConfig.soundEnabled = soundEnabled;
     return false;
 }
 
@@ -75,12 +75,12 @@ uint32_t ttsCallback(cmd *c) {
     String text = arg.getValue();
     text.trim();
 
-    bool soundEnabled = bruceConfig.soundEnabled;
-    bruceConfig.soundEnabled = true;
+    bool soundEnabled = willyConfig.soundEnabled;
+    willyConfig.soundEnabled = true;
 
     bool r = tts(text);
 
-    bruceConfig.soundEnabled = soundEnabled;
+    willyConfig.soundEnabled = soundEnabled;
     return r;
 }
 

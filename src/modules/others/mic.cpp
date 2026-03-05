@@ -235,7 +235,7 @@ void mic_test_one_task() {
     }
 
     // Border around the spectrogram
-    tft.drawRect(displayX - 2, displayY - 2, displayWidth + 4, displayHeight + 4, bruceConfig.priColor);
+    tft.drawRect(displayX - 2, displayY - 2, displayWidth + 4, displayHeight + 4, willyConfig.priColor);
 
     while (1) {
         fft_config_t *plan = fft_init(FFT_SIZE, FFT_REAL, FFT_FORWARD, NULL, NULL);
@@ -551,14 +551,14 @@ void mic_record_app() {
         // Draw a rectangle of the background color over the old row
         int clearHeight = (itemIndex == ITEM_START) ? BUTTON_HEIGHT : ITEM_HEIGHT;
         // Let's enlarge the cleanup area a little to cover the old edges (+4 px)
-        tft.fillRect(MARGIN - 5, yPos - 5, tftWidth - 2 * MARGIN + 10, clearHeight + 10, bruceConfig.bgColor);
+        tft.fillRect(MARGIN - 5, yPos - 5, tftWidth - 2 * MARGIN + 10, clearHeight + 10, willyConfig.bgColor);
 
         tft.setTextSize(TEXT_SIZE_LARGE);
-        tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+        tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
         // 2. DRAW BORDER if selected (except for START button)
         if (isSelected && itemIndex != ITEM_START) {
-            uint16_t borderColor = isEdit ? TFT_GREEN : bruceConfig.priColor;
+            uint16_t borderColor = isEdit ? TFT_GREEN : willyConfig.priColor;
             int borderWidth = isEdit ? 2 : 1;
             for (int i = 0; i < borderWidth; i++) {
                 tft.drawRoundRect(
@@ -587,7 +587,7 @@ void mic_record_app() {
                     const char *infText = (tftWidth > 200) ? "Unlim" : "INF";
                     int textWidth = strlen(infText) * 6 * TEXT_SIZE_LARGE;
                     tft.setCursor(unitX + 6 * TEXT_SIZE_LARGE - textWidth, contentY);
-                    if (isEdit && isSelected) tft.setTextColor(TFT_YELLOW, bruceConfig.bgColor);
+                    if (isEdit && isSelected) tft.setTextColor(TFT_YELLOW, willyConfig.bgColor);
                     tft.print(infText);
                 } else {
                     char timeStr[8];
@@ -628,18 +628,18 @@ void mic_record_app() {
     };
 
     // ===== INITIAL DESIGN (Only once) =====
-    tft.fillScreen(bruceConfig.bgColor);
+    tft.fillScreen(willyConfig.bgColor);
 
     // Header
-    tft.fillRect(0, 0, tftWidth, HEADER_HEIGHT, bruceConfig.priColor);
-    tft.setTextColor(bruceConfig.bgColor, bruceConfig.priColor);
+    tft.fillRect(0, 0, tftWidth, HEADER_HEIGHT, willyConfig.priColor);
+    tft.setTextColor(willyConfig.bgColor, willyConfig.priColor);
     tft.setTextSize(TEXT_SIZE_LARGE);
     tft.setCursor(MARGIN, (HEADER_HEIGHT - (TEXT_SIZE_LARGE * 8)) / 2);
     tft.println("MIC RECORDER");
 
     // Footer Instructions (Static)
     if (tftHeight > 200) {
-        tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+        tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
         tft.setTextSize(TEXT_SIZE_SMALL);
         tft.setCursor(MARGIN, tftHeight - 15);
         tft.print("NAV: ^v | EDIT: Sel | REC: Start");
@@ -749,8 +749,8 @@ void mic_record_app() {
             goto cleanup_and_exit;
         }
 
-        if (!fs->exists("/BruceMIC")) {
-            if (!fs->mkdir("/BruceMIC")) {
+        if (!fs->exists("/WillyMIC")) {
+            if (!fs->mkdir("/WillyMIC")) {
                 displayError("Dir creation failed", true);
                 goto cleanup_and_exit;
             }
@@ -759,7 +759,7 @@ void mic_record_app() {
         char filename[64];
         int index = 0;
         do {
-            snprintf(filename, sizeof(filename), "/BruceMIC/recording_%d.wav", index++);
+            snprintf(filename, sizeof(filename), "/WillyMIC/recording_%d.wav", index++);
         } while (fs->exists(filename));
 
         //===== UI CLEANING AND SETUP =====
@@ -773,7 +773,7 @@ void mic_record_app() {
             tft.print(".");
         } else {
             // Clean the screen completely
-            tft.fillScreen(bruceConfig.bgColor);
+            tft.fillScreen(willyConfig.bgColor);
 
             // ===== HEADER RECORDING =====
             const int REC_HEADER_HEIGHT = (tftHeight > 200) ? 40 : 30;
@@ -788,7 +788,7 @@ void mic_record_app() {
 
             // ===== STATIC INFO (Gain, Filename, Instructions) =====
             const int INFO_START_Y = REC_HEADER_HEIGHT + 10;
-            tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+            tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
             tft.setTextSize(TEXT_SIZE_SMALL);
 
             // Gain
@@ -857,16 +857,16 @@ void mic_record_app() {
                     if (String(timerStr) != lastTimerStr) {
                         lastTimerStr = String(timerStr);
 
-                        tft.fillRect(0, TIMER_Y - 5, tftWidth, TIMER_SIZE * 8 + 10, bruceConfig.bgColor);
+                        tft.fillRect(0, TIMER_Y - 5, tftWidth, TIMER_SIZE * 8 + 10, willyConfig.bgColor);
 
                         tft.setTextSize(TIMER_SIZE);
-                        tft.setTextColor(TFT_RED, bruceConfig.bgColor);
+                        tft.setTextColor(TFT_RED, willyConfig.bgColor);
                         int timerWidth = strlen(timerStr) * 6 * TIMER_SIZE;
                         tft.setCursor((tftWidth - timerWidth) / 2, TIMER_Y);
                         tft.print(timerStr);
 
                         tft.setTextSize(TEXT_SIZE_SMALL);
-                        tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+                        tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
                         const char *label = (time_seconds == 0) ? "Elapsed" : "Elapsed / Total";
                         int labelWidth = strlen(label) * 6;
                         tft.setCursor((tftWidth - labelWidth) / 2, TIMER_Y + TIMER_SIZE * 8 + 5);
@@ -888,7 +888,7 @@ void mic_record_app() {
             Serial.println(" bytes");
 
             if (!stealth_enabled) {
-                tft.fillScreen(bruceConfig.bgColor);
+                tft.fillScreen(willyConfig.bgColor);
 
                 tft.fillRect(0, 0, tftWidth, HEADER_HEIGHT, TFT_DARKGREEN);
                 tft.setTextColor(TFT_WHITE, TFT_DARKGREEN);
@@ -898,7 +898,7 @@ void mic_record_app() {
                 tft.setCursor((tftWidth - successWidth) / 2, (HEADER_HEIGHT - 16) / 2);
                 tft.print(successText);
 
-                tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+                tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
                 tft.setTextSize(TEXT_SIZE_SMALL);
 
                 int infoY = HEADER_HEIGHT + 20;

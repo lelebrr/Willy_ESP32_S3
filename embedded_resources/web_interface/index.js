@@ -434,7 +434,7 @@ const Painel = {
     $('#info-chip').textContent = info.chipModel || 'ESP32';
     $('#info-cpu').textContent = (info.cpuFreq || 240) + ' MHz';
     $('#info-screen').textContent = (info.screenWidth || '--') + ' x ' + (info.screenHeight || '--');
-    $('#info-version').textContent = info.BRUCE_VERSION || '2.1';
+    $('#info-version').textContent = info.WILLY_VERSION || '2.1';
   },
   
   iniciarGraficos() {

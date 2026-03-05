@@ -167,7 +167,7 @@ void wpsViewCracked() {
 
     while (viewing) {
         drawMainBorderWithTitle("Redes Quebradas");
-        tft.setTextColor(bruceConfig.priColor);
+        tft.setTextColor(willyConfig.priColor);
         padprintln("");
         padprintln("Total: " + String(entries.size()) +
                    "  Pag " + String(page+1) + "/" + String(total_pages));
@@ -193,7 +193,7 @@ void wpsViewCracked() {
             padprintln(String(i+1) + ". " + ssid.substring(0, 16));
             tft.setTextColor(TFT_YELLOW);
             padprintln("  PIN: " + pin + "  CH:" + ch);
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("  " + mac_s);
         }
         padprintln("");
@@ -413,7 +413,7 @@ void wpsScan() {
 
     while (viewing) {
         drawMainBorderWithTitle("WPS Scan");
-        tft.setTextColor(bruceConfig.priColor);
+        tft.setTextColor(willyConfig.priColor);
         padprintln("");
         padprintln("Redes: " + String(networks.size()) +
                    "  Pag " + String(page + 1) + "/" + String(total_pages));
@@ -431,7 +431,7 @@ void wpsScan() {
             String prefix = String(i+1) + ". ";
             if (crk) prefix += "[QUEBRADA] ";
             padprintln(prefix + ssid.substring(0, crk ? 10 : 16));
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             String info_line = "  CH:" + String(networks[i].channel) + " " +
                        String(networks[i].rssi) + "dBm";
             if (crk) info_line += " PIN:" + String(networks[i].cracked_pin);
@@ -537,7 +537,7 @@ void wpsPinBruteForceNative() {
             // Update display
             if (millis() - last_update > 500) {
                 drawMainBorderWithTitle("WPS PIN Brute");
-                tft.setTextColor(bruceConfig.priColor);
+                tft.setTextColor(willyConfig.priColor);
                 char disp_buf[64];
                 snprintf(disp_buf, sizeof(disp_buf), "Alvo: %s", target.ssid);
                 padprintln(disp_buf);
@@ -596,7 +596,7 @@ void wpsPinBruteForceRaw() {
     if (!wpsInitInjectionMode(target.channel)) return;
 
     drawMainBorderWithTitle("WPS PIN Brute");
-    tft.setTextColor(bruceConfig.priColor);
+    tft.setTextColor(willyConfig.priColor);
     padprintln("");
     padprintln("Alvo: " + String(target.ssid));
     padprintln("MAC: " + bssidStr(target.bssid));
@@ -692,7 +692,7 @@ void wpsPinBruteForceRaw() {
             // Update display
             if (millis() - last_update > 500) {
                 drawMainBorderWithTitle("WPS PIN Brute");
-                tft.setTextColor(bruceConfig.priColor);
+                tft.setTextColor(willyConfig.priColor);
                 char disp_buf[64];
                 snprintf(disp_buf, sizeof(disp_buf), "Alvo: %s", target.ssid);
                 padprintln(disp_buf);
@@ -901,7 +901,7 @@ void wpsPixieDustRaw() {
 
         if (millis() - last_update > 500) {
             drawMainBorderWithTitle("Pixie Dust (Raw)");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             char disp_buf[64];
             snprintf(disp_buf, sizeof(disp_buf), "Alvo: %s", target.ssid);
             padprintln(disp_buf);
@@ -1008,7 +1008,7 @@ void wpsNullPinAttack() {
             }
 
             drawMainBorderWithTitle("WPS Null PIN");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             char disp_buf[64];
             snprintf(disp_buf, sizeof(disp_buf), "Alvo: %s", target.ssid);
             padprintln(disp_buf);
@@ -1074,7 +1074,7 @@ void wpsPBCFlood() {
     uint8_t spin_idx = 0;
 
     drawMainBorderWithTitle("WPS PBC Flood");
-    tft.setTextColor(bruceConfig.priColor);
+    tft.setTextColor(willyConfig.priColor);
     padprintln("");
     padprintln("Alvo: " + String(target.ssid));
     padprintln("Iniciando injecao...");
@@ -1125,7 +1125,7 @@ void wpsPBCFlood() {
 
         if (millis() - last_update > 500) {
             drawMainBorderWithTitle("WPS PBC Flood");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             char disp_buf[64];
             snprintf(disp_buf, sizeof(disp_buf), "Alvo: %s", target.ssid);
             padprintln(disp_buf);
@@ -1231,7 +1231,7 @@ void wpsLockoutTester() {
         if (millis() - last_update > 2000) {
             uint32_t elapsed = (millis() - start_time) / 1000;
             drawMainBorderWithTitle("Lockout Test");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             char disp_buf[64];
             snprintf(disp_buf, sizeof(disp_buf), "Alvo: %s", target.ssid);
             padprintln(disp_buf);
@@ -1354,7 +1354,7 @@ void wpsAPSpoof() {
 
         if (millis() - last_update > 500) {
             drawMainBorderWithTitle("WPS AP Spoof");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             char disp_buf[64];
             snprintf(disp_buf, sizeof(disp_buf), "Alvo: %s", target.ssid);
             padprintln(disp_buf);
@@ -1469,7 +1469,7 @@ void wpsNACKFlood() {
 
         if (millis() - last_update > 1000) {
             drawMainBorderWithTitle("WPS NACK Flood");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             char disp_buf[64];
             snprintf(disp_buf, sizeof(disp_buf), "Alvo: %s", target.ssid);
             padprintln(disp_buf);

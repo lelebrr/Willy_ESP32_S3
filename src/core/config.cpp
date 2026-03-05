@@ -6,7 +6,7 @@
 const String CRYPTO_KEY = "WillyFirmwareCoreRefinement";
 const String ENC_PREFIX = "_ENC_";
 
-JsonDocument BruceConfig::toJson() const {
+JsonDocument WillyConfig::toJson() const {
     JsonDocument jsonDoc;
     JsonObject setting = jsonDoc.to<JsonObject>();
 
@@ -87,7 +87,7 @@ JsonDocument BruceConfig::toJson() const {
     return jsonDoc;
 }
 
-void BruceConfig::fromFile(bool checkFS) {
+void WillyConfig::fromFile(bool checkFS) {
     FS *fs;
     if (checkFS) {
         if (!getFsStorage(fs)) {
@@ -113,7 +113,7 @@ void BruceConfig::fromFile(bool checkFS) {
 
     // Deserialize the JSON document
     JsonDocument jsonDoc;
-    Serial.println("Starting deserializeJson in BruceConfig...");
+    Serial.println("Starting deserializeJson in WillyConfig...");
     if (deserializeJson(jsonDoc, file)) {
         Serial.println("Failed to read config file, using default configuration");
         return;
@@ -423,7 +423,7 @@ void BruceConfig::fromFile(bool checkFS) {
     log_i("Using config from file");
 }
 
-void BruceConfig::saveFile() {
+void WillyConfig::saveFile() {
     FS *fs = &LittleFS;
     JsonDocument jsonDoc = toJson();
 
@@ -444,14 +444,14 @@ void BruceConfig::saveFile() {
     if (setupSdCard()) copyToFs(LittleFS, SD, filepath, false);
 }
 
-void BruceConfig::factoryReset() {
+void WillyConfig::factoryReset() {
     FS *fs = &LittleFS;
     fs->rename(String(filepath), "/bak." + String(filepath).substring(1));
     if (setupSdCard()) SD.rename(String(filepath), "/bak." + String(filepath).substring(1));
     ESP.restart();
 }
 
-void BruceConfig::validateConfig() {
+void WillyConfig::validateConfig() {
     validateDimmerValue();
     validateBrightValue();
     validateTmzValue();
@@ -476,133 +476,133 @@ void BruceConfig::validateConfig() {
     validateEvilPasswordMode();
 }
 
-void BruceConfig::setUiColor(uint16_t primary, uint16_t *secondary, uint16_t *background) {
-    BruceTheme::_setUiColor(primary, secondary, background);
+void WillyConfig::setUiColor(uint16_t primary, uint16_t *secondary, uint16_t *background) {
+    WillyTheme::_setUiColor(primary, secondary, background);
     saveFile();
 }
 
-void BruceConfig::setDimmer(int value) {
+void WillyConfig::setDimmer(int value) {
     dimmerSet = value;
     validateDimmerValue();
     saveFile();
 }
 
-void BruceConfig::validateDimmerValue() {
+void WillyConfig::validateDimmerValue() {
     if (dimmerSet < 0) dimmerSet = 10;
     if (dimmerSet > 60) dimmerSet = 0;
 }
 
-void BruceConfig::setBright(uint8_t value) {
+void WillyConfig::setBright(uint8_t value) {
     bright = value;
     validateBrightValue();
     saveFile();
 }
 
-void BruceConfig::validateBrightValue() {
+void WillyConfig::validateBrightValue() {
     if (bright > 100) bright = 100;
 }
 
-void BruceConfig::setAutomaticTimeUpdateViaNTP(bool value) {
+void WillyConfig::setAutomaticTimeUpdateViaNTP(bool value) {
     automaticTimeUpdateViaNTP = value;
     saveFile();
 }
 
-void BruceConfig::setTmz(float value) {
+void WillyConfig::setTmz(float value) {
     tmz = value;
     validateTmzValue();
     saveFile();
 }
 
-void BruceConfig::validateTmzValue() {
+void WillyConfig::validateTmzValue() {
     if (tmz < -12 || tmz > 14) tmz = 0;
 }
 
-void BruceConfig::setDST(bool value) {
+void WillyConfig::setDST(bool value) {
     dst = value;
     saveFile();
 }
 
-void BruceConfig::setClock24Hr(bool value) {
+void WillyConfig::setClock24Hr(bool value) {
     clock24hr = value;
     saveFile();
 }
 
-void BruceConfig::setSoundEnabled(int value) {
+void WillyConfig::setSoundEnabled(int value) {
     soundEnabled = value;
     validateSoundEnabledValue();
     saveFile();
 }
 
-void BruceConfig::setSoundVolume(int value) {
+void WillyConfig::setSoundVolume(int value) {
     soundVolume = value;
     validateSoundVolumeValue();
     saveFile();
 }
 
-void BruceConfig::validateSoundEnabledValue() {
+void WillyConfig::validateSoundEnabledValue() {
     if (soundEnabled > 1) soundEnabled = 1;
 }
 
-void BruceConfig::validateSoundVolumeValue() {
+void WillyConfig::validateSoundVolumeValue() {
     if (soundVolume > 100) soundVolume = 100;
 }
 
-void BruceConfig::setWifiAtStartup(int value) {
+void WillyConfig::setWifiAtStartup(int value) {
     wifiAtStartup = value;
     validateWifiAtStartupValue();
     saveFile();
 }
 
-void BruceConfig::validateWifiAtStartupValue() {
+void WillyConfig::validateWifiAtStartupValue() {
     if (wifiAtStartup > 1) wifiAtStartup = 1;
 }
 
 #ifdef HAS_RGB_LED
-void BruceConfig::setLedBright(int value) {
+void WillyConfig::setLedBright(int value) {
     ledBright = value;
     validateLedBrightValue();
     saveFile();
 }
 
-void BruceConfig::validateLedBrightValue() { ledBright = max(0, min(100, ledBright)); }
+void WillyConfig::validateLedBrightValue() { ledBright = max(0, min(100, ledBright)); }
 
-void BruceConfig::setLedColor(uint32_t value) {
+void WillyConfig::setLedColor(uint32_t value) {
     ledColor = value;
     validateLedColorValue();
     saveFile();
 }
 
-void BruceConfig::validateLedColorValue() {
+void WillyConfig::validateLedColorValue() {
     ledColor = max<uint32_t>(0, min<uint32_t>(0xFFFFFFFF, ledColor));
 }
 
-void BruceConfig::setLedBlinkEnabled(int value) {
+void WillyConfig::setLedBlinkEnabled(int value) {
     ledBlinkEnabled = value;
     validateLedBlinkEnabledValue();
     saveFile();
 }
 
-void BruceConfig::validateLedBlinkEnabledValue() {
+void WillyConfig::validateLedBlinkEnabledValue() {
     if (ledBlinkEnabled > 1) ledBlinkEnabled = 1;
 }
 
-void BruceConfig::setLedEffect(int value) {
+void WillyConfig::setLedEffect(int value) {
     ledEffect = value;
     validateLedEffectValue();
     saveFile();
 }
 
-void BruceConfig::validateLedEffectValue() {
+void WillyConfig::validateLedEffectValue() {
     if (ledEffect < 0 || ledEffect > 5) ledEffect = 0;
 }
 
-void BruceConfig::setLedEffectSpeed(int value) {
+void WillyConfig::setLedEffectSpeed(int value) {
     ledEffectSpeed = value;
     validateLedEffectSpeedValue();
     saveFile();
 }
 
-void BruceConfig::validateLedEffectSpeedValue() {
+void WillyConfig::validateLedEffectSpeedValue() {
 #ifdef HAS_ENCODER_LED
     if (ledEffectSpeed > 11) ledEffectSpeed = 11;
 #else
@@ -611,58 +611,58 @@ void BruceConfig::validateLedEffectSpeedValue() {
     if (ledEffectSpeed < 0) ledEffectSpeed = 1;
 }
 
-void BruceConfig::setLedEffectDirection(int value) {
+void WillyConfig::setLedEffectDirection(int value) {
     ledEffectDirection = value;
     validateLedEffectDirectionValue();
     saveFile();
 }
 
-void BruceConfig::validateLedEffectDirectionValue() {
+void WillyConfig::validateLedEffectDirectionValue() {
     if (ledEffectDirection > 1 || ledEffectDirection == 0) ledEffectDirection = 1;
     if (ledEffectDirection < -1) ledEffectDirection = -1;
 }
 #endif
 
-void BruceConfig::setWebUICreds(const String &usr, const String &pwd) {
+void WillyConfig::setWebUICreds(const String &usr, const String &pwd) {
     webUI.user = usr;
     webUI.pwd = pwd;
     saveFile();
 }
 
-void BruceConfig::setWifiApCreds(const String &ssid, const String &pwd) {
+void WillyConfig::setWifiApCreds(const String &ssid, const String &pwd) {
     wifiAp.ssid = ssid;
     wifiAp.pwd = pwd;
     saveFile();
 }
 
-void BruceConfig::addWifiCredential(const String &ssid, const String &pwd) {
+void WillyConfig::addWifiCredential(const String &ssid, const String &pwd) {
     wifi[ssid] = pwd;
     saveFile();
 }
 
-String BruceConfig::getWifiPassword(const String &ssid) const {
+String WillyConfig::getWifiPassword(const String &ssid) const {
     auto it = wifi.find(ssid);
     if (it != wifi.end()) return it->second;
     return "";
 }
 
-void BruceConfig::addEvilWifiName(String value) {
+void WillyConfig::addEvilWifiName(String value) {
     evilWifiNames.insert(value);
     saveFile();
 }
 
-void BruceConfig::removeEvilWifiName(String value) {
+void WillyConfig::removeEvilWifiName(String value) {
     evilWifiNames.erase(value);
     saveFile();
 }
 
-void BruceConfig::setEvilEndpointCreds(String value) {
+void WillyConfig::setEvilEndpointCreds(String value) {
     evilPortalEndpoints.getCredsEndpoint = value;
     validateEvilEndpointCreds();
     saveFile();
 }
 
-void BruceConfig::validateEvilEndpointCreds() {
+void WillyConfig::validateEvilEndpointCreds() {
     if (evilPortalEndpoints.getCredsEndpoint == evilPortalEndpoints.setSsidEndpoint) {
         // on collision reset to defaults
         evilPortalEndpoints.getCredsEndpoint = "/creds";
@@ -672,13 +672,13 @@ void BruceConfig::validateEvilEndpointCreds() {
     }
 }
 
-void BruceConfig::setEvilEndpointSsid(String value) {
+void WillyConfig::setEvilEndpointSsid(String value) {
     evilPortalEndpoints.setSsidEndpoint = value;
     validateEvilEndpointCreds();
     saveFile();
 }
 
-void BruceConfig::validateEvilEndpointSsid() {
+void WillyConfig::validateEvilEndpointSsid() {
     if (evilPortalEndpoints.getCredsEndpoint == evilPortalEndpoints.setSsidEndpoint) {
         // on collision reset to defaults
         evilPortalEndpoints.setSsidEndpoint = "/ssid";
@@ -688,105 +688,105 @@ void BruceConfig::validateEvilEndpointSsid() {
     }
 }
 
-void BruceConfig::setEvilAllowEndpointDisplay(bool value) {
+void WillyConfig::setEvilAllowEndpointDisplay(bool value) {
     evilPortalEndpoints.showEndpoints = value;
     saveFile();
 }
 
-void BruceConfig::setEvilAllowGetCreds(bool value) {
+void WillyConfig::setEvilAllowGetCreds(bool value) {
     evilPortalEndpoints.allowGetCreds = value;
     saveFile();
 }
 
-void BruceConfig::setEvilAllowSetSsid(bool value) {
+void WillyConfig::setEvilAllowSetSsid(bool value) {
     evilPortalEndpoints.allowSetSsid = value;
     saveFile();
 }
 
-void BruceConfig::setEvilPasswordMode(EvilPortalPasswordMode value) {
+void WillyConfig::setEvilPasswordMode(EvilPortalPasswordMode value) {
     evilPortalPasswordMode = value;
     saveFile();
 }
 
-void BruceConfig::validateEvilPasswordMode() {
+void WillyConfig::validateEvilPasswordMode() {
     if (evilPortalPasswordMode < 0 || evilPortalPasswordMode > 2) evilPortalPasswordMode = FULL_PASSWORD;
 }
 
-void BruceConfig::setStartupApp(String value) {
+void WillyConfig::setStartupApp(String value) {
     startupApp = value;
     saveFile();
 }
 
-void BruceConfig::setStartupAppLuaScript(String value) {
+void WillyConfig::setStartupAppLuaScript(String value) {
     startupAppLuaScript = value;
     saveFile();
 }
 
-void BruceConfig::setWigleBasicToken(String value) {
+void WillyConfig::setWigleBasicToken(String value) {
     wigleBasicToken = value;
     saveFile();
 }
 
-void BruceConfig::setDevMode(int value) {
+void WillyConfig::setDevMode(int value) {
     devMode = value;
     validateDevModeValue();
     saveFile();
 }
 
-void BruceConfig::validateDevModeValue() {
+void WillyConfig::validateDevModeValue() {
     if (devMode > 1) devMode = 1;
 }
 
-void BruceConfig::setColorInverted(int value) {
+void WillyConfig::setColorInverted(int value) {
     colorInverted = value;
     validateColorInverted();
     saveFile();
 }
 
-void BruceConfig::validateColorInverted() {
+void WillyConfig::validateColorInverted() {
     if (colorInverted > 1) colorInverted = 1;
 }
 
-void BruceConfig::setBadUSBBLEKeyboardLayout(int value) {
+void WillyConfig::setBadUSBBLEKeyboardLayout(int value) {
     badUSBBLEKeyboardLayout = value;
     validateBadUSBBLEKeyboardLayout();
     saveFile();
 }
 
-void BruceConfig::validateBadUSBBLEKeyboardLayout() {
+void WillyConfig::validateBadUSBBLEKeyboardLayout() {
     if (badUSBBLEKeyboardLayout < 0 || badUSBBLEKeyboardLayout > 13) badUSBBLEKeyboardLayout = 0;
 }
 
-void BruceConfig::setBadUSBBLEKeyDelay(uint16_t value) {
+void WillyConfig::setBadUSBBLEKeyDelay(uint16_t value) {
     badUSBBLEKeyDelay = value;
     validateBadUSBBLEKeyDelay();
     saveFile();
 }
 
-void BruceConfig::validateBadUSBBLEKeyDelay() {
+void WillyConfig::validateBadUSBBLEKeyDelay() {
     if (badUSBBLEKeyDelay > 500) badUSBBLEKeyDelay = 500;
 }
 
-void BruceConfig::setBadUSBBLEShowOutput(bool value) {
+void WillyConfig::setBadUSBBLEShowOutput(bool value) {
     badUSBBLEShowOutput = value;
     saveFile();
 }
-void BruceConfig::addMifareKey(String value) { MifareKeysManager::addKey(mifareKeys, value); }
+void WillyConfig::addMifareKey(String value) { MifareKeysManager::addKey(mifareKeys, value); }
 
-void BruceConfig::validateMifareKeysItems() { MifareKeysManager::validateKeys(mifareKeys); }
+void WillyConfig::validateMifareKeysItems() { MifareKeysManager::validateKeys(mifareKeys); }
 
-void BruceConfig::addDisabledMenu(String value) {
+void WillyConfig::addDisabledMenu(String value) {
     // TODO: check if duplicate
     disabledMenus.push_back(value);
     saveFile();
 }
 
-void BruceConfig::addQrCodeEntry(const String &menuName, const String &content) {
+void WillyConfig::addQrCodeEntry(const String &menuName, const String &content) {
     qrCodes.push_back({menuName, content});
     saveFile();
 }
 
-void BruceConfig::removeQrCodeEntry(const String &menuName) {
+void WillyConfig::removeQrCodeEntry(const String &menuName) {
     size_t writeIndex = 0;
 
     for (size_t readIndex = 0; readIndex < qrCodes.size(); ++readIndex) {
@@ -803,14 +803,14 @@ void BruceConfig::removeQrCodeEntry(const String &menuName) {
     saveFile();
 }
 
-void BruceConfig::addWebUISession(const String &token) {
+void WillyConfig::addWebUISession(const String &token) {
     webUISessions.push_back(token);
     // Limit to maximum 5 sessions - remove oldest (first element) if exceeded
     if (webUISessions.size() > 5) { webUISessions.erase(webUISessions.begin()); }
     saveFile();
 }
 
-void BruceConfig::removeWebUISession(const String &token) {
+void WillyConfig::removeWebUISession(const String &token) {
     for (auto it = webUISessions.begin(); it != webUISessions.end(); ++it) {
         if (*it == token) {
             webUISessions.erase(it);
@@ -820,7 +820,7 @@ void BruceConfig::removeWebUISession(const String &token) {
     saveFile();
 }
 
-bool BruceConfig::isValidWebUISession(const String &token) {
+bool WillyConfig::isValidWebUISession(const String &token) {
     auto it = std::find(webUISessions.begin(), webUISessions.end(), token);
 
     if (it == webUISessions.end()) {
@@ -843,7 +843,7 @@ bool BruceConfig::isValidWebUISession(const String &token) {
     return true;
 }
 
-String BruceConfig::encryptString(const String &input) const {
+String WillyConfig::encryptString(const String &input) const {
     if (input.isEmpty()) return "";
     String output = ENC_PREFIX;
     for (size_t i = 0; i < input.length(); i++) {
@@ -855,7 +855,7 @@ String BruceConfig::encryptString(const String &input) const {
     return output;
 }
 
-String BruceConfig::decryptString(const String &input) const {
+String WillyConfig::decryptString(const String &input) const {
     if (!input.startsWith(ENC_PREFIX)) return input;
     String hexData = input.substring(ENC_PREFIX.length());
     String output = "";

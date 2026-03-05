@@ -28,15 +28,15 @@
 
 // #include "modules/reverseShell/reverseShell.h"
 //  Developed by Fourier (github.com/9dl)
-//  Use BruceC2 to interact with the reverse shell server
-//  BruceC2: https://github.com/9dl/Bruce-C2
-//  To use BruceC2:
-//  1. Start Reverse Shell Mode in Bruce
-//  2. Start BruceC2 and wait.
+//  Use WillyC2 to interact with the reverse shell server
+//  WillyC2: https://github.com/9dl/Willy-C2
+//  To use WillyC2:
+//  1. Start Reverse Shell Mode in Willy
+//  2. Start WillyC2 and wait.
 //  3. Visit 192.168.4.1 in your browser to access the web interface for shell executing.
 
-// 32bit: https://github.com/9dl/Bruce-C2/releases/download/v1.0/BruceC2_windows_386.exe
-// 64bit: https://github.com/9dl/Bruce-C2/releases/download/v1.0/BruceC2_windows_amd64.exe
+// 32bit: https://github.com/9dl/Willy-C2/releases/download/v1.0/WillyC2_windows_386.exe
+// 64bit: https://github.com/9dl/Willy-C2/releases/download/v1.0/WillyC2_windows_amd64.exe
 #include "modules/wifi/tcp_utils.h"
 
 // global toggle - controls whether scanNetworks includes hidden SSIDs
@@ -63,7 +63,7 @@ void WifiMenu::optionsMenu() {
             Option("Conectar WiFi", lambdaHelper(wifiConnectMenu, WIFI_STA)),
             Option("Iniciar WiFi AP", [=]() {
                  wifiConnectMenu(WIFI_AP);
-                 displayInfo("pwd: " + bruceConfig.wifiAp.pwd, true);
+                 displayInfo("pwd: " + willyConfig.wifiAp.pwd, true);
              }),
         };
     }
@@ -156,7 +156,7 @@ void WifiMenu::optionsMenu() {
                        }});
     options.push_back({"Wireguard", wg_setup});
     options.push_back({"Responder", responder});
-    options.push_back({"Brucegotchi", brucegotchi_start});
+    options.push_back({"Willygotchi", willygotchi_start});
     options.push_back({"Recuperar Senha", wifi_recover_menu});
     options.push_back({"WiFi Heatmap", wifiHeatmap});
     options.push_back({"Traffic Fingerprint", encryptedTrafficFingerprint});
@@ -214,7 +214,7 @@ void WifiMenu::drawIcon(float scale) {
     int deltaY = scale * 20;
     int radius = scale * 6;
 
-    tft.fillCircle(iconCenterX, iconCenterY + deltaY, radius, bruceConfig.priColor);
+    tft.fillCircle(iconCenterX, iconCenterY + deltaY, radius, willyConfig.priColor);
     tft.drawArc(
         iconCenterX,
         iconCenterY + deltaY,
@@ -222,8 +222,8 @@ void WifiMenu::drawIcon(float scale) {
         deltaY,
         130,
         230,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
     tft.drawArc(
         iconCenterX,
@@ -232,7 +232,7 @@ void WifiMenu::drawIcon(float scale) {
         2 * deltaY,
         130,
         230,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
 }

@@ -50,21 +50,21 @@ void FMMenu::drawIcon(float scale) {
     int potY = caseY + caseH / 3 + iconH / 10;
 
     // Case
-    tft.drawRoundRect(caseX, caseY, iconW, caseH, iconW / 10, bruceConfig.priColor);
+    tft.drawRoundRect(caseX, caseY, iconW, caseH, iconW / 10, willyConfig.priColor);
 
     // Potentiometer
-    tft.fillCircle(potX, potY, iconH / 7, bruceConfig.priColor);
+    tft.fillCircle(potX, potY, iconH / 7, willyConfig.priColor);
 
     // Screen
-    tft.drawRect(caseX + iconW / 10, caseY + iconH / 10, iconW / 2, iconH / 3, bruceConfig.priColor);
+    tft.drawRect(caseX + iconW / 10, caseY + iconH / 10, iconW / 2, iconH / 3, willyConfig.priColor);
 
     // Antenna
     tft.drawLine(
-        caseX + iconW / 10, caseY, caseX + iconW / 10 + iconH / 3, caseY - iconH / 6, bruceConfig.priColor
+        caseX + iconW / 10, caseY, caseX + iconW / 10 + iconH / 3, caseY - iconH / 6, willyConfig.priColor
     );
-    tft.fillCircle(caseX + iconW / 10 + iconH / 3, caseY - iconH / 6, iconH / 30, bruceConfig.priColor);
+    tft.fillCircle(caseX + iconW / 10 + iconH / 3, caseY - iconH / 6, iconH / 30, willyConfig.priColor);
 
     // Buttons
-    tft.fillCircle(caseX + iconW / 10 + iconH / 8, btnY, iconH / 12, bruceConfig.priColor);
-    tft.fillCircle(caseX + iconW / 10 + iconW / 2 - iconH / 8, btnY, iconH / 12, bruceConfig.priColor);
+    tft.fillCircle(caseX + iconW / 10 + iconH / 8, btnY, iconH / 12, willyConfig.priColor);
+    tft.fillCircle(caseX + iconW / 10 + iconW / 2 - iconH / 8, btnY, iconH / 12, willyConfig.priColor);
 }

@@ -56,7 +56,7 @@ uint32_t dateCallback(cmd *c) {
 uint32_t i2cCallback(cmd *c) {
     // scan for connected i2c modules
     // derived from https://learn.adafruit.com/scanning-i2c-addresses/arduino
-    Wire.begin(bruceConfigPins.i2c_bus.sda, bruceConfigPins.i2c_bus.scl);
+    Wire.begin(willyConfigPins.i2c_bus.sda, willyConfigPins.i2c_bus.scl);
     byte error, address;
     int nDevices;
     serialDevice->println("Scanning...");
@@ -104,8 +104,8 @@ uint32_t freeCallback(cmd *c) {
 }
 
 uint32_t infoCallback(cmd *c) {
-    serialDevice->print("Bruce v");
-    serialDevice->println(BRUCE_VERSION);
+    serialDevice->print("Willy v");
+    serialDevice->println(WILLY_VERSION);
     serialDevice->println(GIT_COMMIT_HASH);
     serialDevice->print("SDK: ");
     serialDevice->println(ESP.getSdkVersion());
@@ -126,14 +126,14 @@ uint32_t infoCallback(cmd *c) {
         serialDevice->println("Wifi: not connected");
     }
 
-    serialDevice->println("Device: Bruce");
+    serialDevice->println("Device: Willy");
 
     return true;
 }
 
 uint32_t helpCallback(cmd *c) {
-    serialDevice->print("Bruce v");
-    serialDevice->print(BRUCE_VERSION);
+    serialDevice->print("Willy v");
+    serialDevice->print(WILLY_VERSION);
     serialDevice->print("\nThese shell commands are defined internally.\n");
 
     serialDevice->println("\nWiFi Commands:");

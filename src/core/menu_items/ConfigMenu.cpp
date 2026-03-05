@@ -40,7 +40,7 @@ void ConfigMenu::optionsMenu() {
         }
 #endif
 
-        if (bruceConfig.devMode) {
+        if (willyConfig.devMode) {
             localOptions.push_back({"Modo Dev", [this]() { devMenu(); }});
         }
 
@@ -101,11 +101,11 @@ void ConfigMenu::ledMenu() {
                  beginLed();
                  setLedBrightnessConfig();
              }                                                                            },
-            {String("Piscar LED: ") + (bruceConfig.ledBlinkEnabled ? "LIG" : "DES"),
+            {String("Piscar LED: ") + (willyConfig.ledBlinkEnabled ? "LIG" : "DES"),
              [this]() {
                  // Toggle LED blink setting
-                 bruceConfig.ledBlinkEnabled = !bruceConfig.ledBlinkEnabled;
-                 bruceConfig.saveFile();
+                 willyConfig.ledBlinkEnabled = !willyConfig.ledBlinkEnabled;
+                 willyConfig.saveFile();
              }                                                                            },
             {"Voltar",                                                               []() {}},
         };
@@ -128,11 +128,11 @@ void ConfigMenu::audioMenu() {
 #if !defined(LITE_VERSION)
 #if defined(BUZZ_PIN) || defined(HAS_NS4168_SPKR) || defined(CYD)
 
-            {String("Som: ") + (bruceConfig.soundEnabled ? "LIG" : "DES"),
+            {String("Som: ") + (willyConfig.soundEnabled ? "LIG" : "DES"),
                                                              [this]() {
                  // Toggle sound setting
-                 bruceConfig.soundEnabled = !bruceConfig.soundEnabled;
-                 bruceConfig.saveFile();
+                 willyConfig.soundEnabled = !willyConfig.soundEnabled;
+                 willyConfig.saveFile();
              }                                                                                                                                            },
 #if defined(HAS_NS4168_SPKR)
             {"Volume Som",                                                  [this]() { setSoundVolume(); }},
@@ -157,17 +157,17 @@ void ConfigMenu::audioMenu() {
 void ConfigMenu::systemMenu() {
     while (true) {
         std::vector<Option> localOptions = {
-            {String("InstaBoot: ") + (bruceConfig.instantBoot ? "LIG" : "DES"),
+            {String("InstaBoot: ") + (willyConfig.instantBoot ? "LIG" : "DES"),
              [this]() {
                  // Toggle InstaBoot setting
-                 bruceConfig.instantBoot = !bruceConfig.instantBoot;
-                 bruceConfig.saveFile();
+                 willyConfig.instantBoot = !willyConfig.instantBoot;
+                 willyConfig.saveFile();
              }                                                                                                           },
-            {String("WiFi no Inicio: ") + (bruceConfig.wifiAtStartup ? "LIG" : "DES"),
+            {String("WiFi no Inicio: ") + (willyConfig.wifiAtStartup ? "LIG" : "DES"),
              [this]() {
                  // Toggle WiFi at startup setting
-                 bruceConfig.wifiAtStartup = !bruceConfig.wifiAtStartup;
-                 bruceConfig.saveFile();
+                 willyConfig.wifiAtStartup = !willyConfig.wifiAtStartup;
+                 willyConfig.saveFile();
              }                                                                                                           },
             {"App Inicial",                                                         [this]() { setStartupApp(); }        },
             {"Mostrar/Ocultar Apps",                                                [this]() { mainMenu.hideAppsMenu(); }},
@@ -210,8 +210,8 @@ void ConfigMenu::advancedMenu() {
 
                  if (choice == 1) {
                      // User confirmed - perform factory reset
-                     bruceConfigPins.factoryReset();
-                     bruceConfig.factoryReset(); // Restarts ESP
+                     willyConfigPins.factoryReset();
+                     willyConfig.factoryReset(); // Restarts ESP
                  }
                  // If cancelled, loop continues and menu rebuilds
              }                                                                             },
@@ -262,19 +262,19 @@ void ConfigMenu::devMenu() {
     while (true) {
         std::vector<Option> localOptions = {
             {"I2C Finder",      [this]() { find_i2c_addresses(); }                      },
-            {"Pinos CC1101",    [this]() { setSPIPinsMenu(bruceConfigPins.CC1101_bus); }},
-            {"Pinos NRF24",     [this]() { setSPIPinsMenu(bruceConfigPins.NRF24_bus); } },
+            {"Pinos CC1101",    [this]() { setSPIPinsMenu(willyConfigPins.CC1101_bus); }},
+            {"Pinos NRF24",     [this]() { setSPIPinsMenu(willyConfigPins.NRF24_bus); } },
 #if !defined(LITE_VERSION)
-            {"Pinos LoRa",      [this]() { setSPIPinsMenu(bruceConfigPins.LoRa_bus); }  },
-            {"Pinos W5500",     [this]() { setSPIPinsMenu(bruceConfigPins.W5500_bus); } },
+            {"Pinos LoRa",      [this]() { setSPIPinsMenu(willyConfigPins.LoRa_bus); }  },
+            {"Pinos W5500",     [this]() { setSPIPinsMenu(willyConfigPins.W5500_bus); } },
 #endif
-            {"Pinos CartaoSD",  [this]() { setSPIPinsMenu(bruceConfigPins.SDCARD_bus); }},
-            {"Pinos I2C",       [this]() { setI2CPinsMenu(bruceConfigPins.i2c_bus); }   },
-            {"Pinos UART",      [this]() { setUARTPinsMenu(bruceConfigPins.uart_bus); } },
-            {"Pinos GPS",       [this]() { setUARTPinsMenu(bruceConfigPins.gps_bus); }  },
+            {"Pinos CartaoSD",  [this]() { setSPIPinsMenu(willyConfigPins.SDCARD_bus); }},
+            {"Pinos I2C",       [this]() { setI2CPinsMenu(willyConfigPins.i2c_bus); }   },
+            {"Pinos UART",      [this]() { setUARTPinsMenu(willyConfigPins.uart_bus); } },
+            {"Pinos GPS",       [this]() { setUARTPinsMenu(willyConfigPins.gps_bus); }  },
             {"Serial USB",      [this]() { switchToUSBSerial(); }                       },
             {"Serial UART",     [this]() { switchToUARTSerial(); }                      },
-            {"Desativar Modo Dev", [this]() { bruceConfig.setDevMode(false); }             },
+            {"Desativar Modo Dev", [this]() { willyConfig.setDevMode(false); }             },
             {"Voltar",          []() {}                                                 },
         };
 
@@ -311,8 +311,8 @@ void ConfigMenu::switchToUARTSerial() {
     if (usbSerial.getSerialOutput() == &Serial1) return;
 
     // Check and resolve SD card pin conflicts
-    if (bruceConfigPins.SDCARD_bus.checkConflict(bruceConfigPins.uart_bus.rx) ||
-        bruceConfigPins.SDCARD_bus.checkConflict(bruceConfigPins.uart_bus.tx)) {
+    if (willyConfigPins.SDCARD_bus.checkConflict(willyConfigPins.uart_bus.rx) ||
+        willyConfigPins.SDCARD_bus.checkConflict(willyConfigPins.uart_bus.tx)) {
         if (sdcardMounted) {
             sdcardSPI.end();
             sdcardMounted = false;
@@ -320,17 +320,17 @@ void ConfigMenu::switchToUARTSerial() {
     }
 
     // Check and resolve CC1101/NRF24 pin conflicts
-    if (bruceConfigPins.CC1101_bus.checkConflict(bruceConfigPins.uart_bus.rx) ||
-        bruceConfigPins.CC1101_bus.checkConflict(bruceConfigPins.uart_bus.tx) ||
-        bruceConfigPins.NRF24_bus.checkConflict(bruceConfigPins.uart_bus.rx) ||
-        bruceConfigPins.NRF24_bus.checkConflict(bruceConfigPins.uart_bus.tx)) {
+    if (willyConfigPins.CC1101_bus.checkConflict(willyConfigPins.uart_bus.rx) ||
+        willyConfigPins.CC1101_bus.checkConflict(willyConfigPins.uart_bus.tx) ||
+        willyConfigPins.NRF24_bus.checkConflict(willyConfigPins.uart_bus.rx) ||
+        willyConfigPins.NRF24_bus.checkConflict(willyConfigPins.uart_bus.tx)) {
         CC_NRF_SPI.end();
     }
 
     // Configure UART pins and switch serial output
-    pinMode(bruceConfigPins.uart_bus.rx, INPUT);
-    pinMode(bruceConfigPins.uart_bus.tx, OUTPUT);
-    Serial1.begin(115200, SERIAL_8N1, bruceConfigPins.uart_bus.rx, bruceConfigPins.uart_bus.tx);
+    pinMode(willyConfigPins.uart_bus.rx, INPUT);
+    pinMode(willyConfigPins.uart_bus.tx, OUTPUT);
+    Serial1.begin(115200, SERIAL_8N1, willyConfigPins.uart_bus.rx, willyConfigPins.uart_bus.tx);
     usbSerial.setSerialOutput(&Serial1);
 }
 
@@ -356,8 +356,8 @@ void ConfigMenu::drawIcon(float scale) {
             2 * radius,
             startAngle,
             startAngle + toothWidth,
-            bruceConfig.priColor,
-            bruceConfig.bgColor,
+            willyConfig.priColor,
+            willyConfig.bgColor,
             true
         );
     }
@@ -371,8 +371,8 @@ void ConfigMenu::drawIcon(float scale) {
         radius,
         0,
         360,
-        bruceConfig.priColor,
-        bruceConfig.bgColor,
+        willyConfig.priColor,
+        willyConfig.bgColor,
         false
     );
 }
@@ -382,5 +382,5 @@ void ConfigMenu::drawIcon(float scale) {
 **  Stub for joystick configuration
 **********************************************************************/
 void ConfigMenu::joystickMenu() {
-    displayMessage("Módulo de Joystick\nem desenvolvimento.", "OK", nullptr, nullptr, bruceConfig.priColor);
+    displayMessage("Módulo de Joystick\nem desenvolvimento.", "OK", nullptr, nullptr, willyConfig.priColor);
 }

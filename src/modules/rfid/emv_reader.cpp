@@ -6,7 +6,7 @@
 
 void EMVReader::setup() {
   _cancelled = false;
-  switch (bruceConfigPins.rfidModule) {
+  switch (willyConfigPins.rfidModule) {
   case PN532_I2C_MODULE:
     _rfid = new PN532(PN532::CONNECTION_TYPE::I2C);
     break;

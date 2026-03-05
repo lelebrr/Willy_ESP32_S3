@@ -41,7 +41,7 @@ TagOMatic::~TagOMatic() {
 }
 
 void TagOMatic::set_rfid_module() {
-  switch (bruceConfigPins.rfidModule) {
+  switch (willyConfigPins.rfidModule) {
   case PN532_I2C_MODULE:
     _rfid = new PN532(PN532::CONNECTION_TYPE::I2C);
     break;
@@ -226,10 +226,10 @@ void TagOMatic::display_banner() {
 
   tft.setTextSize(FP);
   padprintln("");
-  tft.setTextColor(getColorVariation(bruceConfig.priColor),
-                   bruceConfig.bgColor);
+  tft.setTextColor(getColorVariation(willyConfig.priColor),
+                   willyConfig.bgColor);
   padprintln("Pressione [OK] para mudar.");
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   padprintln("");
 }
 
@@ -295,7 +295,7 @@ void TagOMatic::read_card() {
     return;
 
   if (_rfid->read() != RFIDInterface::SUCCESS) {
-    if (bruceConfigPins.rfidModule !=
+    if (willyConfigPins.rfidModule !=
         M5_RFID2_MODULE) { // Read felica if module is PN532
       if (_rfid->read(1) != RFIDInterface::SUCCESS)
         return;
@@ -627,7 +627,7 @@ void TagOMatic::save_scan_result() {
     return;
   }
 
-  file.println("Filetype: Bruce RFID Scan Result");
+  file.println("Filetype: Willy RFID Scan Result");
   for (String uid : _scanned_tags) {
     file.println(uid);
   }
@@ -777,9 +777,9 @@ int TagOMatic::load_file_headless(String filename) {
     return RFIDInterface::FAILURE;
   }
 
-  // Parse file .rfid (standard RFID format for Bruce)
+  // Parse file .rfid (standard RFID format for Willy)
 
-  // Filetype: Bruce RFID File
+  // Filetype: Willy RFID File
   // Version: 1
   // Device type: <tipo>
   // UID: <uid>

@@ -29,8 +29,8 @@ SRIXTool::~SRIXTool() { delete nfc; }
 
 void SRIXTool::setup() {
   // Use I2C pins from global config
-  int sda_pin = bruceConfigPins.i2c_bus.sda;
-  int scl_pin = bruceConfigPins.i2c_bus.scl;
+  int sda_pin = willyConfigPins.i2c_bus.sda;
+  int scl_pin = willyConfigPins.i2c_bus.scl;
 
   drawMainBorderWithTitle("SRIX TOOL");
   padprintln("");
@@ -206,7 +206,7 @@ void SRIXTool::show_main_menu() {
     return;
   }
 
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   tft.setTextSize(FP);
 
   padprintln("SRIX Tool for SRIX4K/512 v1.3");
@@ -223,10 +223,10 @@ void SRIXTool::show_main_menu() {
   padprintln("- Info modulo PN532");
   padprintln("");
 
-  tft.setTextColor(getColorVariation(bruceConfig.priColor),
-                   bruceConfig.bgColor);
+  tft.setTextColor(getColorVariation(willyConfig.priColor),
+                   willyConfig.bgColor);
   padprintln("Aperte [OK] p/ abrir menu");
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
   _screen_drawn = true;
 }
@@ -345,13 +345,13 @@ void SRIXTool::read_tag() {
   padprintln("");
   padprintln("");
   displaySuccess("Tag lida com sucesso!");
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   padprintln("");
 
-  tft.setTextColor(getColorVariation(bruceConfig.priColor),
-                   bruceConfig.bgColor);
+  tft.setTextColor(getColorVariation(willyConfig.priColor),
+                   willyConfig.bgColor);
   padprintln("Aperte [OK] p/ Menu Princ");
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
   _tag_read = true;
   _lastReadTime = millis();
@@ -475,7 +475,7 @@ void SRIXTool::write_tag() {
     padprintln("Nenhum bloco gravado");
   }
 
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   _lastReadTime = millis();
   delayWithReturn(3000);
   set_state(IDLE_MODE);
@@ -500,7 +500,7 @@ void SRIXTool::read_uid() {
 
   if (!nfc->SRIX_get_uid(_uid)) {
     displayError("Falha ao ler UID!");
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
     delay(2000);
     set_state(READ_UID_MODE);
     return;
@@ -520,7 +520,7 @@ void SRIXTool::read_uid() {
     uid_parts[group].toUpperCase();
   }
 
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   tft.setTextSize(FM);
   // Build and print directly
   String uid_line = "UID: ";
@@ -539,10 +539,10 @@ void SRIXTool::read_uid() {
   tft.setTextSize(FP);
   padprintln("");
 
-  tft.setTextColor(getColorVariation(bruceConfig.priColor),
-                   bruceConfig.bgColor);
+  tft.setTextColor(getColorVariation(willyConfig.priColor),
+                   willyConfig.bgColor);
   padprintln("Press [OK] for Main Menu");
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
   _lastReadTime = millis();
   _screen_drawn = true;
@@ -558,13 +558,13 @@ void SRIXTool::show_pn_info() {
   uint32_t ver = nfc->getFirmwareVersion();
   if (!ver) {
     displayError("Falha ao ler firmware!");
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
     delay(2000);
     set_state(IDLE_MODE);
     return;
   }
 
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   tft.setTextSize(FM);
   padprintln("PN532 Info:");
   tft.setTextSize(FP);
@@ -662,7 +662,7 @@ void SRIXTool::save_file() {
   }
 
   // Write header
-  file.println("Filetype: Bruce SRIX Dump");
+  file.println("Filetype: Willy SRIX Dump");
   file.println("UID: " + uid_str);
   file.println("Blocks: 128");
   file.println("Data size: 512");
@@ -881,7 +881,7 @@ void SRIXTool::load_file_data(FS *fs, String filepath) {
   _screen_drawn = false;
 
   display_banner();
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   tft.setTextSize(FM);
   padprintln("File:");
   padprintln(filename); // Rewrite for long filename
@@ -892,11 +892,11 @@ void SRIXTool::load_file_data(FS *fs, String filepath) {
   padprintln("");
   tft.setTextSize(FP);
 
-  tft.setTextColor(getColorVariation(bruceConfig.priColor),
-                   bruceConfig.bgColor);
+  tft.setTextColor(getColorVariation(willyConfig.priColor),
+                   willyConfig.bgColor);
   padprintln("Press [OK] to open menu");
   padprintln("Select 'Write tag' to write");
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
   _lastReadTime = millis();
   _screen_drawn = true;
@@ -923,8 +923,8 @@ SRIXTool::SRIXTool(bool headless_mode) {
   memset(_dump, 0, sizeof(_dump));
   memset(_uid, 0, sizeof(_uid));
 
-  int sda_pin = bruceConfigPins.i2c_bus.sda;
-  int scl_pin = bruceConfigPins.i2c_bus.scl;
+  int sda_pin = willyConfigPins.i2c_bus.sda;
+  int scl_pin = willyConfigPins.i2c_bus.scl;
 
   SRIX_LOG("[SRIX] I2C pins: SDA=%d, SCL=%d", sda_pin, scl_pin);
 
@@ -1169,7 +1169,7 @@ String SRIXTool::save_file_headless(String filename) {
   uid_str.toUpperCase();
 
   // Write header
-  file.println("Filetype: Bruce SRIX Dump");
+  file.println("Filetype: Willy SRIX Dump");
   file.println("UID: " + uid_str);
   file.println("Blocks: 128");
   file.println("Data size: 512");

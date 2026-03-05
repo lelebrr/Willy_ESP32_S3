@@ -42,7 +42,7 @@ function displayDeviceInfo() {
 
     // Display page title
     display.setTextSize(2 + fontScale);
-    display.setTextColor(BRUCE_PRICOLOR);
+    display.setTextColor(WILLY_PRICOLOR);
     display.drawText("Device Info", 10, 12);
 
     var y = 25 + fontScale * 10;
@@ -50,7 +50,7 @@ function displayDeviceInfo() {
     display.setTextColor(colours[1]);
     display.drawText("Version:", 10, y);
     display.setTextColor(colours[2]);
-    display.drawText(device.getBruceVersion(), displayWidth / 3 + 10, y);
+    display.drawText(device.getWillyVersion(), displayWidth / 3 + 10, y);
 
     y += 12 + fontScale * 5;
     display.setTextColor(colours[1]);
@@ -93,7 +93,7 @@ function displayBatteryInfo() {
 
     // Display page title
     display.setTextSize(2 + fontScale);
-    display.setTextColor(BRUCE_PRICOLOR);
+    display.setTextColor(WILLY_PRICOLOR);
     display.drawText("Battery Info", 10, 12);
 
     var battery = device.getBatteryDetailed();
@@ -149,7 +149,7 @@ function displayStorageInfo() {
 
     // Display page title
     display.setTextSize(2 + fontScale);
-    display.setTextColor(BRUCE_PRICOLOR);
+    display.setTextColor(WILLY_PRICOLOR);
     display.drawText("Storage Info", 10, 12);
 
     // Get storage space
@@ -235,7 +235,7 @@ function displayMemoryInfo() {
 
     // Display page title
     display.setTextSize(2 + fontScale);
-    display.setTextColor(BRUCE_PRICOLOR);
+    display.setTextColor(WILLY_PRICOLOR);
     display.drawText("Memory Info", 10, 12);
 
     // Get memory statistics
@@ -305,7 +305,7 @@ function displayScreenInfo() {
 
     // Display page title
     display.setTextSize(2 + fontScale);
-    display.setTextColor(BRUCE_PRICOLOR);
+    display.setTextColor(WILLY_PRICOLOR);
     display.drawText("Screen Info", 10, 12);
 
     // Display screen information

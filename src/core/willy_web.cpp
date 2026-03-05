@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "willy_logger.h"
 
-extern BruceConfig bruceConfig;
+extern WillyConfig willyConfig;
 
 void setupWillyWeb(AsyncWebServer* server) {
     // Serve assets from SD card if they exist

@@ -12,7 +12,7 @@ static std::vector<std::vector<uint8_t>> discovered_mj_macs;
 
 void perform_promiscuous_mj_scan(NRF24_MODE mode) {
     discovered_mj_macs.clear();
-    tft.fillRect(10, 70, tftWidth - 20, 20, bruceConfig.bgColor);
+    tft.fillRect(10, 70, tftWidth - 20, 20, willyConfig.bgColor);
     tft.setCursor(10, 70);
     tft.println("Scanning (Promisc)...");
 
@@ -84,7 +84,7 @@ void nrf_mousejack_injector() {
         return;
     }
 
-    tft.fillRect(10, 70, tftWidth - 20, 20, bruceConfig.bgColor);
+    tft.fillRect(10, 70, tftWidth - 20, 20, willyConfig.bgColor);
     tft.setCursor(10, 70);
     tft.printf("Targets found: %d", discovered_mj_macs.size());
 
@@ -113,7 +113,7 @@ void nrf_mousejack_injector() {
             if (success) {
                 injected_count++;
                 payload_idx = (payload_idx + 1) % 5;
-                tft.fillRect(10, 90, tftWidth - 20, 20, bruceConfig.bgColor);
+                tft.fillRect(10, 90, tftWidth - 20, 20, willyConfig.bgColor);
                 tft.setCursor(10, 90);
                 tft.printf("Injected! Total: %d", injected_count);
             }

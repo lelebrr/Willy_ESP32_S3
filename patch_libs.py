@@ -27,7 +27,9 @@ def patch_file(filepath: str, replacements: List[Tuple[str, str]]) -> None:
         print(f"Patch Script: Patched {filepath}")
 
 # 1. Patch mquickjs.c
-patch_file(".pio/libdeps/CYD-3248S035C/mquickjs/mquickjs.c", [
+# Generalizing path for Willy project
+env_path = ".pio/libdeps/willy_ili9341_custom"
+patch_file(f"{env_path}/mquickjs/mquickjs.c", [
     ('buf = "null";', 'buf = (char *)"null";'),
     ('buf = "undefined";', 'buf = (char *)"undefined";'),
     ('buf = "uninitialized";', 'buf = (char *)"uninitialized";'),
@@ -38,12 +40,12 @@ patch_file(".pio/libdeps/CYD-3248S035C/mquickjs/mquickjs.c", [
 ])
 
 # 2. Patch IRrecv.cpp
-patch_file(".pio/libdeps/CYD-3248S035C/IRremoteESP8266/src/IRrecv.cpp", [
+patch_file(f"{env_path}/IRremoteESP8266/src/IRrecv.cpp", [
     ("  }\n  params.rawlen++;", "  }\n  params.rawlen = params.rawlen + 1;")
 ])
 
 # 3. Patch chameleonUltra.cpp
-patch_file(".pio/libdeps/CYD-3248S035C/ESP Chameleon Ultra/src/chameleonUltra.cpp", [
+patch_file(f"{env_path}/ESP Chameleon Ultra/src/chameleonUltra.cpp", [
     ("uint8_t cmd[3] = {slot-1, freq, 0x01};", "uint8_t cmd[3] = {static_cast<uint8_t>(slot-1), freq, 0x01};"),
     ("uint8_t cmd[1] = {slot-1};", "uint8_t cmd[1] = {static_cast<uint8_t>(slot-1)};"),
     ("uint8_t cmd[3] = {slot-1, (tagType >> 8) & 0xFF, tagType & 0xFF};", "uint8_t cmd[3] = {static_cast<uint8_t>(slot-1), static_cast<uint8_t>((tagType >> 8) & 0xFF), static_cast<uint8_t>(tagType & 0xFF)};"),
@@ -51,19 +53,19 @@ patch_file(".pio/libdeps/CYD-3248S035C/ESP Chameleon Ultra/src/chameleonUltra.cp
 ])
 
 # 4. Patch libssh_esp32_compat.c
-patch_file(".pio/libdeps/CYD-3248S035C/LibSSH-ESP32/src/libssh_esp32_compat.c", [
+patch_file(f"{env_path}/LibSSH-ESP32/src/libssh_esp32_compat.c", [
     ('static struct passwd p =\n  { LIBSSH_ESP32_COMPAT_USERNAME, /* password: */"", LIBSSH_ESP32_COMPAT_UID,\n    LIBSSH_ESP32_COMPAT_GID, /* comment: */"", /* gecos: */"",\n    LIBSSH_ESP32_COMPAT_HOMEDIR, /* shell: */"" };',
      'static struct passwd p =\n  { (char *)LIBSSH_ESP32_COMPAT_USERNAME, /* password: */(char *)"", LIBSSH_ESP32_COMPAT_UID,\n    LIBSSH_ESP32_COMPAT_GID, /* comment: */(char *)"", /* gecos: */(char *)"",\n    (char *)LIBSSH_ESP32_COMPAT_HOMEDIR, /* shell: */(char *)"" };')
 ])
 
 # 5. Patch OneWire.cpp
-patch_file(".pio/libdeps/CYD-3248S035C/OneWire/OneWire.cpp", [
+patch_file(f"{env_path}/OneWire/OneWire.cpp", [
     ('#  undef noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)', '#  undef noInterrupts'),
     ('#  undef interrupts() portEXIT_CRITICAL(&mux);}', '#  undef interrupts')
 ])
 
 # 6. Patch pfs.c
-patch_file(".pio/libdeps/CYD-3248S035C/ESP32-PSRamFS/src/pfs.c", [
+patch_file(f"{env_path}/ESP32-PSRamFS/src/pfs.c", [
     ('#warning "Will use PSRAM or heap"', '// #warning "Will use PSRAM or heap"'),
     ('#warning "No SPIRAM detected, will use heap"', '// #warning "No SPIRAM detected, will use heap"')
 ])

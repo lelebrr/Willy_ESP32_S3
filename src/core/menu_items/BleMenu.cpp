@@ -80,8 +80,8 @@ void BleMenu::drawIcon(float scale) {
         iconCenterX - iconW,
         iconCenterY - iconH / 4,
         lineWidth,
-        bruceConfig.priColor,
-        bruceConfig.priColor
+        willyConfig.priColor,
+        willyConfig.priColor
     );
     tft.drawWideLine(
         iconCenterX,
@@ -89,8 +89,8 @@ void BleMenu::drawIcon(float scale) {
         iconCenterX - iconW,
         iconCenterY + iconH / 4,
         lineWidth,
-        bruceConfig.priColor,
-        bruceConfig.priColor
+        willyConfig.priColor,
+        willyConfig.priColor
     );
     tft.drawWideLine(
         iconCenterX,
@@ -98,8 +98,8 @@ void BleMenu::drawIcon(float scale) {
         iconCenterX - iconW / 2,
         iconCenterY + iconH / 2,
         lineWidth,
-        bruceConfig.priColor,
-        bruceConfig.priColor
+        willyConfig.priColor,
+        willyConfig.priColor
     );
     tft.drawWideLine(
         iconCenterX,
@@ -107,8 +107,8 @@ void BleMenu::drawIcon(float scale) {
         iconCenterX - iconW / 2,
         iconCenterY - iconH / 2,
         lineWidth,
-        bruceConfig.priColor,
-        bruceConfig.priColor
+        willyConfig.priColor,
+        willyConfig.priColor
     );
 
     tft.drawWideLine(
@@ -117,8 +117,8 @@ void BleMenu::drawIcon(float scale) {
         iconCenterX - iconW / 2,
         iconCenterY + iconH / 2,
         lineWidth,
-        bruceConfig.priColor,
-        bruceConfig.priColor
+        willyConfig.priColor,
+        willyConfig.priColor
     );
 
     tft.drawArc(
@@ -128,8 +128,8 @@ void BleMenu::drawIcon(float scale) {
         2 * radius,
         210,
         330,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
     tft.drawArc(
         iconCenterX,
@@ -138,8 +138,8 @@ void BleMenu::drawIcon(float scale) {
         2 * radius + deltaRadius,
         210,
         330,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
     tft.drawArc(
         iconCenterX,
@@ -148,8 +148,8 @@ void BleMenu::drawIcon(float scale) {
         2 * radius + 2 * deltaRadius,
         210,
         330,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
 }
 
@@ -160,16 +160,16 @@ void BleMenu::drawIcon(float scale) {
 void BleMenu::setBleNameMenu() {
     const String defaultBleName = "Keyboard_" + String((uint8_t)(ESP.getEfuseMac() >> 32), HEX);
 
-    const bool isDefault = bruceConfigPins.bleName == defaultBleName;
+    const bool isDefault = willyConfigPins.bleName == defaultBleName;
 
     options = {
-        {"Padrao", [=]() { bruceConfigPins.setBleName(defaultBleName); }, isDefault },
+        {"Padrao", [=]() { willyConfigPins.setBleName(defaultBleName); }, isDefault },
         {"Custom",
          [=]() {
-             String newBleName = keyboard(bruceConfigPins.bleName, 30, "Nome Disp BLE:");
+             String newBleName = keyboard(willyConfigPins.bleName, 30, "Nome Disp BLE:");
              if (newBleName != "\x1B") {
                  if (newBleName.length() > 0 && newBleName.length() <= 30) {
-                     bruceConfigPins.setBleName(newBleName);
+                     willyConfigPins.setBleName(newBleName);
                  } else if (newBleName.isEmpty()) {
                      displayError("Nome BLE nao pode ser vazio", true);
                  } else {

@@ -65,7 +65,7 @@ void channelAnalyzer() {
     // Atualiza display
     if (millis() - last_update > 500) {
       drawMainBorderWithTitle("Channel Analyzer");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
 
       // Mostra canais mais ocupados
@@ -155,7 +155,7 @@ void packetCounter() {
 
     if (millis() - last_update > 1000) {
       drawMainBorderWithTitle("Packet Counter");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("Total: " + String(total_packets));
       padprintln("");
@@ -231,7 +231,7 @@ void detectPwnagotchi() {
 
     if (millis() - last_update > 500) {
       drawMainBorderWithTitle("Detect Pwnagotchi");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("Pwnagotchis detectados: " + String(detected.size()));
       padprintln("");
@@ -239,7 +239,7 @@ void detectPwnagotchi() {
       for (const auto &pwn : detected) {
         tft.setTextColor(TFT_RED);
         padprintln(pwn.identity);
-        tft.setTextColor(bruceConfig.priColor);
+        tft.setTextColor(willyConfig.priColor);
         padprintln("  MAC: " + macToString(pwn.mac));
         padprintln("  Ch: " + String(pwn.channel) +
                    " RSSI: " + String(pwn.rssi));
@@ -270,7 +270,7 @@ void scanAllNetworks() {
   int nets = WiFi.scanNetworks(false, true);
 
   drawMainBorderWithTitle("Scan All");
-  tft.setTextColor(bruceConfig.priColor);
+  tft.setTextColor(willyConfig.priColor);
   padprintln("");
   padprintln("Redes encontradas: " + String(nets));
   padprintln("");
@@ -292,12 +292,12 @@ void scanAllNetworks() {
       tft.setTextColor(TFT_YELLOW);
       padprintln("[WPA3] " + line);
     } else {
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln(line);
     }
   }
 
-  tft.setTextColor(bruceConfig.priColor);
+  tft.setTextColor(willyConfig.priColor);
   padprintln("");
   padprintln("Pressione qualquer tecla");
 
@@ -338,7 +338,7 @@ void saeCommitCapture() {
 
     if (millis() - last_update > 500) {
       drawMainBorderWithTitle("SAE Commit Capture");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("Commits capturados: " + String(captures.size()));
       padprintln("");
@@ -556,7 +556,7 @@ void portScanAll() {
         tft.setTextColor(TFT_GREEN);
         padprintln(String(r.port) + " " + r.service);
       }
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("ESC para parar");
     }
@@ -794,7 +794,7 @@ void probeRequestFlood() {
       padprintln("");
       tft.setTextColor(TFT_YELLOW);
       padprintln("Redes visiveis no ambiente");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("ESC para parar");
       last_update = millis();
@@ -973,7 +973,7 @@ void karmaAttack() {
       padprintln("");
       tft.setTextColor(TFT_YELLOW);
       padprintln("Aguardando conexoes...");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("ESC para parar");
       last_update = millis();
@@ -1031,7 +1031,7 @@ void badMessageAttack() {
       padprintln("Pode causar crash");
       padprintln("em dispositivos");
       padprintln("vulneraveis!");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("ESC para parar");
       last_update = millis();
@@ -1080,7 +1080,7 @@ void sleepAttack() {
       tft.setTextColor(TFT_YELLOW);
       padprintln("Dispositivos nao");
       padprintln("podem dormir");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("ESC para parar");
       last_update = millis();
@@ -1151,7 +1151,7 @@ void saeCommitFlood() {
       padprintln("Pode afetar APs");
       padprintln("com implementacao");
       padprintln("vulneravel");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("ESC para parar");
       last_update = millis();

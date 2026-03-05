@@ -10,12 +10,12 @@
 #define ALCOLOR TFT_RED
 
 #include "SerialDevice.h"
-#include "core/USBSerial/BruceUSBSerial.h"
+#include "core/USBSerial/WillyUSBSerial.h"
 #include "core/config.h"
 #include "core/configPins.h"
-#include "willy_logger.h"
 #include "core/serial_commands/cli.h"
 #include "core/startup_app.h"
+#include "willy_logger.h"
 #include <Arduino.h>
 #include <ESP32Time.h>
 #include <LittleFS.h>
@@ -24,6 +24,7 @@
 #include <functional>
 #include <io_expander/io_expander.h> // ./lib/HAL
 #include <vector>
+
 extern io_expander ioExpander;
 
 #if defined(HAS_RTC)
@@ -40,8 +41,9 @@ extern RTC_DateTypeDef _date;
 
 // Declaração dos objetos TFT
 #if defined(HAS_SCREEN)
-#include <display/tft.h>
 #include "tftLogger.h"
+#include <display/tft.h>
+
 extern tft_logger tft;
 extern tft_sprite sprite;
 extern tft_sprite draw;
@@ -67,10 +69,11 @@ extern XPowersPPM PPM;
 extern XPowersPPM PPM;
 #endif
 
-extern int8_t interpreter_state; // -1 - stopped, 0 - background, 1 - waiting for foreground, 2 - foreground
+extern int8_t interpreter_state; // -1 - stopped, 0 - background, 1 - waiting
+                                 // for foreground, 2 - foreground
 
-extern BruceConfig bruceConfig;
-extern BruceConfigPins bruceConfigPins;
+extern WillyConfig willyConfig;
+extern WillyConfigPins willyConfigPins;
 extern SerialCli serialCli;
 extern SerialDevice *serialDevice;
 extern WillyUSBSerial usbSerial;
@@ -102,68 +105,70 @@ extern bool BLEConnected; // inform if BLE is active or not
 extern bool gpsConnected; // inform if GPS is active or not
 
 struct Option {
-    String label;
-    std::function<void()> operation;
-    bool selected = false;
-    bool (*hover)(void *hoverPointer, bool shouldRender);
-    void *hoverPointer;
-    bool hovered; // return to the remote (webui or app) if it is hovered on the loopoptions
+  String label;
+  std::function<void()> operation;
+  bool selected = false;
+  bool (*hover)(void *hoverPointer, bool shouldRender);
+  void *hoverPointer;
+  bool hovered; // return to the remote (webui or app) if it is hovered on the
+                // loopoptions
 
-    Option(
-        String lbl, const std::function<void()> &op, bool sel = false,
-        bool (*hov)(void *hoverPointer, bool shouldRender) =
-            nullptr, // hover lambda returns true if it already handled rendering
-        void *ptr = nullptr, bool hvrd = false
-    )
-        : label(lbl), operation(op), selected(sel), hover(hov), hoverPointer(ptr), hovered(hvrd) {}
+  Option(
+      String lbl, const std::function<void()> &op, bool sel = false,
+      bool (*hov)(void *hoverPointer, bool shouldRender) =
+          nullptr, // hover lambda returns true if it already handled rendering
+      void *ptr = nullptr, bool hvrd = false)
+      : label(lbl), operation(op), selected(sel), hover(hov), hoverPointer(ptr),
+        hovered(hvrd) {}
 
-    // Explicit constructor for common {string, function} initialization
-    Option(const char* lbl, std::function<void()> op)
-        : label(lbl), operation(op), selected(false), hover(nullptr), hoverPointer(nullptr), hovered(false) {}
+  // Explicit constructor for common {string, function} initialization
+  Option(const char *lbl, std::function<void()> op)
+      : label(lbl), operation(op), selected(false), hover(nullptr),
+        hoverPointer(nullptr), hovered(false) {}
 };
 
 struct keyStroke { // DO NOT CHANGE IT!!!!!
-    bool pressed = false;
-    bool exit_key = false;
-    bool fn = false;
-    bool del = false;
-    bool enter = false;
-    bool alt = false;
-    bool ctrl = false;
-    bool gui = false;
-    uint8_t modifiers = 0;
-    std::vector<char> word;
-    std::vector<uint8_t> hid_keys;
-    std::vector<uint8_t> modifier_keys;
+  bool pressed = false;
+  bool exit_key = false;
+  bool fn = false;
+  bool del = false;
+  bool enter = false;
+  bool alt = false;
+  bool ctrl = false;
+  bool gui = false;
+  uint8_t modifiers = 0;
+  std::vector<char> word;
+  std::vector<uint8_t> hid_keys;
+  std::vector<uint8_t> modifier_keys;
 
-    // Clear function
-    void Clear() {
-        pressed = false;
-        exit_key = false;
-        fn = false;
-        del = false;
-        enter = false;
-        alt = false;
-        ctrl = false;
-        gui = false;
-        modifiers = 0;
-        word.clear();
-        hid_keys.clear();
-        modifier_keys.clear();
-    }
+  // Clear function
+  void Clear() {
+    pressed = false;
+    exit_key = false;
+    fn = false;
+    del = false;
+    enter = false;
+    alt = false;
+    ctrl = false;
+    gui = false;
+    modifiers = 0;
+    word.clear();
+    hid_keys.clear();
+    modifier_keys.clear();
+  }
 };
 
 struct TouchPoint {
-    bool pressed = false;
-    uint16_t x;
-    uint16_t y;
+  bool pressed = false;
+  uint16_t x;
+  uint16_t y;
 
-    // clear touch to better handle tasks
-    void Clear(void) {
-        pressed = false;
-        x = 0;
-        y = 0;
-    }
+  // clear touch to better handle tasks
+  void Clear(void) {
+    pressed = false;
+    x = 0;
+    y = 0;
+  }
 };
 
 extern TouchPoint touchPoint;
@@ -172,14 +177,15 @@ extern std::vector<Option> options;
 
 template <typename R, typename... Args>
 std::function<void()> lambdaHelper(R (*callback)(Args...), Args... args) {
-    return [=]() { (void)callback(args...); };
+  return [=]() { (void)callback(args...); };
 }
 
 extern String fileToCopy;
 
 extern const int bufSize;
 
-extern bool returnToMenu; // variable to check and break loops to return to main menu
+extern bool
+    returnToMenu; // variable to check and break loops to return to main menu
 
 extern String cachedPassword;
 
@@ -215,7 +221,8 @@ extern volatile bool SerialCmdPress;
 
 extern volatile int forceMenuOption;
 
-extern volatile uint8_t menuOptionType; // updates when drawing loopoptions, to send to remote controller
+extern volatile uint8_t menuOptionType; // updates when drawing loopoptions, to
+                                        // send to remote controller
 
 extern String menuOptionLabel;
 
@@ -227,28 +234,34 @@ extern TaskHandle_t xHandle;
 extern inline bool check(volatile bool &btn, bool resetButtonStatus = true) {
 
 #ifndef USE_TFT_eSPI_TOUCH
-    if (!btn) return false;
-    if (xHandle != NULL) vTaskSuspend(xHandle);
-    if (resetButtonStatus) {
-        btn = false;
-        AnyKeyPress = false;
-        SerialCmdPress = false;
-    }
-    delay(10);
-    if (xHandle != NULL) vTaskResume(xHandle);
-    return true;
-#else
-
-    InputHandler();
-    if (!btn) return false;
+  if (!btn)
+    return false;
+  if (xHandle != NULL)
+    vTaskSuspend(xHandle);
+  if (resetButtonStatus) {
     btn = false;
     AnyKeyPress = false;
     SerialCmdPress = false;
-    return true;
+  }
+  delay(10);
+  if (xHandle != NULL)
+    vTaskResume(xHandle);
+  return true;
+#else
+
+  InputHandler();
+  if (!btn)
+    return false;
+  btn = false;
+  AnyKeyPress = false;
+  SerialCmdPress = false;
+  return true;
 
 #endif
 }
 
 extern gpio_num_t mic_bclk_pin; // used to configure Cardputer ADV Microphone
+
+extern SemaphoreHandle_t spiMutex;
 
 #endif

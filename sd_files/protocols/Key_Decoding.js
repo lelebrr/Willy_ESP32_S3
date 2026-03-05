@@ -6,9 +6,9 @@ const keyboard = require("keyboard");
 const displayWidth = display.width();
 const displayHeight = display.height();
 
-const bgColor = BRUCE_BGCOLOR;
-const priColor = BRUCE_PRICOLOR;
-const secColor = BRUCE_SECCOLOR;
+const bgColor = WILLY_BGCOLOR;
+const priColor = WILLY_PRICOLOR;
+const secColor = WILLY_SECCOLOR;
 
 const version = "1.14.1";
 

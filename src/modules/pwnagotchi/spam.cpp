@@ -141,13 +141,13 @@ void beacon_task(void *pvParameters) {
 }
 
 void displaySpamStatus() {
-    tft.fillScreen(bruceConfig.bgColor);
+    tft.fillScreen(willyConfig.bgColor);
     drawTopCanvas();
     drawBottomCanvas();
-    tft.fillRect(0, 20, tftWidth, tftHeight - 40, bruceConfig.bgColor);
+    tft.fillRect(0, 20, tftWidth, tftHeight - 40, willyConfig.bgColor);
     tft.setTextSize(1.5);
     tft.setCursor(0, 20);
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
     tft.println("PwnGrid Spam Running...");
 
 #if defined(HAS_TOUCH)
@@ -244,7 +244,7 @@ void loadFacesAndNames() {
         faces[i++] = "♬♪♬♪♬♪♬";
         faces[i++] = "(X‿‿X)";
         faces[i++] = "(u W u)";
-        faces[i++] = "(BRUCE)";
+        faces[i++] = "(WILLY)";
         faces[i++] = "(.)(.)";
         faces[i++] = "ლ(o_oლ)";
         faces[i++] = "(O﹏o)";
@@ -255,15 +255,15 @@ void loadFacesAndNames() {
         faces[i++] = "NOPWND!\n■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■";
         num_faces = i;
         i = 0;
-        names[i++] = "my name is... BRUCE!";
-        names[i++] = "Check M5 Bruce Project";
+        names[i++] = "my name is... WILLY!";
+        names[i++] = "Check M5 Willy Project";
         names[i++] = "┌∩┐(◣_◢)┌∩┐";
         names[i++] = "(╯°□°)╯╭╮(XoX)";
         names[i++] = "STOP DEAUTH SKIDZ!";
         names[i++] = "System Breached oups";
         names[i++] = "Unauthorized  Access";
         names[i++] = "Security  Compromised.. reboot";
-        names[i++] = "Warning...Bruce's here";
+        names[i++] = "Warning...Willy's here";
         names[i++] = "Critical Error need reboot";
         names[i++] = "No more Battery";
         names[i++] = "Never gonna give you up";
@@ -360,7 +360,7 @@ void send_pwnagotchi_beacon_main() {
     spamRunning = true;
 
     // Clear screen
-    tft.fillRect(0, 20, tftWidth, tftHeight - 40, bruceConfig.bgColor);
+    tft.fillRect(0, 20, tftWidth, tftHeight - 40, willyConfig.bgColor);
 
     // Créer la tâche beacon
     xTaskCreate(&beacon_task, "beacon_task", 4096, NULL, 5, NULL);

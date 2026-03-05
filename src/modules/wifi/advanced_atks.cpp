@@ -120,7 +120,7 @@ void deinitAdvancedAttackMode() {
     vTaskDelay(pdMS_TO_TICKS(100));
   }
   if (WiFi.status() != WL_CONNECTED &&
-      WiFi.softAPSSID() != bruceConfig.wifiAp.ssid) {
+      WiFi.softAPSSID() != willyConfig.wifiAp.ssid) {
     wifiDisconnect();
   }
 }
@@ -202,7 +202,7 @@ void dynamicBeaconFuzzer() {
     return;
 
   drawMainBorderWithTitle("Beacon Fuzzer");
-  tft.setTextColor(bruceConfig.priColor);
+  tft.setTextColor(willyConfig.priColor);
   padprintln("");
   padprintln("Enviando beacons malformados...");
   padprintln("Pressione ESC para parar");
@@ -322,7 +322,7 @@ void dynamicBeaconFuzzer() {
     // Atualiza display
     if (millis() - last_update > 1000) {
       drawMainBorderWithTitle("Beacon Fuzzer");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("Enviando beacons malformados...");
       padprintln("");
@@ -480,7 +480,7 @@ void clientBatteryDrain() {
     // Atualiza display
     if (millis() - last_update > 1000) {
       drawMainBorderWithTitle("Battery Drain");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("Injetando PS-Poll frames...");
       padprintln("");
@@ -557,7 +557,7 @@ void visualWifiHeatmap() {
     }
 
     // Limpa área do mapa
-    tft.fillRect(10, margin_top, map_width, map_height, bruceConfig.bgColor);
+    tft.fillRect(10, margin_top, map_width, map_height, willyConfig.bgColor);
 
     // Desenha grid
     tft.setTextColor(TFT_DARKGREY);
@@ -616,7 +616,7 @@ void visualWifiHeatmap() {
     }
 
     // Desenha legenda
-    tft.setTextColor(bruceConfig.priColor);
+    tft.setTextColor(willyConfig.priColor);
     tft.setTextSize(FM);
     tft.setCursor(10, display_height - margin_bottom + 5);
     tft.print("Redes: " + String(nets));
@@ -837,7 +837,7 @@ void wpa3DowngradeAttack() {
     // Atualiza display
     if (millis() - last_update > 1000) {
       drawMainBorderWithTitle("WPA3 Downgrade");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("Alvo: " + target_ssid);
       padprintln("Canal: " + String(target_channel));
@@ -848,7 +848,7 @@ void wpa3DowngradeAttack() {
       padprintln("");
       tft.setTextColor(TFT_YELLOW);
       padprintln("Clientes podem conectar com WPA2");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("ESC para parar");
       last_update = millis();
@@ -1020,7 +1020,7 @@ void iotExploitInjector() {
     // Atualiza display
     if (millis() - last_update > 1000) {
       drawMainBorderWithTitle("IoT Exploit");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("Alvo: " + target_ssid);
       padprintln("Vendor: " + String(entry.vendor));
@@ -1147,7 +1147,7 @@ void meshDisruptor() {
     // Atualiza display
     if (millis() - last_update > 1000) {
       drawMainBorderWithTitle("Mesh Disruptor");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("Enviando Path Request frames...");
       padprintln("");
@@ -1156,7 +1156,7 @@ void meshDisruptor() {
       padprintln("");
       tft.setTextColor(TFT_YELLOW);
       padprintln("Redes mesh serao afetadas");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("ESC para parar");
       last_update = millis();
@@ -1273,7 +1273,7 @@ void smartDeauthScheduler() {
     // Atualiza display
     if (now - last_update > 500) {
       drawMainBorderWithTitle("Smart Deauth");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("Alvo: " + active_schedule.target_ssid);
       padprintln("Canal: " + String(active_schedule.channel));
@@ -1512,14 +1512,14 @@ void sessionHijackPortal() {
     // Atualiza display
     if (millis() - last_update > 500) {
       drawMainBorderWithTitle("Session Hijack");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("AP: " + ap_name);
       padprintln("IP: " + apIP.toString());
       padprintln("");
       tft.setTextColor(TFT_GREEN);
       padprintln("Sessoes capturadas: " + String(captured_sessions.size()));
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
 
       // Mostra última sessão
@@ -1678,7 +1678,7 @@ void mgmtFrameBypassFlood() {
     // Atualiza display
     if (millis() - last_update > 1000) {
       drawMainBorderWithTitle("Mgmt Frame Bypass");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("Enviando frames furtivos...");
       padprintln("");
@@ -1688,7 +1688,7 @@ void mgmtFrameBypassFlood() {
       padprintln("");
       tft.setTextColor(TFT_YELLOW);
       padprintln("Modo: Abaixo do radar WIDS");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
       padprintln("");
       padprintln("ESC para parar");
       last_update = millis();

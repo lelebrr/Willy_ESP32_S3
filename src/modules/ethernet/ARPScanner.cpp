@@ -179,8 +179,8 @@ void ARPScanner::setup() {
         if (millis() - lastUpdate > 500) { // Update display every 500ms
             displayRedStripe(
                 "Sondando " + String(hostsScanned) + " de " + String(totalHosts) + " hosts",
-                getComplementaryColor2(bruceConfig.priColor),
-                bruceConfig.priColor
+                getComplementaryColor2(willyConfig.priColor),
+                willyConfig.priColor
             );
             lastUpdate = millis();
         }
@@ -322,7 +322,7 @@ void ARPScanner::afterScanOptions(const ScanHosts::Host &host) {
         {"MAC Flooding",    [=]() { MACFlooding(); }         },
 #endif
     };
-    // if(sdcardMounted && bruceConfig.devMode) options.push_back({"ARP MITM (WIP)",  [&](){ opt=5;  }});
+    // if(sdcardMounted && willyConfig.devMode) options.push_back({"ARP MITM (WIP)",  [&](){ opt=5;  }});
     loopOptions(options);
     if (opt == 5) {
         Serial.println("Starting MITM");

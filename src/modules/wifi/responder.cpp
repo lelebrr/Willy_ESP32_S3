@@ -200,8 +200,8 @@ String readUTF16(uint8_t* pkt, uint32_t offset, uint16_t len) {
 }
 
 void updateHashUI() {
-    tft.fillScreen(bruceConfig.bgColor);
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.fillScreen(willyConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
     char buf[64];
 
@@ -565,19 +565,19 @@ void decodeNetBIOSLabel(const uint8_t* enc32, char* out, size_t outSize) {
 ***************************************************************************************/
 void responder() {
 
-  tft.fillScreen(bruceConfig.bgColor);
-  //M5Cardputer.Display.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
+  //M5Cardputer.Display.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   if (!wifiConnected) wifiConnectMenu();
 
-  String tmp_name = keyboard("Bruce", 20);
+  String tmp_name = keyboard("Willy", 20);
   strncpy(netbiosname_str, tmp_name.c_str(), sizeof(netbiosname_str)-1);
   netbiosName = netbiosname_str;
 
-  String tmp_domain = keyboard("BRUCEGROUP", 20);
+  String tmp_domain = keyboard("WILLYGROUP", 20);
   strncpy(netbiosdomain_str, tmp_domain.c_str(), sizeof(netbiosdomain_str)-1);
   netbiosDomain = netbiosdomain_str;
 
-  String tmp_dns = keyboard("Bruce.Local", 20);
+  String tmp_dns = keyboard("Willy.Local", 20);
   strncpy(dnsdomain_str, tmp_dns.c_str(), sizeof(dnsdomain_str)-1);
   dnsDomain = dnsdomain_str;
 

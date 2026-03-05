@@ -1,5 +1,5 @@
-#ifndef __BRUCE_CONFIG_H__
-#define __BRUCE_CONFIG_H__
+#ifndef __WILLY_CONFIG_H__
+#define __WILLY_CONFIG_H__
 
 #include "theme.h"
 #include <Arduino.h>
@@ -11,7 +11,7 @@
 
 enum EvilPortalPasswordMode { FULL_PASSWORD = 0, FIRST_LAST_CHAR = 1, HIDE_PASSWORD = 2, SAVE_LENGTH = 3 };
 
-class BruceConfig : public BruceTheme {
+class WillyConfig : public WillyTheme {
 public:
     struct WiFiCredential {
         String ssid;
@@ -33,7 +33,7 @@ public:
         bool allowGetCreds;
     };
 
-    const char *filepath = "/bruce.conf";
+    const char *filepath = "/willy.conf";
 
     //  Settings
     int dimmerSet = 10;
@@ -100,8 +100,8 @@ public:
     /////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     /////////////////////////////////////////////////////////////////////////////////////
-    BruceConfig() {};
-    // ~BruceConfig();
+    WillyConfig() {};
+    // ~WillyConfig();
 
     /////////////////////////////////////////////////////////////////////////////////////
     // Operations

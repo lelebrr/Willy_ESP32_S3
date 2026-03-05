@@ -9,8 +9,8 @@ public:
 
     void optionsMenu(void);
     void drawIcon(float scale);
-    bool hasTheme() { return bruceConfig.theme.fm; }
-    String themePath() { return bruceConfig.theme.paths.fm; }
+    bool hasTheme() { return willyConfig.theme.fm; }
+    String themePath() { return willyConfig.theme.paths.fm; }
 };
 
 #endif

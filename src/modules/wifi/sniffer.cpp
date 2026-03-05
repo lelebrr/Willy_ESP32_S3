@@ -1085,8 +1085,8 @@ void sniffer_setup() {
                         15,
                         0,
                         360 * (millis() - _tmp) / 700,
-                        getColorVariation(bruceConfig.priColor),
-                        bruceConfig.bgColor
+                        getColorVariation(willyConfig.priColor),
+                        willyConfig.bgColor
                     );
                 vTaskDelay(10 / portTICK_RATE_MS);
             }
@@ -1184,7 +1184,7 @@ void sniffer_setup() {
             drawMainBorderWithTitle("pcap sniffer", clearScreen); // Clear Screen and redraw border
             clearScreen = false;
             tft.setTextSize(FP);
-            tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+            tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
             String activeFile = "File: ";
             if (sniffer_get_mode() == SnifferMode::Full && rawCaptureEnabled()) {
                 activeFile += FileSys + ":" + filename;
@@ -1196,12 +1196,12 @@ void sniffer_setup() {
             padprintln(activeFile);
             padprintln("Sniffer Mode: " + currentModeString());
             if (deauth) {
-                tft.setTextColor(bruceConfig.bgColor, bruceConfig.priColor);
+                tft.setTextColor(willyConfig.bgColor, willyConfig.priColor);
                 padprintln(
                     "Deauth: in " + String((DEAUTH_INTERVAL - (millis() - deauth_tmp)) / 1000) + "s, total " +
                     String(deauth_counter) + " pkts sent"
                 );
-                tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+                tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
             } else padprintln("Silent mode.");
 
@@ -1226,7 +1226,7 @@ void sniffer_setup() {
             }
 
             // make a nice reverse video bar
-            tft.setTextColor(bruceConfig.bgColor, bruceConfig.priColor);
+            tft.setTextColor(willyConfig.bgColor, willyConfig.priColor);
             tft.drawRightString(
                 "Ch" +
                     String(

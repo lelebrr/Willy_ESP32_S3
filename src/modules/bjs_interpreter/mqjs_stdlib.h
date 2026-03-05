@@ -879,7 +879,7 @@ static const uint32_t __attribute((aligned(64))) js_stdlib_table[] = {
   0x4d746567,
   0x6c65646f,
   0x00000000,
-  (JS_MTAG_STRING << 1) | (1 << JS_MTAG_BITS) | (1 << (JS_MTAG_BITS + 1)) | (0 << (JS_MTAG_BITS + 2)) | (15 << (JS_MTAG_BITS + 3)), /* "getBruceVersion" (offset=872) */
+  (JS_MTAG_STRING << 1) | (1 << JS_MTAG_BITS) | (1 << (JS_MTAG_BITS + 1)) | (0 << (JS_MTAG_BITS + 2)) | (15 << (JS_MTAG_BITS + 3)), /* "getWillyVersion" (offset=872) */
   0x42746567,
   0x65637572,
   0x73726556,
@@ -1609,7 +1609,7 @@ static const uint32_t __attribute((aligned(64))) js_stdlib_table[] = {
   JS_ROM_VALUE(883), /* getBatteryDetailed */
   JS_ROM_VALUE(864), /* getBoard */
   JS_ROM_VALUE(1035), /* getBrightness */
-  JS_ROM_VALUE(872), /* getBruceVersion */
+  JS_ROM_VALUE(872), /* getWillyVersion */
   JS_ROM_VALUE(894), /* getEEPROMSize */
   JS_ROM_VALUE(1200), /* getEscPress */
   JS_ROM_VALUE(889), /* getFreeHeapSize */
@@ -3295,7 +3295,7 @@ static const uint32_t __attribute((aligned(64))) js_stdlib_table[] = {
   JS_ROM_VALUE(868) /* getModel */,
   JS_VALUE_MAKE_SPECIAL(JS_TAG_SHORT_FUNC, 158),
   (9 << 1) | (JS_PROP_NORMAL << 30),
-  JS_ROM_VALUE(872) /* getBruceVersion */,
+  JS_ROM_VALUE(872) /* getWillyVersion */,
   JS_VALUE_MAKE_SPECIAL(JS_TAG_SHORT_FUNC, 159),
   (12 << 1) | (JS_PROP_NORMAL << 30),
   JS_ROM_VALUE(877) /* getBatteryCharge */,
@@ -4762,8 +4762,8 @@ static const JSCFunctionDef js_c_function_table[] = {
   { { .generic = native_getBoard },
     JS_ROM_VALUE(868) /* getModel */,
     JS_CFUNC_generic, 0, 0 },
-  { { .generic = native_getBruceVersion },
-    JS_ROM_VALUE(872) /* getBruceVersion */,
+  { { .generic = native_getWillyVersion },
+    JS_ROM_VALUE(872) /* getWillyVersion */,
     JS_CFUNC_generic, 0, 0 },
   { { .generic = native_getBattery },
     JS_ROM_VALUE(877) /* getBatteryCharge */,

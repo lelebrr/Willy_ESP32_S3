@@ -41,7 +41,7 @@ class RelayServerCallbacks : public BLEServerCallbacks {
 };
 
 static void setupRelayBLE(bool isServer) {
-  BLEDevice::init("BRUCE-NFC-RELAY");
+  BLEDevice::init("WILLY-NFC-RELAY");
   if (isServer) {
     relayServer = BLEDevice::createServer();
     relayServer->setCallbacks(new RelayServerCallbacks());
@@ -209,7 +209,7 @@ void APDUCommandFuzzer() {
       // Update UI
       if (fuzzedCount % 10 == 0) {
         tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20,
-                     bruceConfig.bgColor);
+                     willyConfig.bgColor);
         tft.setCursor(10, tftHeight / 2 + 20);
         tft.print("APDUs Enviados: ");
         tft.print(fuzzedCount);
@@ -230,8 +230,8 @@ void DynamicUIDCollision() {
   PN532 *nfcModule = new PN532(PN532::CONNECTION_TYPE::I2C);
   nfcModule->begin();
 
-  tft.setTextColor(getColorVariation(bruceConfig.priColor),
-                   bruceConfig.bgColor);
+  tft.setTextColor(getColorVariation(willyConfig.priColor),
+                   willyConfig.bgColor);
 
   uint32_t floodCount = 0;
 
@@ -260,7 +260,7 @@ void DynamicUIDCollision() {
     floodCount++;
     if (floodCount % 15 == 0) {
       tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20,
-                   bruceConfig.bgColor);
+                   willyConfig.bgColor);
       tft.setCursor(10, tftHeight / 2 + 20);
       tft.print("UIDs Injetados: ");
       tft.print(floodCount);
@@ -274,7 +274,7 @@ void DynamicUIDCollision() {
 void NDEFStealthExfil() {
   drawMainBorderWithTitle("NDEF Exfil");
   printSubtitle("Emulando URL maliciosa");
-  padprintln("Payload: https://bruce.local/x");
+  padprintln("Payload: https://willy.local/x");
   padprintln("Aproxime um celular (NFC)");
   padprintln("Pressione [ESC] para abortar.");
 
@@ -283,7 +283,7 @@ void NDEFStealthExfil() {
 
   // Emulate an NDEF Type 4 Tag containing a URI record
   // Payload length = 0x11 (17 bytes)
-  // NDEF Message: 0xD1 0x01 0x0D 0x55 0x04 'bruce.local/x'
+  // NDEF Message: 0xD1 0x01 0x0D 0x55 0x04 'willy.local/x'
   uint8_t ndefPayload[] = {0xD1, 0x01, 0x0D, 0x55, 0x04, 'b', 'r', 'u', 'c',
                            'e',  '.',  'l',  'o',  'c',  'a', 'l', '/', 'x'};
 
@@ -381,7 +381,7 @@ void MifareRainbowTable() {
       if (check(EscPress))
         break;
 
-      tft.fillRect(10, tftHeight / 2, tftWidth - 20, 40, bruceConfig.bgColor);
+      tft.fillRect(10, tftHeight / 2, tftWidth - 20, 40, willyConfig.bgColor);
       tft.setCursor(10, tftHeight / 2);
       tft.print("Tentando: ");
       for (int k = 0; k < 6; k++) {
@@ -455,7 +455,7 @@ void LiveDataInjectionEmulation() {
 
     // Periodic UI update
     tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20,
-                 bruceConfig.bgColor);
+                 willyConfig.bgColor);
     tft.setCursor(10, tftHeight / 2 + 20);
     tft.print("Injeção v");
     tft.print(updateCount);
@@ -484,7 +484,7 @@ void MultiSlotChameleonUltra() {
       break;
 
     tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20,
-                 bruceConfig.bgColor);
+                 willyConfig.bgColor);
     tft.setCursor(10, tftHeight / 2 + 20);
     tft.print("Slot Ativo: ");
     tft.print(currentSlot);
@@ -523,7 +523,7 @@ void RFIDSkimmerHunterPro() {
     if (nfcModule->nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen,
                                            500)) {
       tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20,
-                   bruceConfig.bgColor);
+                   willyConfig.bgColor);
       tft.setCursor(10, tftHeight / 2 + 20);
       tft.setTextColor(TFT_RED);
       tft.print("TAG: ");
@@ -532,7 +532,7 @@ void RFIDSkimmerHunterPro() {
           tft.print("0");
         tft.print(uid[i], HEX);
       }
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
 
       padprintln("Potencial risco detectado!");
       delay(2000);
@@ -568,7 +568,7 @@ void UIDObfuscationRandomizer() {
       lastChange = millis();
 
       tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20,
-                   bruceConfig.bgColor);
+                   willyConfig.bgColor);
       tft.setCursor(10, tftHeight / 2 + 20);
       tft.print("Novo UID: ");
       for (int i = 0; i < 4; i++) {
@@ -613,11 +613,11 @@ void NFCWormPropagator() {
     // reader
     if (nfcModule->nfc.TgInitAsTarget()) {
       tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20,
-                   bruceConfig.bgColor);
+                   willyConfig.bgColor);
       tft.setCursor(10, tftHeight / 2 + 20);
       tft.setTextColor(TFT_RED);
       tft.print("WORM ENVIADO!");
-      tft.setTextColor(bruceConfig.priColor);
+      tft.setTextColor(willyConfig.priColor);
 
       // Logic to simulate payload delivery
       uint8_t payload[] = "PAYLOAD_INFECT_v1";
@@ -657,7 +657,7 @@ void MobilePaymentSnifferMSRP() {
       int16_t rxLen =
           nfcModule->nfc.TgGetData(rxBuf, &rxLen_val) ? rxLen_val : 0;
       if (rxLen > 0) {
-        tft.fillRect(10, tftHeight / 2, tftWidth - 20, 20, bruceConfig.bgColor);
+        tft.fillRect(10, tftHeight / 2, tftWidth - 20, 20, willyConfig.bgColor);
         tft.setCursor(10, tftHeight / 2);
         tft.print("DATA CAPT:");
         for (int i = 0; i < (int)min((size_t)rxLen, (size_t)8); i++) {
@@ -703,7 +703,7 @@ void MifareMasterKeyBrute() {
     if (nfcModule->nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen,
                                            500)) {
       tft.fillRect(10, tftHeight / 2 + 20, tftWidth - 20, 20,
-                   bruceConfig.bgColor);
+                   willyConfig.bgColor);
       tft.setCursor(10, tftHeight / 2 + 20);
       tft.print("Key [");
       tft.print(currentKey);
@@ -713,12 +713,12 @@ void MifareMasterKeyBrute() {
                                                          keys[currentKey])) {
         tft.setTextColor(TFT_GREEN);
         tft.print("SUCESSO!");
-        tft.setTextColor(bruceConfig.priColor);
+        tft.setTextColor(willyConfig.priColor);
         delay(3000);
       } else {
         tft.setTextColor(TFT_RED);
         tft.print("FALHA");
-        tft.setTextColor(bruceConfig.priColor);
+        tft.setTextColor(willyConfig.priColor);
       }
 
       currentKey = (currentKey + 1) % keyCount;

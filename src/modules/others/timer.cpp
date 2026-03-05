@@ -32,7 +32,7 @@ enum SettingMode {
 Timer::Timer() { setup(); }
 
 Timer::~Timer() {
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
   backToMenu();
 }
 
@@ -45,7 +45,7 @@ void Timer::setup() {
 
   char timeString[12];
 
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
   delay(DELAY_VALUE);
 
   // Setup loop: configure timer duration and options
@@ -166,7 +166,7 @@ void Timer::loop() {
       -1; // Track last displayed value to avoid unnecessary redraws
   char timeString[12];
 
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
 
   // Countdown loop
   while (true) {
@@ -213,7 +213,7 @@ void Timer::loop() {
 
         drawMainBorder(false);
         tft.setTextSize(f_size);
-        tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+        tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
         tft.drawCentreString(timeString, timerX, timerY, 1);
 
         lastSeconds = seconds;
@@ -228,15 +228,15 @@ void Timer::loop() {
 
 void Timer::playAlarmPattern() {
   // Display "TIME'S UP!" message
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
   drawMainBorderWithTitle("Timer finished!", false);
 
   tft.setTextSize(2);
-  tft.setTextColor(TFT_RED, bruceConfig.bgColor);
+  tft.setTextColor(TFT_RED, willyConfig.bgColor);
   tft.drawCentreString("TIME'S UP!", timerX, timerY - LH, 1);
 
   tft.setTextSize(1);
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   tft.drawCentreString("Press SEL or BACK to stop", timerX, timerY + (2 * LH),
                        1);
 
@@ -278,22 +278,22 @@ void Timer::playAlarmPattern() {
 
 void Timer::clearUnderline() {
   tft.drawLine(BORDER_PAD_X, underlineY, tftWidth - BORDER_PAD_X, underlineY,
-               bruceConfig.bgColor);
+               willyConfig.bgColor);
 }
 
 void Timer::underlineHours() {
   tft.drawLine(timerX - (4 * LW * fontSize), underlineY,
-               timerX - (2 * LW * fontSize), underlineY, bruceConfig.priColor);
+               timerX - (2 * LW * fontSize), underlineY, willyConfig.priColor);
 }
 
 void Timer::underlineMinutes() {
   tft.drawLine(timerX - (LW * fontSize), underlineY, timerX + (LW * fontSize),
-               underlineY, bruceConfig.priColor);
+               underlineY, willyConfig.priColor);
 }
 
 void Timer::underlineSeconds() {
   tft.drawLine(timerX + (2 * LW * fontSize), underlineY,
-               timerX + (4 * LW * fontSize), underlineY, bruceConfig.priColor);
+               timerX + (4 * LW * fontSize), underlineY, willyConfig.priColor);
 }
 
 void Timer::drawSoundOption(bool highlight) {
@@ -302,18 +302,18 @@ void Timer::drawSoundOption(bool highlight) {
   tft.setTextSize(1);
 
   // Choose colors based on highlight state
-  uint16_t textColor = highlight ? bruceConfig.priColor : TFT_DARKGREY;
+  uint16_t textColor = highlight ? willyConfig.priColor : TFT_DARKGREY;
 
   // Clear the line first
   tft.fillRect(BORDER_PAD_X, optionY, tftWidth - BORDER_PAD_X * 2, LH + 2,
-               bruceConfig.bgColor);
+               willyConfig.bgColor);
 
   // Build the option text
   char optionText[32];
   snprintf(optionText, sizeof(optionText), "Play sound: %s",
            playSoundOnFinish ? "ON" : "OFF");
 
-  tft.setTextColor(textColor, bruceConfig.bgColor);
+  tft.setTextColor(textColor, willyConfig.bgColor);
   tft.drawCentreString(optionText, timerX, optionY, 1);
 
   // Optional: Draw a small indicator if highlighted
@@ -323,6 +323,6 @@ void Timer::drawSoundOption(bool highlight) {
     int startX = timerX - (textWidth / 2);
     int endX = timerX + (textWidth / 2);
 
-    tft.drawLine(startX, indicatorY, endX, indicatorY, bruceConfig.priColor);
+    tft.drawLine(startX, indicatorY, endX, indicatorY, willyConfig.priColor);
   }
 }

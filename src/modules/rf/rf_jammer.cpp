@@ -15,11 +15,11 @@ RFJammer::~RFJammer() {
 }
 
 void RFJammer::setup() {
-    nTransmitterPin = bruceConfigPins.rfTx;
+    nTransmitterPin = willyConfigPins.rfTx;
     if (!initRfModule("tx")) return;
 
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) {
-        nTransmitterPin = bruceConfigPins.CC1101_bus.io0;
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE) {
+        nTransmitterPin = willyConfigPins.CC1101_bus.io0;
     }
 
     sendRF = true;
@@ -40,9 +40,9 @@ void RFJammer::display_banner() {
     padprintln("");
     padprintln("");
 
-    tft.setTextColor(getColorVariation(bruceConfig.priColor), bruceConfig.bgColor);
+    tft.setTextColor(getColorVariation(willyConfig.priColor), willyConfig.bgColor);
     padprintln("Pressione [ESC] para opcoes.");
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 }
 
 void RFJammer::run_full_jammer() {
@@ -169,7 +169,7 @@ void RFJammer::run_hopper_jammer() {
     int currentFreqIdx = 0;
 
     // Attempt to set freq using CC1101 (only applies if CC1101 is used)
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) {
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE) {
         setMHZ(freqs[currentFreqIdx]);
     }
 
@@ -199,7 +199,7 @@ void RFJammer::run_hopper_jammer() {
             lastHopTime = currentTime;
             currentFreqIdx = (currentFreqIdx + 1) % freqCount;
             digitalWrite(nTransmitterPin, LOW);
-            if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) {
+            if (willyConfigPins.rfModule == CC1101_SPI_MODULE) {
                 setMHZ(freqs[currentFreqIdx]);
             }
             digitalWrite(nTransmitterPin, HIGH);
@@ -214,7 +214,7 @@ void RFJammer::run_hopper_jammer() {
     digitalWrite(nTransmitterPin, LOW);
 
     // Restore original frequency settings if CC1101 was adjusted
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) {
-        setMHZ(bruceConfigPins.rfFreq);
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE) {
+        setMHZ(willyConfigPins.rfFreq);
     }
 }

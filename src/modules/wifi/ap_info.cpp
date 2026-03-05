@@ -5,7 +5,7 @@
 
 void displayAPInfo(const wifi_ap_record_t &record) {
     drawMainBorderWithTitle("INFORMACOES DO AP");
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
     tft.setTextSize(FM);
     
     char buf[64];

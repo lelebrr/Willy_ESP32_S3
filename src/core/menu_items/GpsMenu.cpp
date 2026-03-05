@@ -17,7 +17,7 @@ void GpsMenu::optionsMenu() {
     };
     addOptionToMainMenu();
 
-    String txt = "GPS (" + String(bruceConfigPins.gpsBaudrate) + " bps)";
+    String txt = "GPS (" + String(willyConfigPins.gpsBaudrate) + " bps)";
     loopOptions(options, MENU_TYPE_SUBMENU, txt.c_str());
 }
 
@@ -42,7 +42,7 @@ void GpsMenu::configMenu() {
     options = {
         {"Modo de Operacao", [this]() { modeMenu(); }                      },
         {"Baudrate",         setGpsBaudrateMenu                           },
-        {"Pinos GPS",        [this]() { setUARTPinsMenu(bruceConfigPins.gps_bus); }},
+        {"Pinos GPS",        [this]() { setUARTPinsMenu(willyConfigPins.gps_bus); }},
         {"Voltar",           [this]() { optionsMenu(); }                    },
     };
 
@@ -176,7 +176,7 @@ void GpsMenu::applyAdvancedConfig() {
 
     // Initialize serial for configuration
     HardwareSerial gpsSerial(2);
-    gpsSerial.begin(bruceConfigPins.gpsBaudrate, SERIAL_8N1, bruceConfigPins.gps_bus.rx, bruceConfigPins.gps_bus.tx);
+    gpsSerial.begin(willyConfigPins.gpsBaudrate, SERIAL_8N1, willyConfigPins.gps_bus.rx, willyConfigPins.gps_bus.tx);
 
     delay(500);
 
@@ -206,7 +206,7 @@ void GpsMenu::drawIcon(float scale) {
     int tangentX = sqrt(radius * radius - (radius / 2 * radius / 2));
     int32_t tangentY = radius / 2;
 
-    tft.fillCircle(iconCenterX, iconCenterY - radius / 2, radius, bruceConfig.priColor);
+    tft.fillCircle(iconCenterX, iconCenterY - radius / 2, radius, willyConfig.priColor);
     tft.fillTriangle(
         iconCenterX - tangentX,
         iconCenterY - radius / 2 + tangentY,
@@ -214,9 +214,9 @@ void GpsMenu::drawIcon(float scale) {
         iconCenterY - radius / 2 + tangentY,
         iconCenterX,
         iconCenterY + 1.5 * radius,
-        bruceConfig.priColor
+        willyConfig.priColor
     );
-    tft.fillCircle(iconCenterX, iconCenterY - radius / 2, radius / 2, bruceConfig.bgColor);
+    tft.fillCircle(iconCenterX, iconCenterY - radius / 2, radius / 2, willyConfig.bgColor);
 
-    tft.drawEllipse(iconCenterX, iconCenterY + 1.5 * radius, 1.5 * radius, radius / 2, bruceConfig.priColor);
+    tft.drawEllipse(iconCenterX, iconCenterY + 1.5 * radius, 1.5 * radius, radius / 2, willyConfig.priColor);
 }

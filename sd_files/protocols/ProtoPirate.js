@@ -1,5 +1,5 @@
 /**
- * ProtoPirate Car Key Decoder for Bruce Firmware 1.14+
+ * ProtoPirate Car Key Decoder for Willy Firmware 1.14+
  * Enhanced version with multi-protocol support
  * Protocols: Kia V0/V1/V2, Ford V0, Suzuki, StarLine, Scher-Khan, Subaru, Chrysler
  */
@@ -1094,7 +1094,7 @@ var loadFileIndex = 0;
 function scanForFiles() {
     loadedFiles = [];
     // Try to list .sub files from common directories
-    var dirs = ["/", "/BruceRF/", "/subghz/"];
+    var dirs = ["/", "/WillyRF/", "/subghz/"];
     
     for (var d = 0; d < dirs.length; d++) {
         try {
@@ -1266,7 +1266,7 @@ function saveSignal() {
     var filename = "pp_" + protoName + "_" + saveCounter + ".sub";
     
     // Build file content
-    var content = "Filetype: Bruce SubGhz File\n";
+    var content = "Filetype: Willy SubGhz File\n";
     content += "Version: 1\n";
     content += "Frequency: " + Math.floor(frequency * 1000000) + "\n";
     content += "Preset: FuriHalSubGhzPresetOok650Async\n";
@@ -1282,7 +1282,7 @@ function saveSignal() {
     // Try multiple paths
     var paths = [
         "/" + filename,
-        "/BruceRF/" + filename,
+        "/WillyRF/" + filename,
         "/subghz/" + filename
     ];
     

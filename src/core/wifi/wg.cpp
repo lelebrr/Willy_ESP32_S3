@@ -85,14 +85,14 @@ void read_and_parse_file() {
 
     File file = SD.open("/wg.conf");
     if (!file) {
-        tft.fillScreen(bruceConfig.bgColor);
+        tft.fillScreen(willyConfig.bgColor);
         tft.setCursor(0, 0);
 
-        tft.setTextColor(TFT_RED, bruceConfig.bgColor);
+        tft.setTextColor(TFT_RED, willyConfig.bgColor);
         Serial.println("Failed to open wg.conf file");
         // tft.println("No wg.conf file\nfound on\nthe SD");
-        displayRedStripe("No wg.conf file", TFT_RED, bruceConfig.priColor);
-        tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+        displayRedStripe("No wg.conf file", TFT_RED, willyConfig.priColor);
+        tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
         delay(6000);
         return;
     }
@@ -114,7 +114,7 @@ void wg_setup() {
 
     Serial.println("Adjusting system time...");
     configTime(9 * 60 * 60, 0, "ntp.jst.mfeed.ad.jp", "ntp.nict.jp");
-    tft.fillScreen(bruceConfig.bgColor);
+    tft.fillScreen(willyConfig.bgColor);
     tft.setCursor(0, 0);
 
     Serial.println("Connected. Initializing WireGuard...");
@@ -126,20 +126,20 @@ void wg_setup() {
     Serial.println(public_key);
     Serial.println(endpoint_port);
 
-    tft.fillScreen(bruceConfig.bgColor);
+    tft.fillScreen(willyConfig.bgColor);
     tft.setCursor(0, 0);
     tft.setTextSize(FG);
 
-    tft.setTextColor(TFT_GREEN, bruceConfig.bgColor);
+    tft.setTextColor(TFT_GREEN, willyConfig.bgColor);
     tft.println("Connected!");
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
     tft.println("IP on tunnel:");
-    tft.setTextColor(TFT_WHITE, bruceConfig.bgColor);
+    tft.setTextColor(TFT_WHITE, willyConfig.bgColor);
     tft.println(local_ip);
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
     Serial.println(local_ip);
     delay(7000);
     isConnectedWireguard = true;
-    tft.fillScreen(bruceConfig.bgColor);
+    tft.fillScreen(willyConfig.bgColor);
 }
 #endif

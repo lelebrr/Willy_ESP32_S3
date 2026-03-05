@@ -6,7 +6,7 @@
 #include <Arduino.h>
 #include <time.h>
 
-// Forward declarations of Bruce callbacks - implemented below
+// Forward declarations of Willy callbacks - implemented below
 static void wifi_cb(lv_event_t *e);
 static void ble_cb(lv_event_t *e);
 static void ir_cb(lv_event_t *e);
@@ -163,7 +163,7 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text, const lv_po
         lv_obj_set_style_shadow_width(obj, 0, 0);
         lv_obj_set_style_border_width(obj, 4, 0);
         // Reset to theme color
-        lv_color_t sec = lv_color_hex(bruceConfig.secColor);
+        lv_color_t sec = lv_color_hex(willyConfig.secColor);
         lv_obj_set_style_border_color(obj, sec, 0);
     };
 
@@ -254,16 +254,16 @@ static void update_bar_timer_cb(lv_timer_t *timer) {
         lv_label_set_text(data->time_label, "--:--");
     }
 
-    // Battery level handling - if Bruce battery API is available
+    // Battery level handling - if Willy battery API is available
     // For now we leave it as visual placeholder, or implement basic reading later.
 }
 
 void setup_cyber_menu(lv_obj_t *menu) {
     lv_obj_set_style_bg_color(menu, lv_color_hex(0x001122), 0);
 
-    // Use Bruce's primary/secondary colors for theme integration
-    lv_color_t primary = lv_color_hex(bruceConfig.priColor);
-    lv_color_t secondary = lv_color_hex(bruceConfig.secColor);
+    // Use Willy's primary/secondary colors for theme integration
+    lv_color_t primary = lv_color_hex(willyConfig.priColor);
+    lv_color_t secondary = lv_color_hex(willyConfig.secColor);
     lv_color_t accent = lv_color_hex(0x00FFFF); // Cyber cyan
 
     create_notification_bar(menu);

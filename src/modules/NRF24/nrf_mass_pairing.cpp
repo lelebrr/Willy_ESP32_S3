@@ -61,7 +61,7 @@ void nrf_mass_pairing() {
             attempts++;
 
             if (attempts % 150 == 0) {
-                tft.fillRect(10, 90, tftWidth - 20, 20, bruceConfig.bgColor);
+                tft.fillRect(10, 90, tftWidth - 20, 20, willyConfig.bgColor);
                 tft.setCursor(10, 90);
                 tft.printf("Attempts: %d", attempts);
             }

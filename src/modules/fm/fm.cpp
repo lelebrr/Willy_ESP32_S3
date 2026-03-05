@@ -12,9 +12,9 @@ void set_auto_scan(bool new_value) { auto_scan = new_value; }
 void set_frq(uint16_t frq) { fm_station = frq; }
 
 void fm_banner() {
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
   tft.setCursor(10, 10);
-  tft.drawCentreString("~== Bruce Radio ==~", tftWidth / 2, 10, SMOOTH_FONT);
+  tft.drawCentreString("~== Willy Radio ==~", tftWidth / 2, 10, SMOOTH_FONT);
   delay(500);
 }
 
@@ -32,7 +32,7 @@ uint16_t fm_scan() {
   radio.readTuneStatus();
   min_noise = radio.currNoiseLevel;
 
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
   displayTextLine("Scanning...");
   for (f = 8750; f < 10800; f += 10) {
     Serial.print("Measuring ");
@@ -50,7 +50,7 @@ uint16_t fm_scan() {
   }
 
   sprintf(display_freq, "Found %d MHz", freq_candidate);
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
   displayTextLine(display_freq);
   while (!check(EscPress) && !check(SelPress)) {
     delay(100);
@@ -200,7 +200,7 @@ void fm_spectrum() {
   int noise_level = 0;
   int SIGNAL_STRENGTH_THRESHOLD = 35;
 
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
   tft.setTextSize(1);
 
   fm_options(f_min, f_max, false);
@@ -215,7 +215,7 @@ void fm_spectrum() {
       noise_level = radio.currNoiseLevel;
       if (noise_level != 0) {
         // Clear the display area
-        tft.fillRect(0, 40, tftWidth, tftHeight, bruceConfig.bgColor);
+        tft.fillRect(0, 40, tftWidth, tftHeight, willyConfig.bgColor);
         // Draw waveform based on signal strength
         for (int i = 0; i < noise_level; i++) {
           int lineHeight =
@@ -227,7 +227,7 @@ void fm_spectrum() {
                                  20 + tftHeight);
           int endY = constrain(20 + tftHeight / 2 + lineHeight / 2, 20,
                                20 + tftHeight);
-          tft.drawLine(lineX, startY, lineX, endY, bruceConfig.priColor);
+          tft.drawLine(lineX, startY, lineX, endY, willyConfig.priColor);
         }
       }
     }
@@ -238,7 +238,7 @@ void fm_spectrum() {
 
 bool fm_begin() {
   if (!radio.begin()) { // begin with address 0x63 (CS high default)
-    tft.fillScreen(bruceConfig.bgColor);
+    tft.fillScreen(willyConfig.bgColor);
     Serial.println("Cannot find radio");
     displayTextLine("Cannot find radio", true);
     return false;
@@ -293,11 +293,11 @@ bool fm_setup(bool traffic_alert, bool silent) {
   // Begin the RDS/RDBS transmission
   radio.beginRDS();
   if (traffic_alert) {
-    radio.setRDSstation("BruceTraffic");
+    radio.setRDSstation("WillyTraffic");
     radio.setRDSbuffer("Traffic Info");
   } else {
-    radio.setRDSstation("BruceRadio");
-    radio.setRDSbuffer("Pwned by Bruce Radio!");
+    radio.setRDSstation("WillyRadio");
+    radio.setRDSbuffer("Pwned by Willy Radio!");
   }
 
   if (!silent) {

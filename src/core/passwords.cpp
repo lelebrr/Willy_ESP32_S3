@@ -87,7 +87,7 @@ String readDecryptedFile(FS &fs, String filepath) {
     while (cyphertextFile.available()) {
         line = cyphertextFile.readStringUntil('\n');
         line.trim();
-        if (line.startsWith("Filetype:") && !line.endsWith("Bruce Encrypted File")) unsupported_params = true;
+        if (line.startsWith("Filetype:") && !line.endsWith("Willy Encrypted File")) unsupported_params = true;
         if (line.startsWith("Algo:") && !line.endsWith("XOR") && !line.endsWith("AES-XOR (MD5 Derived Key)")) unsupported_params = true;
         if (line.startsWith("KeyDerivationAlgo:") && !line.endsWith("MD5")) unsupported_params = true;
         if (line.startsWith("KeyDerivationPasses:")) {
@@ -165,7 +165,7 @@ String encryptString(String &plaintext, const String &password_str) {
     dataStrHex.toUpperCase();
     dataStrHex.trim();
 
-    String out = "Filetype: Bruce Encrypted File\nVersion: 1\n";
+    String out = "Filetype: Willy Encrypted File\nVersion: 1\n";
     out += "Algo: AES-XOR (MD5 Derived Key)\n";
     out += "KeyDerivationAlgo: MD5\n";
     out += "KeyDerivationPasses: 10\n";

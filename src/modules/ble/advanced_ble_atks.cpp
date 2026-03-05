@@ -119,7 +119,7 @@ std::vector<uint8_t> generateAppleAdvertisingData() {
 bool initBLEAttackMode() {
     // Inicializa NimBLE se necessário
     if (!NimBLEDevice::isInitialized()) {
-        NimBLEDevice::init("BruceBLE");
+        NimBLEDevice::init("WillyBLE");
     }
     return true;
 }
@@ -215,7 +215,7 @@ void malformedATTFuzzer() {
     if (!initBLEAttackMode()) return;
 
     drawMainBorderWithTitle("ATT Fuzzer");
-    tft.setTextColor(bruceConfig.priColor);
+    tft.setTextColor(willyConfig.priColor);
     padprintln("");
     padprintln("Enviando pacotes ATT malformados...");
     padprintln("");
@@ -325,7 +325,7 @@ void malformedATTFuzzer() {
         // Atualiza display
         if (millis() - last_update > 1000) {
             drawMainBorderWithTitle("ATT Fuzzer");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("Enviando pacotes ATT malformados...");
             padprintln("");
@@ -397,7 +397,7 @@ public:
 
     void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
         // Retorna dados falsos
-        pCharacteristic->setValue("BrucePhishing");
+        pCharacteristic->setValue("WillyPhishing");
     }
 };
 
@@ -441,7 +441,7 @@ void gattPhishingServer() {
 
     char_callbacks = new PhishingCharacteristicCallbacks();
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
-    String serverNameStr = "Bruce Phishing";
+    String serverNameStr = "Willy Phishing";
 
     switch (profile) {
         case PROFILE_KEYBOARD: {
@@ -531,7 +531,7 @@ void gattPhishingServer() {
         // Processa conexões
         if (millis() - last_update > 500) {
             drawMainBorderWithTitle("GATT Phishing");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("Servidor ativo: " + serverNameStr);
             padprintln("");
@@ -550,7 +550,7 @@ void gattPhishingServer() {
                 for (const auto& data : char_callbacks->captured_data) {
                     padprintln("  " + data.substring(0, 20));
                 }
-                tft.setTextColor(bruceConfig.priColor);
+                tft.setTextColor(willyConfig.priColor);
             }
 
             padprintln("");
@@ -661,7 +661,7 @@ void advertisingChannelJammer() {
         // Atualiza display
         if (millis() - last_update > 1000) {
             drawMainBorderWithTitle("BLE Jammer");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("Jamming ativo...");
             padprintln("");
@@ -671,7 +671,7 @@ void advertisingChannelJammer() {
             padprintln("");
             tft.setTextColor(TFT_RED);
             padprintln("BLE bloqueado na area!");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("ESC para parar");
             last_update = millis();
@@ -773,7 +773,7 @@ void connectionParameterDrain() {
 
     // Advertising
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
-    pAdvertising->setName("Bruce Watch");
+    pAdvertising->setName("Willy Watch");
     pAdvertising->addServiceUUID("180F");
     pAdvertising->addServiceUUID("180D");
     pAdvertising->setAppearance(0x03C2); // Watch
@@ -804,9 +804,9 @@ void connectionParameterDrain() {
         // Atualiza display
         if (millis() - last_update > 500) {
             drawMainBorderWithTitle("Battery Drain");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
-            padprintln("Dispositivo: Bruce Watch");
+            padprintln("Dispositivo: Willy Watch");
             padprintln("");
             padprintln("Conexoes: " + String(pServer->getConnectedCount()));
             padprintln("Updates: " + String(drain_callbacks->update_count));
@@ -816,7 +816,7 @@ void connectionParameterDrain() {
             padprintln("");
             tft.setTextColor(TFT_YELLOW);
             padprintln("Bateria sendo drenada!");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("ESC para parar");
             last_update = millis();
@@ -912,7 +912,7 @@ void massAirTagSpoof() {
         // Atualiza display
         if (millis() - last_update > 1000) {
             drawMainBorderWithTitle("AirTag Spoof");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("Spoofando AirTags...");
             padprintln("");
@@ -922,7 +922,7 @@ void massAirTagSpoof() {
             padprintln("");
             tft.setTextColor(TFT_RED);
             padprintln("Caos no FindMy!");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("ESC para parar");
             last_update = millis();
@@ -978,7 +978,7 @@ void longRangeExtendedAttack() {
 
         // Dados do advertisement
         advData.setFlags(BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
-        advData.setName("BruceLR");
+        advData.setName("WillyLR");
 
         // Manufacturer data
         std::vector<uint8_t> mfg_data = {0xFF, 0xFF, 0xDE, 0xAD, 0xBE, 0xEF};
@@ -1005,7 +1005,7 @@ void longRangeExtendedAttack() {
         // Atualiza display
         if (millis() - last_update > 1000) {
             drawMainBorderWithTitle("Long Range BLE");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("Modo: Long Range (Coded PHY)");
             padprintln("");
@@ -1015,7 +1015,7 @@ void longRangeExtendedAttack() {
             padprintln("");
             tft.setTextColor(TFT_YELLOW);
             padprintln("Advertising extended ativo");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("ESC para parar");
             last_update = millis();
@@ -1077,7 +1077,7 @@ void pairingMITMSimulator() {
 
     // Advertising
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
-    pAdvertising->setName("BruceSecure");
+    pAdvertising->setName("WillySecure");
     pAdvertising->addServiceUUID("1812");
 
     ble_attack_running = true;
@@ -1088,10 +1088,10 @@ void pairingMITMSimulator() {
 
         if (millis() - last_update > 500) {
             drawMainBorderWithTitle("Pairing MITM");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("Servidor MITM ativo");
-            padprintln("Nome: BruceSecure");
+            padprintln("Nome: WillySecure");
             padprintln("");
             padprintln("Dispositivos pareados: " + String(mitm_callbacks->paired_devices.size()));
             padprintln("");
@@ -1102,7 +1102,7 @@ void pairingMITMSimulator() {
                 for (const auto& addr : mitm_callbacks->paired_devices) {
                     padprintln("  " + bleAddressToString(addr));
                 }
-                tft.setTextColor(bruceConfig.priColor);
+                tft.setTextColor(willyConfig.priColor);
             }
 
             padprintln("");
@@ -1244,7 +1244,7 @@ void advertisementStealthExfil() {
         // Atualiza display
         if (millis() - last_update > 500) {
             drawMainBorderWithTitle("Stealth Exfil");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("Exfiltrando via advertising...");
             padprintln("");
@@ -1254,7 +1254,7 @@ void advertisementStealthExfil() {
             padprintln("");
             tft.setTextColor(TFT_GREEN);
             padprintln("Exfiltracao oculta ativa");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("ESC para parar");
             last_update = millis();
@@ -1370,7 +1370,7 @@ void meshWormPropagator() {
         // Atualiza display
         if (millis() - last_update > 1000) {
             drawMainBorderWithTitle("Mesh Worm");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("Propagador ativo...");
             padprintln("");
@@ -1387,7 +1387,7 @@ void meshWormPropagator() {
                         padprintln("  " + bleAddressToString(node.address));
                     }
                 }
-                tft.setTextColor(bruceConfig.priColor);
+                tft.setTextColor(willyConfig.priColor);
             }
 
             padprintln("");
@@ -1490,7 +1490,7 @@ void directedDisconnectFlood() {
         // Atualiza display
         if (millis() - last_update > 500) {
             drawMainBorderWithTitle("Disconnect Flood");
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln("Ataque de disconnect ativo");
             padprintln("");
@@ -1503,7 +1503,7 @@ void directedDisconnectFlood() {
             for (const auto& addr : disconnect_targets) {
                 padprintln("  " + bleAddressToString(addr));
             }
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
 
             padprintln("");
             padprintln("ESC para parar");
@@ -1540,7 +1540,7 @@ static void runGenericBLEScan(const char* title, const char* status, std::functi
         NimBLEScanResults results = pScan->getResults(scanTimeMs, false);
 
         drawMainBorderWithTitle(title);
-        tft.setTextColor(bruceConfig.priColor);
+        tft.setTextColor(willyConfig.priColor);
         padprintln("");
 
         onScanResults(results);
@@ -1589,7 +1589,7 @@ static void runGenericBLESpam(const char* title, const char* status, std::functi
 
         if (packet_count % 50 == 0) {
             drawMainBorderWithTitle(title);
-            tft.setTextColor(bruceConfig.priColor);
+            tft.setTextColor(willyConfig.priColor);
             padprintln("");
             padprintln(status);
             padprintln("Pacotes: " + String(packet_count));
@@ -1633,7 +1633,7 @@ void flipperSniff() {
                 padprintln("FLIPPER: " + name);
                 padprintln("RSSI: " + String(dev->getRSSI()) + "dBm");
                 padprintln("MAC: " + String(std::string(dev->getAddress()).c_str()));
-                tft.setTextColor(bruceConfig.priColor);
+                tft.setTextColor(willyConfig.priColor);
             }
         }
         padprintln("Flippers: " + String(flipper_count));
@@ -1652,7 +1652,7 @@ void airtagMonitor() {
                     tft.setTextColor(TFT_YELLOW);
                     padprintln("Apple: " + String(dev->getRSSI()) + "dBm");
                     padprintln("MAC: " + String(std::string(dev->getAddress()).c_str()));
-                    tft.setTextColor(bruceConfig.priColor);
+                    tft.setTextColor(willyConfig.priColor);
                 }
             }
         }
@@ -1704,13 +1704,13 @@ void detectCardSkimmers() {
                 suspect_count++;
                 tft.setTextColor(TFT_RED);
                 padprintln("SUSPEITO: " + String(dev->getName().c_str()) + " " + String(dev->getRSSI()) + "dBm");
-                tft.setTextColor(bruceConfig.priColor);
+                tft.setTextColor(willyConfig.priColor);
             }
         }
         padprintln("");
         if (suspect_count > 0) { tft.setTextColor(TFT_RED); padprintln("ALERTA: " + String(suspect_count) + " suspeito(s)!"); }
         else { tft.setTextColor(TFT_GREEN); padprintln("Nenhum skimmer detectado"); }
-        tft.setTextColor(bruceConfig.priColor);
+        tft.setTextColor(willyConfig.priColor);
     }, 5000);
 }
 

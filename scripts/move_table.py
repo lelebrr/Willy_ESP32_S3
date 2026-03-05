@@ -8,15 +8,15 @@ if enum_match:
     enum_str = enum_match.group(0)
     code = code.replace(enum_str, '')
 
-array_match = re.search(r'const JSCFunctionDef bruce_c_functions\[CFUNC_COUNT\] = \{[\s\S]*?\};\n\n', code)
+array_match = re.search(r'const JSCFunctionDef willy_c_functions\[CFUNC_COUNT\] = \{[\s\S]*?\};\n\n', code)
 if array_match:
     array_str = array_match.group(0)
     code = code.replace(array_str, '')
 
 stdlib_def_str = """
-JSSTDLibraryDef bruce_stdlib_def = {
+JSSTDLibraryDef willy_stdlib_def = {
     .stdlib_table = NULL,
-    .c_function_table = bruce_c_functions,
+    .c_function_table = willy_c_functions,
     .c_finalizer_table = NULL,
     .stdlib_table_len = 0,
     .stdlib_table_align = 0,
@@ -28,7 +28,7 @@ JSSTDLibraryDef bruce_stdlib_def = {
 
 if enum_match and array_match:
     insert_str = enum_str + array_str + stdlib_def_str + '\n'
-    code = code.replace('void js_bruce_init(JSContext *ctx) {', insert_str + 'void js_bruce_init(JSContext *ctx) {')
+    code = code.replace('void js_willy_init(JSContext *ctx) {', insert_str + 'void js_willy_init(JSContext *ctx) {')
 
     with open("src/modules/bjs_interpreter/mqjs_bindings.cpp", "w") as f:
         f.write(code)

@@ -11,18 +11,18 @@ RFScan::RFScan() { setup(); }
 RFScan::~RFScan() { deinitRfModule(); }
 
 void RFScan::setup() {
-    if (!initRfModule("rx", bruceConfigPins.rfFreq)) { return; }
+    if (!initRfModule("rx", willyConfigPins.rfFreq)) { return; }
 
     RCSwitch_Enable_Receive(rcswitch);
 
-    if (bruceConfigPins.rfScanRange < 0 || bruceConfigPins.rfScanRange > 3) {
-        bruceConfigPins.setRfScanRange(3);
+    if (willyConfigPins.rfScanRange < 0 || willyConfigPins.rfScanRange > 3) {
+        willyConfigPins.setRfScanRange(3);
     }
-    if (bruceConfigPins.rfModule != CC1101_SPI_MODULE) { bruceConfigPins.setRfFxdFreq(1); }
+    if (willyConfigPins.rfModule != CC1101_SPI_MODULE) { willyConfigPins.setRfFxdFreq(1); }
 
     display_info(received, signals, ReadRAW, codesOnly, autoSave, title);
 
-    if (bruceConfigPins.rfFxdFreq) frequency = bruceConfigPins.rfFreq;
+    if (willyConfigPins.rfFxdFreq) frequency = willyConfigPins.rfFreq;
 
     // Clear cache for RAW signal
     rcswitch.resetAvailable();
@@ -42,7 +42,7 @@ void RFScan::loop() {
         }
         if (restartScan) return setup();
 
-        if (bruceConfigPins.rfFxdFreq) frequency = bruceConfigPins.rfFreq;
+        if (willyConfigPins.rfFxdFreq) frequency = willyConfigPins.rfFreq;
         if (frequency <= 0) init_freqs();
 
         while (frequency <= 0) { // FastScan
@@ -68,10 +68,10 @@ void RFScan::loop() {
 }
 
 void RFScan::RCSwitch_Enable_Receive(RCSwitch rcswitch) {
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) {
-        rcswitch.enableReceive(bruceConfigPins.CC1101_bus.io0);
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE) {
+        rcswitch.enableReceive(willyConfigPins.CC1101_bus.io0);
     } else {
-        rcswitch.enableReceive(bruceConfigPins.rfRx);
+        rcswitch.enableReceive(willyConfigPins.rfRx);
     }
 }
 
@@ -85,9 +85,9 @@ void RFScan::init_freqs() {
 
 bool RFScan::fast_scan() {
 
-    if (idx < range_limits[bruceConfigPins.rfScanRange][0] ||
-        idx > range_limits[bruceConfigPins.rfScanRange][1]) {
-        idx = range_limits[bruceConfigPins.rfScanRange][0];
+    if (idx < range_limits[willyConfigPins.rfScanRange][0] ||
+        idx > range_limits[willyConfigPins.rfScanRange][1]) {
+        idx = range_limits[willyConfigPins.rfScanRange][0];
     }
     float checkFrequency = subghz_frequency_list[idx];
     setMHZ(checkFrequency);
@@ -104,7 +104,7 @@ bool RFScan::fast_scan() {
                 if (_freqs[i].rssi > _freqs[max_index].rssi) { max_index = i; }
             }
 
-            bruceConfigPins.setRfFreq(_freqs[max_index].freq, 2); // change to fixed frequency
+            willyConfigPins.setRfFreq(_freqs[max_index].freq, 2); // change to fixed frequency
             frequency = _freqs[max_index].freq;
             setMHZ(frequency);
             Serial.println("Frequencia Enc.: " + String(frequency));
@@ -244,9 +244,9 @@ void RFScan::select_menu_option() {
 
     if (received.protocol != "") options.emplace_back("Resetar Sinal", [this]() { set_option(RESET); });
 
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE)
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE)
         options.emplace_back("Alcance", [this]() { set_option(RANGE); });
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE && !bruceConfigPins.rfFxdFreq)
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE && !willyConfigPins.rfFxdFreq)
         options.emplace_back("Limiar", [this]() { set_option(THRESHOLD); });
 
     if (ReadRAW)
@@ -352,14 +352,14 @@ void RFScan::set_range() {
     bool chooseFixedOpt = false;
 
     options = {
-        {String("Fxd [" + String(bruceConfigPins.rfFreq) + "]").c_str(),
-         [=]() { bruceConfigPins.setRfScanRange(bruceConfigPins.rfScanRange, 1); } },
+        {String("Fxd [" + String(willyConfigPins.rfFreq) + "]").c_str(),
+         [=]() { willyConfigPins.setRfScanRange(willyConfigPins.rfScanRange, 1); } },
         {"Choose Fxd",                                                   [&]() { chooseFixedOpt = true; } },
         {subghz_frequency_ranges[0],                                     [=]() {
-bruceConfigPins.setRfScanRange(0); }}, {subghz_frequency_ranges[1],                                     [=]()
-{ bruceConfigPins.setRfScanRange(1); }}, {subghz_frequency_ranges[2], [=]() {
-bruceConfigPins.setRfScanRange(2); }}, {subghz_frequency_ranges[3],                                     [=]()
-{ bruceConfigPins.setRfScanRange(3); }},
+willyConfigPins.setRfScanRange(0); }}, {subghz_frequency_ranges[1],                                     [=]()
+{ willyConfigPins.setRfScanRange(1); }}, {subghz_frequency_ranges[2], [=]() {
+willyConfigPins.setRfScanRange(2); }}, {subghz_frequency_ranges[3],                                     [=]()
+{ willyConfigPins.setRfScanRange(3); }},
     };
 
     loopOptions(options);
@@ -370,16 +370,16 @@ bruceConfigPins.setRfScanRange(2); }}, {subghz_frequency_ranges[3],             
         int arraySize = sizeof(subghz_frequency_list) / sizeof(subghz_frequency_list[0]);
         for (int i = 0; i < arraySize; i++) {
             String tmp = String(subghz_frequency_list[i], 2) + "Mhz";
-            options.emplace_back(tmp.c_str(), [=]() { bruceConfigPins.rfFreq = subghz_frequency_list[i]; });
+            options.emplace_back(tmp.c_str(), [=]() { willyConfigPins.rfFreq = subghz_frequency_list[i]; });
             if (int(frequency * 100) == int(subghz_frequency_list[i] * 100)) ind = i;
         }
         loopOptions(options, ind);
         options.clear();
-        bruceConfigPins.setRfScanRange(bruceConfigPins.rfScanRange, 1);
+        willyConfigPins.setRfScanRange(willyConfigPins.rfScanRange, 1);
     }
 
-    if (bruceConfigPins.rfFxdFreq) displayTextLine("Scan freq set to " + String(bruceConfigPins.rfFreq));
-    else displayTextLine("Range set to " + String(subghz_frequency_ranges[bruceConfigPins.rfScanRange]));
+    if (willyConfigPins.rfFxdFreq) displayTextLine("Scan freq set to " + String(willyConfigPins.rfFreq));
+    else displayTextLine("Range set to " + String(subghz_frequency_ranges[willyConfigPins.rfScanRange]));
 }
 */
 void display_info(RfCodes received, int signals, bool ReadRAW, bool codesOnly, bool autoSave, String title) {
@@ -388,7 +388,7 @@ void display_info(RfCodes received, int signals, bool ReadRAW, bool codesOnly, b
 
     if (received.protocol != "") display_signal_data(received);
 
-    tft.setTextColor(getColorVariation(bruceConfig.priColor), bruceConfig.bgColor);
+    tft.setTextColor(getColorVariation(willyConfig.priColor), willyConfig.bgColor);
 
     if (!ReadRAW) padprintln("Gravando: Apenas codigos RCSwitch.");
     else if (codesOnly) padprintln("Gravando: RAW com CRC ou RCSwitch.");
@@ -396,12 +396,12 @@ void display_info(RfCodes received, int signals, bool ReadRAW, bool codesOnly, b
 
     if (autoSave) padprintln("Auto salvar: Ativado");
 
-    if (bruceConfigPins.rfFxdFreq) padprintln("Escaneando: " + String(bruceConfigPins.rfFreq) + " MHz");
-    else padprintln("Escaneando: " + String(subghz_frequency_ranges[bruceConfigPins.rfScanRange]));
+    if (willyConfigPins.rfFxdFreq) padprintln("Escaneando: " + String(willyConfigPins.rfFreq) + " MHz");
+    else padprintln("Escaneando: " + String(subghz_frequency_ranges[willyConfigPins.rfScanRange]));
 
     padprintln("Total sinais enc.: " + String(signals));
 
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
     padprintln("");
     padprintln("Pressione [NEXT] para opcoes.");
@@ -441,7 +441,7 @@ void display_signal_data(RfCodes received) {
     if (received.protocol == "RAW") padprintln("CRC: " + String(hexString));
     else padprintln("Key: " + String(hexString));
 
-    // if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) {
+    // if (willyConfigPins.rfModule == CC1101_SPI_MODULE) {
     //     int rssi = ELECHOUSE_cc1101.getRssi();
     //     tft.drawPixel(0, 0, 0);
     //     padprintln("Rssi: " + String(rssi));
@@ -475,7 +475,7 @@ bool RCSwitch_SaveSignal(float frequency, RfCodes codes, bool raw, char *key, bo
         return false;
     }
 
-    String subfile_out = "Filetype: Bruce SubGhz File\nVersion 1\n";
+    String subfile_out = "Filetype: Willy SubGhz File\nVersion 1\n";
     subfile_out += "Frequency: " + String(int(frequency * 1000000)) + "\n";
     if (!raw) {
         subfile_out += "Preset: " + String(codes.preset) + "\n";
@@ -517,7 +517,7 @@ bool RCSwitch_SaveSignal(float frequency, RfCodes codes, bool raw, char *key, bo
 String rf_scan(float start_freq, float stop_freq, int max_loops) {
     // derived from https://github.com/mcore1976/cc1101-tool/blob/main/cc1101-tool-esp32.ino#L480
 
-    if (bruceConfigPins.rfModule != CC1101_SPI_MODULE) {
+    if (willyConfigPins.rfModule != CC1101_SPI_MODULE) {
         displayError("rf scanning is available with CC1101 only", true);
         return ""; // only CC1101 is supported for this
     }
@@ -583,7 +583,7 @@ String RCSwitch_Read(float frequency, int max_loops, bool raw) {
     RCSwitch rcswitch = RCSwitch();
     RfCodes received;
 
-    if (!frequency) frequency = bruceConfigPins.rfFreq; // default from config
+    if (!frequency) frequency = willyConfigPins.rfFreq; // default from config
 
     char hexString[64];
 
@@ -595,12 +595,12 @@ RestartRec:
 
     // init receive
     if (!initRfModule("rx", frequency)) return "";
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) { // CC1101 in use
-        rcswitch.enableReceive(bruceConfigPins.CC1101_bus.io0);
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE) { // CC1101 in use
+        rcswitch.enableReceive(willyConfigPins.CC1101_bus.io0);
         Serial.println("CC1101 enableReceive()");
 
     } else {
-        rcswitch.enableReceive(bruceConfigPins.rfRx);
+        rcswitch.enableReceive(willyConfigPins.rfRx);
     }
     while (!check(EscPress)) {
         if (rcswitch.available()) {
@@ -673,7 +673,7 @@ RestartRec:
                 // TODO: show a dialog/warning?
                 // raw = yesNoDialog("decoding failed, save as RAW?");
             }
-            String subfile_out = "Filetype: Bruce SubGhz File\nVersion 1\n";
+            String subfile_out = "Filetype: Willy SubGhz File\nVersion 1\n";
             subfile_out += "Frequency: " + String(int(frequency * 1000000)) + "\n";
             if (!raw) {
                 subfile_out += "Preset: " + String(received.preset) + "\n";

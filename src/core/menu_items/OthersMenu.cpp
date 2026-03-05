@@ -76,19 +76,19 @@ void OthersMenu::drawIcon(float scale) {
     int radius = scale * 7;
 
     // Center circle
-    tft.fillCircle(iconCenterX, iconCenterY, radius, bruceConfig.priColor);
+    tft.fillCircle(iconCenterX, iconCenterY, radius, willyConfig.priColor);
 
     // Concentric arcs - dynamically scaled for different screen sizes
     tft.drawArc(
-        iconCenterX, iconCenterY, 2.5 * radius, 2 * radius, 0, 340, bruceConfig.priColor, bruceConfig.bgColor
+        iconCenterX, iconCenterY, 2.5 * radius, 2 * radius, 0, 340, willyConfig.priColor, willyConfig.bgColor
     );
 
     tft.drawArc(
-        iconCenterX, iconCenterY, 3.5 * radius, 3 * radius, 20, 360, bruceConfig.priColor, bruceConfig.bgColor
+        iconCenterX, iconCenterY, 3.5 * radius, 3 * radius, 20, 360, willyConfig.priColor, willyConfig.bgColor
     );
 
     tft.drawArc(
-        iconCenterX, iconCenterY, 4.5 * radius, 4 * radius, 0, 200, bruceConfig.priColor, bruceConfig.bgColor
+        iconCenterX, iconCenterY, 4.5 * radius, 4 * radius, 0, 200, willyConfig.priColor, willyConfig.bgColor
     );
 
     tft.drawArc(
@@ -98,7 +98,7 @@ void OthersMenu::drawIcon(float scale) {
         4 * radius,
         240,
         360,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
 }

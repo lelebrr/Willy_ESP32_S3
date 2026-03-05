@@ -8,16 +8,16 @@ struct ThemeEntry {
     String &path;
 };
 
-void BruceTheme::removeTheme(void) {
+void WillyTheme::removeTheme(void) {
     themeInfo t;
     theme = t;
 }
-FS *BruceTheme::themeFS(void) {
+FS *WillyTheme::themeFS(void) {
     if (theme.fs == 1) return &LittleFS;
     else if (theme.fs == 2) return &SD;
     return &LittleFS; // always get back to safety
 }
-bool BruceTheme::openThemeFile(FS *fs, String filepath, bool overwriteConfigSettings) {
+bool WillyTheme::openThemeFile(FS *fs, String filepath, bool overwriteConfigSettings) {
 
     if (fs == nullptr) return true;
     if (!fs->exists(filepath)) return false;
@@ -83,9 +83,9 @@ bool BruceTheme::openThemeFile(FS *fs, String filepath, bool overwriteConfigSett
     if (!_th["gifDuration"].isNull()) { theme.gifDuration = _th["gifDuration"].as<int>(); }
 
     if (overwriteConfigSettings) {
-        uint16_t _priColor = bruceConfig.priColor;
-        uint16_t _secColor = bruceConfig.secColor;
-        uint16_t _bgColor = bruceConfig.bgColor;
+        uint16_t _priColor = willyConfig.priColor;
+        uint16_t _secColor = willyConfig.secColor;
+        uint16_t _bgColor = willyConfig.bgColor;
 
         if (!_th["priColor"].isNull()) { _priColor = strtoul(_th["priColor"], nullptr, 16); }
         if (!_th["secColor"].isNull()) { _secColor = strtoul(_th["secColor"], nullptr, 16); }
@@ -93,12 +93,12 @@ bool BruceTheme::openThemeFile(FS *fs, String filepath, bool overwriteConfigSett
         _setUiColor(_priColor, &_secColor, &_bgColor);
 
 #ifdef HAS_RGB_LED
-        if (!_th["ledBright"].isNull()) { bruceConfig.ledBright = _th["ledBright"].as<int>(); }
-        if (!_th["ledColor"].isNull()) { bruceConfig.ledColor = strtoul(_th["ledColor"], nullptr, 16); }
-        if (!_th["ledEffect"].isNull()) { bruceConfig.ledEffect = _th["ledEffect"].as<int>(); }
-        if (!_th["ledEffectSpeed"].isNull()) { bruceConfig.ledEffectSpeed = _th["ledEffectSpeed"].as<int>(); }
+        if (!_th["ledBright"].isNull()) { willyConfig.ledBright = _th["ledBright"].as<int>(); }
+        if (!_th["ledColor"].isNull()) { willyConfig.ledColor = strtoul(_th["ledColor"], nullptr, 16); }
+        if (!_th["ledEffect"].isNull()) { willyConfig.ledEffect = _th["ledEffect"].as<int>(); }
+        if (!_th["ledEffectSpeed"].isNull()) { willyConfig.ledEffectSpeed = _th["ledEffectSpeed"].as<int>(); }
         if (!_th["ledEffectDirection"].isNull()) {
-            bruceConfig.ledEffectDirection = _th["ledEffectDirection"].as<int>();
+            willyConfig.ledEffectDirection = _th["ledEffectDirection"].as<int>();
         }
         ledSetup();
 #endif
@@ -111,13 +111,13 @@ bool BruceTheme::openThemeFile(FS *fs, String filepath, bool overwriteConfigSett
     return true;
 }
 
-bool BruceTheme::validateImgFile(FS *fs, String filepath) {
+bool WillyTheme::validateImgFile(FS *fs, String filepath) {
     // Think of a way to check if the images are at maximum height of tftHeight
     // this size is the maximun value to be shown on screen without overlapping the status bar.
     return true;
 }
 
-void BruceTheme::_setUiColor(uint16_t primary, uint16_t *secondary, uint16_t *background) {
+void WillyTheme::_setUiColor(uint16_t primary, uint16_t *secondary, uint16_t *background) {
     priColor = primary;
     secColor = secondary == nullptr ? primary - 0x2000 : *secondary;
     bgColor = background == nullptr ? 0x0 : *background;

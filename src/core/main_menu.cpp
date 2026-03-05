@@ -54,7 +54,7 @@ void MainMenu::begin(void) {
     returnToMenu = false;
     options = {};
 
-    std::vector<String> l = bruceConfig.disabledMenus;
+    std::vector<String> l = willyConfig.disabledMenus;
     for (int i = 0; i < _totalItems; i++) {
         String itemName = _menuItems[i]->getName();
         if (find(l.begin(), l.end(), itemName) == l.end()) { // If menu item is not disabled
@@ -69,7 +69,7 @@ void MainMenu::begin(void) {
 
                      MenuItemInterface *obj = static_cast<MenuItemInterface *>(menuItem);
                      float scale = float((float)tftWidth / (float)240);
-                     if (bruceConfigPins.rotation & 0b01) scale = float((float)tftHeight / (float)135);
+                     if (willyConfigPins.rotation & 0b01) scale = float((float)tftHeight / (float)135);
                      obj->draw(scale);
 #if defined(HAS_TOUCH)
                      TouchFooter();
@@ -95,13 +95,13 @@ RESTART: // using gotos to avoid stackoverflow after many choices
     options.clear();
     for (auto item : items) {
         String label = item->getName();
-        std::vector<String> l = bruceConfig.disabledMenus;
+        std::vector<String> l = willyConfig.disabledMenus;
         bool enabled = find(l.begin(), l.end(), label) == l.end();
-        options.push_back({label, [this, label]() { bruceConfig.addDisabledMenu(label); }, enabled});
+        options.push_back({label, [this, label]() { willyConfig.addDisabledMenu(label); }, enabled});
     }
-    options.push_back({"Mostrar Tudo", [=]() { bruceConfig.disabledMenus.clear(); }, true});
+    options.push_back({"Mostrar Tudo", [=]() { willyConfig.disabledMenus.clear(); }, true});
     addOptionToMainMenu();
     loopOptions(options);
-    bruceConfig.saveFile();
+    willyConfig.saveFile();
     if (!returnToMenu) goto RESTART;
 }

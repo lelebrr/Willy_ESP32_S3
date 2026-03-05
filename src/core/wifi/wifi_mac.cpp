@@ -6,10 +6,10 @@
 #include <esp_wifi.h>
 
 void applyConfiguredMAC() {
-    if (bruceConfig.wifiMAC.length() == 17 && validateMACFormat(bruceConfig.wifiMAC)) {
+    if (willyConfig.wifiMAC.length() == 17 && validateMACFormat(willyConfig.wifiMAC)) {
         uint8_t newMAC[6];
         if (sscanf(
-            bruceConfig.wifiMAC.c_str(),
+            willyConfig.wifiMAC.c_str(),
             "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
             &newMAC[0],
             &newMAC[1],
@@ -19,7 +19,7 @@ void applyConfiguredMAC() {
             &newMAC[5]
         ) == 6) {
             if (esp_wifi_set_mac(WIFI_IF_STA, newMAC) == ESP_OK) {
-                Serial.println("[WiFi] Custom MAC applied: " + bruceConfig.wifiMAC);
+                Serial.println("[WiFi] Custom MAC applied: " + willyConfig.wifiMAC);
             } else {
                 Serial.println("[WiFi] Failed to apply custom MAC, using default");
             }
@@ -44,8 +44,8 @@ bool setCustomMAC(const String &mac) {
         displayError("Invalid MAC Format!");
         return false;
     }
-    bruceConfig.wifiMAC = mac;
-    bruceConfig.saveFile();
+    willyConfig.wifiMAC = mac;
+    willyConfig.saveFile();
     return true;
 }
 
@@ -62,8 +62,8 @@ String generateRandomMAC() {
 void wifiMACMenu() {
     String currentMAC;
 
-    if (bruceConfig.wifiMAC != "" && validateMACFormat(bruceConfig.wifiMAC)) {
-        currentMAC = bruceConfig.wifiMAC + " (Custom)";
+    if (willyConfig.wifiMAC != "" && validateMACFormat(willyConfig.wifiMAC)) {
+        currentMAC = willyConfig.wifiMAC + " (Custom)";
     } else {
         currentMAC = WiFi.macAddress() + " (Default)";
     }
@@ -73,8 +73,8 @@ void wifiMACMenu() {
 
     options.clear();
     options.push_back({"MAC Padrão", []() {
-                           bruceConfig.wifiMAC = "";
-                           bruceConfig.saveFile();
+                           willyConfig.wifiMAC = "";
+                           willyConfig.saveFile();
                            displayTextLine("Default MAC set");
                        }});
 

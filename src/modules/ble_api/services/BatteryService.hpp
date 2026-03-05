@@ -1,9 +1,9 @@
 #pragma once
 #if !defined(LITE_VERSION)
-#include "BruceBLEService.hpp"
+#include "WillyBLEService.hpp"
 #include <NimBLEServer.h>
 
-class BatteryService : public BruceBLEService {
+class BatteryService : public WillyBLEService {
     NimBLECharacteristic *battery_char = nullptr;
     TaskHandle_t battery_task_handle = nullptr;
 

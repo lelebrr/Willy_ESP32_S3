@@ -43,27 +43,27 @@ void FileMenu::drawIcon(float scale) {
     int iconDelta = 10;
 
     // Files
-    tft.drawRect(iconX + iconDelta, iconY - iconDelta, iconW, iconH, bruceConfig.priColor);
+    tft.drawRect(iconX + iconDelta, iconY - iconDelta, iconW, iconH, willyConfig.priColor);
 
-    tft.fillRect(iconX, iconY, iconW, iconH, bruceConfig.bgColor);
-    tft.drawRect(iconX, iconY, iconW, iconH, bruceConfig.priColor);
+    tft.fillRect(iconX, iconY, iconW, iconH, willyConfig.bgColor);
+    tft.drawRect(iconX, iconY, iconW, iconH, willyConfig.priColor);
 
-    tft.fillRect(iconX - iconDelta, iconY + iconDelta, iconW, iconH, bruceConfig.bgColor);
-    tft.drawRect(iconX - iconDelta, iconY + iconDelta, iconW, iconH, bruceConfig.priColor);
+    tft.fillRect(iconX - iconDelta, iconY + iconDelta, iconW, iconH, willyConfig.bgColor);
+    tft.drawRect(iconX - iconDelta, iconY + iconDelta, iconW, iconH, willyConfig.priColor);
 
     // Erase corners
     tft.fillRect(
-        iconX + iconDelta + iconW - foldSize, iconY - iconDelta - 1, foldSize, 2, bruceConfig.bgColor
+        iconX + iconDelta + iconW - foldSize, iconY - iconDelta - 1, foldSize, 2, willyConfig.bgColor
     );
-    tft.fillRect(iconX + iconDelta + iconW - 1, iconY - iconDelta, 2, foldSize, bruceConfig.bgColor);
+    tft.fillRect(iconX + iconDelta + iconW - 1, iconY - iconDelta, 2, foldSize, willyConfig.bgColor);
 
-    tft.fillRect(iconX + iconW - foldSize, iconY - 1, foldSize, 2, bruceConfig.bgColor);
-    tft.fillRect(iconX + iconW - 1, iconY, 2, foldSize, bruceConfig.bgColor);
+    tft.fillRect(iconX + iconW - foldSize, iconY - 1, foldSize, 2, willyConfig.bgColor);
+    tft.fillRect(iconX + iconW - 1, iconY, 2, foldSize, willyConfig.bgColor);
 
     tft.fillRect(
-        iconX - iconDelta + iconW - foldSize, iconY + iconDelta - 1, foldSize, 2, bruceConfig.bgColor
+        iconX - iconDelta + iconW - foldSize, iconY + iconDelta - 1, foldSize, 2, willyConfig.bgColor
     );
-    tft.fillRect(iconX - iconDelta + iconW - 1, iconY + iconDelta, 2, foldSize, bruceConfig.bgColor);
+    tft.fillRect(iconX - iconDelta + iconW - 1, iconY + iconDelta, 2, foldSize, willyConfig.bgColor);
 
     // Folds
     tft.drawTriangle(
@@ -73,7 +73,7 @@ void FileMenu::drawIcon(float scale) {
         iconY - iconDelta + foldSize - 1,
         iconX + iconDelta + iconW - 1,
         iconY - iconDelta + foldSize - 1,
-        bruceConfig.priColor
+        willyConfig.priColor
     );
     tft.drawTriangle(
         iconX + iconW - foldSize,
@@ -82,7 +82,7 @@ void FileMenu::drawIcon(float scale) {
         iconY + foldSize - 1,
         iconX + iconW - 1,
         iconY + foldSize - 1,
-        bruceConfig.priColor
+        willyConfig.priColor
     );
     tft.drawTriangle(
         iconX - iconDelta + iconW - foldSize,
@@ -91,6 +91,6 @@ void FileMenu::drawIcon(float scale) {
         iconY + iconDelta + foldSize - 1,
         iconX - iconDelta + iconW - 1,
         iconY + iconDelta + foldSize - 1,
-        bruceConfig.priColor
+        willyConfig.priColor
     );
 }

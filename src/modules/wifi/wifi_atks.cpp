@@ -171,7 +171,7 @@ void wsl_bypasser_send_raw_frame(const wifi_ap_record_t *ap_record,
 void wifi_atk_info(String tssid, String mac, uint8_t channel) {
   // desenhar a tela
   drawMainBorder();
-  tft.setTextColor(bruceConfig.priColor);
+  tft.setTextColor(willyConfig.priColor);
   tft.drawCentreString("-=Informações=-", tft.width() / 2, 28, SMOOTH_FONT);
   tft.drawString("AP: " + tssid, 10, 48);
   tft.drawString("Canal: " + String(channel), 10, 66);
@@ -208,7 +208,7 @@ bool wifi_atk_setWifi() {
     vTaskDelay(pdMS_TO_TICKS(100));
   }
 
-  if (WiFi.softAPSSID() != bruceConfig.wifiAp.ssid &&
+  if (WiFi.softAPSSID() != willyConfig.wifiAp.ssid &&
       WiFi.softAPSSID() != WIFI_ATK_NAME) {
     if (!WiFi.softAP(WIFI_ATK_NAME, emptyString, 1, 1, 4, false)) {
       displayError("Falha ao iniciar AP Atacante", true);
@@ -232,7 +232,7 @@ bool wifi_atk_unsetWifi() {
     vTaskDelay(pdMS_TO_TICKS(100));
   }
   if (WiFi.status() != WL_CONNECTED &&
-      WiFi.softAPSSID() != bruceConfig.wifiAp.ssid)
+      WiFi.softAPSSID() != willyConfig.wifiAp.ssid)
     wifiDisconnect();
 
   return true;
@@ -574,7 +574,7 @@ void capture_handshake(String tssid, String mac, uint8_t channel) {
   bool hasBeacons = false;
   bool hasEAPOL __attribute__((unused)) = false;
 
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   tft.setTextSize(FM);
 
   // only redraw when we explicitly need to (deauth sent or handshake captured)
@@ -603,7 +603,7 @@ void capture_handshake(String tssid, String mac, uint8_t channel) {
 
     if (needRedraw) {
       drawMainBorderWithTitle("Handshake Capture");
-      tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+      tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
       padprintln("");
       padprintln("SSID: " + tssid);
       padprintln("BSSID: " + mac);
@@ -612,51 +612,51 @@ void capture_handshake(String tssid, String mac, uint8_t channel) {
 
       // Show console status
       if (captured) {
-        tft.setTextColor(TFT_GREEN, bruceConfig.bgColor);
+        tft.setTextColor(TFT_GREEN, willyConfig.bgColor);
         padprintln("Status: CAPTURADO!");
         padprintln("");
         tft.setTextColor(hsTracker.msg1 ? TFT_GREEN : TFT_RED,
-                         bruceConfig.bgColor);
+                         willyConfig.bgColor);
         padprintln("        EAPOL MSG 1: " +
                    String(hsTracker.msg1 ? "Capturado" : "Nenhum"));
         tft.setTextColor(hsTracker.msg2 ? TFT_GREEN : TFT_RED,
-                         bruceConfig.bgColor);
+                         willyConfig.bgColor);
         padprintln("        EAPOL MSG 2: " +
                    String(hsTracker.msg2 ? "Capturado" : "Nenhum"));
         tft.setTextColor(hsTracker.msg3 ? TFT_GREEN : TFT_RED,
-                         bruceConfig.bgColor);
+                         willyConfig.bgColor);
         padprintln("        EAPOL MSG 3: " +
                    String(hsTracker.msg3 ? "Capturado" : "Nenhum"));
         tft.setTextColor(hsTracker.msg4 ? TFT_GREEN : TFT_RED,
-                         bruceConfig.bgColor);
+                         willyConfig.bgColor);
         padprintln("        EAPOL MSG 4: " +
                    String(hsTracker.msg4 ? "Capturado" : "Nenhum"));
-        tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+        tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
       } else if (hasBeacons) {
-        tft.setTextColor(TFT_YELLOW, bruceConfig.bgColor);
+        tft.setTextColor(TFT_YELLOW, willyConfig.bgColor);
         padprintln("Status: Beacon capturado");
         padprintln("");
         tft.setTextColor(hsTracker.msg1 ? TFT_GREEN : TFT_RED,
-                         bruceConfig.bgColor);
+                         willyConfig.bgColor);
         padprintln("        EAPOL MSG 1: " +
                    String(hsTracker.msg1 ? "Capturado" : "Nenhum"));
         tft.setTextColor(hsTracker.msg2 ? TFT_GREEN : TFT_RED,
-                         bruceConfig.bgColor);
+                         willyConfig.bgColor);
         padprintln("        EAPOL MSG 2: " +
                    String(hsTracker.msg2 ? "Capturado" : "Nenhum"));
         tft.setTextColor(hsTracker.msg3 ? TFT_GREEN : TFT_RED,
-                         bruceConfig.bgColor);
+                         willyConfig.bgColor);
         padprintln("        EAPOL MSG 3: " +
                    String(hsTracker.msg3 ? "Capturado" : "Nenhum"));
         tft.setTextColor(hsTracker.msg4 ? TFT_GREEN : TFT_RED,
-                         bruceConfig.bgColor);
+                         willyConfig.bgColor);
         padprintln("        EAPOL MSG 4: " +
                    String(hsTracker.msg4 ? "Capturado" : "Nenhum"));
-        tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+        tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
       } else {
-        tft.setTextColor(TFT_YELLOW, bruceConfig.bgColor);
+        tft.setTextColor(TFT_YELLOW, willyConfig.bgColor);
         padprintln("Status: Aguardando...");
-        tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+        tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
       }
 
       padprintln("");
@@ -743,7 +743,7 @@ void target_atk(String tssid, String mac, uint8_t channel) {
   bool attackActive = true;
 
   check(SelPress);
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   tft.setTextSize(FM);
   setCpuFrequencyMhz(CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ);
 
@@ -751,7 +751,7 @@ void target_atk(String tssid, String mac, uint8_t channel) {
     // Render UI if needed
     if (needsRedraw) {
       drawMainBorderWithTitle("Deauth no Alvo");
-      tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+      tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
       // Dynamic vertical spacing based on screen height
 
@@ -860,7 +860,7 @@ const char Beacons[] PROGMEM = {"Mom Use This One\n"
                                 "Virus-Infected Wi-Fi\n"
                                 "Starbucks Wi-Fi\n"
                                 "Text 64ALL for Password\n"
-                                "Yell BRUCE for Password\n"
+                                "Yell WILLY for Password\n"
                                 "The Password Is 1234\n"
                                 "Free Public Wi-Fi\n"
                                 "No Free Wi-Fi Here\n"
@@ -1015,7 +1015,7 @@ void beaconAttack() {
 #if !defined(LITE_VERSION)
   // Get user input for single SSID mode
   if (BeaconMode == 4) {
-    singleSSID = keyboard("BruceBeacon", 26, "SSID Base:");
+    singleSSID = keyboard("WillyBeacon", 26, "SSID Base:");
     if (singleSSID.length() == 0) {
       return; // User cancelled
     }

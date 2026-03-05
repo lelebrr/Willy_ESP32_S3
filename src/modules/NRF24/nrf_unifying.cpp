@@ -11,7 +11,7 @@ static std::vector<std::vector<uint8_t>> discovered_uni_macs;
 
 void perform_promiscuous_uni_scan(NRF24_MODE mode) {
     discovered_uni_macs.clear();
-    tft.fillRect(10, 60, tftWidth - 20, 20, bruceConfig.bgColor);
+    tft.fillRect(10, 60, tftWidth - 20, 20, willyConfig.bgColor);
     tft.setCursor(10, 60);
     tft.println("Scanning Logitech...");
 
@@ -83,7 +83,7 @@ void nrf_unifying_exploit() {
         return;
     }
 
-    tft.fillRect(10, 60, tftWidth - 20, 40, bruceConfig.bgColor);
+    tft.fillRect(10, 60, tftWidth - 20, 40, willyConfig.bgColor);
     tft.setCursor(10, 60);
     tft.printf("Targets found: %u\n", (unsigned int)discovered_uni_macs.size());
     tft.println("Broadcasting exploit...");
@@ -122,7 +122,7 @@ void nrf_unifying_exploit() {
             }
 
             if (attempts % 10 == 0 && success) {
-                tft.fillRect(10, 100, tftWidth - 20, 20, bruceConfig.bgColor);
+                tft.fillRect(10, 100, tftWidth - 20, 20, willyConfig.bgColor);
                 tft.setCursor(10, 100);
                 tft.printf("Payloads sent: %d", attempts);
             }

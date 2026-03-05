@@ -8,7 +8,7 @@ YS_IRTM::YS_IRTM() {
 
 void YS_IRTM::begin() {
     if (!_initialized) {
-        _serial->begin(9600, SERIAL_8N1, bruceConfigPins.gps_bus.rx, bruceConfigPins.gps_bus.tx);
+        _serial->begin(9600, SERIAL_8N1, willyConfigPins.gps_bus.rx, willyConfigPins.gps_bus.tx);
         _initialized = true;
     }
 }

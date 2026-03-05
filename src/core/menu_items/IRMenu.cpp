@@ -28,8 +28,8 @@ void IRMenu::optionsMenu() {
     addOptionToMainMenu();
 
     String txt = "Infravermelho";
-    txt += " Tx: " + String(bruceConfigPins.irTx) + " Rx: " + String(bruceConfigPins.irRx) +
-           " Rpts: " + String(bruceConfigPins.irTxRepeats);
+    txt += " Tx: " + String(willyConfigPins.irTx) + " Rx: " + String(willyConfigPins.irRx) +
+           " Rpts: " + String(willyConfigPins.irTxRepeats);
     loopOptions(options, MENU_TYPE_SUBMENU, txt.c_str());
 #if defined(ARDUINO_M5STICK_S3)
     M5.Power.setExtOutput(prevPower);
@@ -178,17 +178,17 @@ void IRMenu::drawIcon(float scale) {
     if (iconSize % 2 != 0) iconSize++;
 
     tft.fillRect(
-        iconCenterX - iconSize / 2, iconCenterY - iconSize / 2, iconSize / 6, iconSize, bruceConfig.priColor
+        iconCenterX - iconSize / 2, iconCenterY - iconSize / 2, iconSize / 6, iconSize, willyConfig.priColor
     );
     tft.fillRect(
         iconCenterX - iconSize / 3,
         iconCenterY - iconSize / 3,
         iconSize / 6,
         2 * iconSize / 3,
-        bruceConfig.priColor
+        willyConfig.priColor
     );
 
-    tft.drawCircle(iconCenterX - iconSize / 6, iconCenterY, radius, bruceConfig.priColor);
+    tft.drawCircle(iconCenterX - iconSize / 6, iconCenterY, radius, willyConfig.priColor);
 
     tft.drawArc(
         iconCenterX - iconSize / 6,
@@ -197,8 +197,8 @@ void IRMenu::drawIcon(float scale) {
         2 * radius,
         220,
         320,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
     tft.drawArc(
         iconCenterX - iconSize / 6,
@@ -207,8 +207,8 @@ void IRMenu::drawIcon(float scale) {
         2 * radius + deltaRadius,
         220,
         320,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
     tft.drawArc(
         iconCenterX - iconSize / 6,
@@ -217,7 +217,7 @@ void IRMenu::drawIcon(float scale) {
         2 * radius + 2 * deltaRadius,
         220,
         320,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
 }

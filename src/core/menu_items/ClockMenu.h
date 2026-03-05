@@ -10,8 +10,8 @@ public:
     void optionsMenu(void);
     void showSubMenu(void);
     void drawIcon(float scale);
-    bool hasTheme() { return bruceConfig.theme.clock; }
-    String themePath() { return bruceConfig.theme.paths.clock; }
+    bool hasTheme() { return willyConfig.theme.clock; }
+    String themePath() { return willyConfig.theme.paths.clock; }
 };
 
 #endif

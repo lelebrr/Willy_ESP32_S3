@@ -36,7 +36,7 @@ uint32_t wifiCallback(cmd *c) {
         return _setupAP();
 
     } else if (status == "add" && ssid != "" && pwd != "") {
-        bruceConfig.addWifiCredential(ssid, pwd);
+        willyConfig.addWifiCredential(ssid, pwd);
         return true;
     } else {
         serialDevice->println(

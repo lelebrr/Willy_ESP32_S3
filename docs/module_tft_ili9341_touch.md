@@ -36,7 +36,11 @@
 | `T_CS` | `15` | Seleção de Chip do Touch. |
 | `T_DIN` | `11` | SPI MOSI (Compartilhado). |
 | `T_DO` | `13` | SPI MISO (Compartilhado). |
-| `T_IRQ` | `Não conectado`| **Interrupção do Touch** (Configurado como -1 no platformio.ini, usa polling). |
+| `T_IRQ` | `Não conectado`| **Interrupção do Touch** (Confirmado como -1 no User_Setup.h e platformio.ini). |
+
+### Observações de Hardware (05/03/2026)
+- **T_IRQ**: Removido e configurado como `-1`. Não conecte este pino para evitar conflitos de interrupção no ESP32-S3.
+- **Modo Headless**: O firmware agora é capaz de rodar sem o display conectado. Se o `tft.init()` falhar ou a tela não for detectada, o sistema entra em modo headless automaticamente, mantendo Serial CLI e Web Dashboard ativos.
 
 ## Configuração da Biblioteca (`platformio.ini`)
 

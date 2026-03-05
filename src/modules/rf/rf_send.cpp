@@ -224,7 +224,7 @@ void sendRfCommand(struct RfCodes rfcode, bool hideDefaultUI) {
 
     // init transmitter
     if (!initRfModule("", frequency / 1000000.0)) return;
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) { // CC1101 in use
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE) { // CC1101 in use
         // derived from
         // https://github.com/LSatan/SmartRC-CC1101-Driver-Lib/blob/master/examples/Rc-Switch%20examples%20cc1101/SendDemo_cc1101/SendDemo_cc1101.ino
         ELECHOUSE_cc1101.setModulation(modulation);
@@ -234,7 +234,7 @@ void sendRfCommand(struct RfCodes rfcode, bool hideDefaultUI) {
                 rxBW
             ); // Set the Receive Bandwidth in kHz. Value from 58.03 to 812.50. Default is 812.50 kHz.
         if (dataRate) ELECHOUSE_cc1101.setDRate(dataRate);
-        pinMode(bruceConfigPins.CC1101_bus.io0, OUTPUT);
+        pinMode(willyConfigPins.CC1101_bus.io0, OUTPUT);
         ELECHOUSE_cc1101.setPA(
             12
         ); // set TxPower. The following settings are possible depending on the frequency band.  (-30  -20 -15
@@ -322,7 +322,7 @@ void sendRfCommand(struct RfCodes rfcode, bool hideDefaultUI) {
 
     willyLogger.logRF(rfcode.key, rfcode.frequency / 1000000.0, (int)rfcode.protocol.toInt(), rfcode.data.c_str());
 
-    // digitalWrite(bruceConfigPins.rfTx, LED_OFF);
+    // digitalWrite(willyConfigPins.rfTx, LED_OFF);
     deinitRfModule();
 }
 
@@ -332,10 +332,10 @@ void RCSwitch_send(uint64_t data, unsigned int bits, int pulse, int protocol, in
 
     RCSwitch mySwitch = RCSwitch();
 
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) {
-        mySwitch.enableTransmit(bruceConfigPins.CC1101_bus.io0);
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE) {
+        mySwitch.enableTransmit(willyConfigPins.CC1101_bus.io0);
     } else {
-        mySwitch.enableTransmit(bruceConfigPins.rfTx);
+        mySwitch.enableTransmit(willyConfigPins.rfTx);
     }
 
     mySwitch.setProtocol(protocol); // override
@@ -358,8 +358,8 @@ void RCSwitch_send(uint64_t data, unsigned int bits, int pulse, int protocol, in
 
 // ported from https://github.com/sui77/rc-switch/blob/3a536a172ab752f3c7a58d831c5075ca24fd920b/RCSwitch.cpp
 void RCSwitch_RAW_Bit_send(RfCodes data) {
-    int nTransmitterPin = bruceConfigPins.rfTx;
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) { nTransmitterPin = bruceConfigPins.CC1101_bus.io0; }
+    int nTransmitterPin = willyConfigPins.rfTx;
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE) { nTransmitterPin = willyConfigPins.CC1101_bus.io0; }
 
     if (data.data == "") return;
     bool currentlogiclevel = false;
@@ -393,8 +393,8 @@ void RCSwitch_RAW_Bit_send(RfCodes data) {
 }
 
 void RCSwitch_RAW_send(int *ptrtransmittimings) {
-    int nTransmitterPin = bruceConfigPins.rfTx;
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) { nTransmitterPin = bruceConfigPins.CC1101_bus.io0; }
+    int nTransmitterPin = willyConfigPins.rfTx;
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE) { nTransmitterPin = willyConfigPins.CC1101_bus.io0; }
 
     if (!ptrtransmittimings) return;
 

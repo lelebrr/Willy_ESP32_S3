@@ -67,8 +67,8 @@ void RFMenu::optionsMenu() {
 
     delay(200);
     String txt = "Radio Frequencia";
-    if (bruceConfigPins.rfModule == CC1101_SPI_MODULE) txt += " (CC1101)"; // Indicates if CC1101 is connected
-    else txt += " Tx: " + String(bruceConfigPins.rfTx) + " Rx: " + String(bruceConfigPins.rfRx);
+    if (willyConfigPins.rfModule == CC1101_SPI_MODULE) txt += " (CC1101)"; // Indicates if CC1101 is connected
+    else txt += " Tx: " + String(willyConfigPins.rfTx) + " Rx: " + String(willyConfigPins.rfRx);
 
     loopOptions(options, MENU_TYPE_SUBMENU, txt.c_str());
 }
@@ -94,7 +94,7 @@ void RFMenu::drawIcon(float scale) {
     if (triangleSize % 2 != 0) triangleSize++;
 
     // Body
-    tft.fillCircle(iconCenterX, iconCenterY - radius, radius, bruceConfig.priColor);
+    tft.fillCircle(iconCenterX, iconCenterY - radius, radius, willyConfig.priColor);
     tft.fillTriangle(
         iconCenterX,
         iconCenterY,
@@ -102,7 +102,7 @@ void RFMenu::drawIcon(float scale) {
         iconCenterY + triangleSize,
         iconCenterX + triangleSize / 2,
         iconCenterY + triangleSize,
-        bruceConfig.priColor
+        willyConfig.priColor
     );
 
     // Left Arcs
@@ -113,8 +113,8 @@ void RFMenu::drawIcon(float scale) {
         2 * radius,
         40,
         140,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
     tft.drawArc(
         iconCenterX,
@@ -123,8 +123,8 @@ void RFMenu::drawIcon(float scale) {
         2 * radius + deltaRadius,
         40,
         140,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
     tft.drawArc(
         iconCenterX,
@@ -133,8 +133,8 @@ void RFMenu::drawIcon(float scale) {
         2 * radius + 2 * deltaRadius,
         40,
         140,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
 
     // Right Arcs
@@ -145,8 +145,8 @@ void RFMenu::drawIcon(float scale) {
         2 * radius,
         220,
         320,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
     tft.drawArc(
         iconCenterX,
@@ -155,8 +155,8 @@ void RFMenu::drawIcon(float scale) {
         2 * radius + deltaRadius,
         220,
         320,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
     tft.drawArc(
         iconCenterX,
@@ -165,7 +165,7 @@ void RFMenu::drawIcon(float scale) {
         2 * radius + 2 * deltaRadius,
         220,
         320,
-        bruceConfig.priColor,
-        bruceConfig.bgColor
+        willyConfig.priColor,
+        willyConfig.bgColor
     );
 }

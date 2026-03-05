@@ -113,9 +113,9 @@ void ARPSpoofer::setup(const ScanHosts::Host &host, IPAddress gateway) {
 
   if (mitm) {
     tft.setTextSize(FP);
-    tft.setTextColor(TFT_RED, bruceConfig.bgColor);
+    tft.setTextColor(TFT_RED, willyConfig.bgColor);
     padprintln("MITM Routing ATIVO");
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
     Serial.println("MITM Ativo. W5500 interceptando trafego.");
   }
   padprintln("Tgt:" + host.mac);

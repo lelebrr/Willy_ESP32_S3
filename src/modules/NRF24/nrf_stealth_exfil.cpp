@@ -37,7 +37,7 @@ void nrf_stealth_exfil() {
     tft.setCursor(10, 80);
     tft.println("Channel: 120 | Power: MIN");
 
-    String exfilData = "SSID:" + bruceConfig.wifiAp.ssid + "|PWD:" + bruceConfig.wifiAp.pwd + "|MAC:" + bruceConfig.wifiMAC;
+    String exfilData = "SSID:" + willyConfig.wifiAp.ssid + "|PWD:" + willyConfig.wifiAp.pwd + "|MAC:" + willyConfig.wifiMAC;
     int total_len = exfilData.length();
     int sent_bytes = 0;
 
@@ -46,7 +46,7 @@ void nrf_stealth_exfil() {
         if (CHECK_NRF_SPI(mode)) {
             if (sent_bytes >= total_len) {
                 // Done!
-                tft.fillRect(10, 110, tftWidth - 20, 20, bruceConfig.bgColor);
+                tft.fillRect(10, 110, tftWidth - 20, 20, willyConfig.bgColor);
                 tft.setCursor(10, 110);
                 tft.println("Exfiltration Complete!");
                 delay(2000);
@@ -68,7 +68,7 @@ void nrf_stealth_exfil() {
             NRFradio.write(payload, 32);
             sent_bytes += chunk_size;
 
-            tft.fillRect(10, 110, tftWidth - 20, 20, bruceConfig.bgColor);
+            tft.fillRect(10, 110, tftWidth - 20, 20, willyConfig.bgColor);
             tft.setCursor(10, 110);
             tft.printf("Exfil bytes: %d/%d", sent_bytes, total_len);
 

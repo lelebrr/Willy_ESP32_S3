@@ -426,7 +426,7 @@ void ransomwareSimulationDemo() {
 
   String script = "cd $HOME\\Desktop; "
                   "New-Item -Path 'READ_ME_NOW.txt' -ItemType File -Force; "
-                  "Set-Content -Path 'READ_ME_NOW.txt' -Value 'SIMULACAO BRUCE "
+                  "Set-Content -Path 'READ_ME_NOW.txt' -Value 'SIMULACAO WILLY "
                   "TEAM: Seus arquivos poderiam estar criptografados neste "
                   "momento. Treine sua equipe!'; "
                   "notepad.exe 'READ_ME_NOW.txt'";
@@ -455,12 +455,12 @@ void persistentHidBackdoor() {
   // Powershell script to schedule a task that runs invisible - Educational demo
   String psTarget =
       "$A = New-ScheduledTaskAction -Execute 'notepad.exe' -Argument "
-      "'C:\\Users\\Public\\BRUCE_WAS_HERE.txt';"
+      "'C:\\Users\\Public\\WILLY_WAS_HERE.txt';"
       "$T = New-ScheduledTaskTrigger -AtLogOn;"
-      "Register-ScheduledTask -TaskName 'BruceSecurityDemo' -Action $A "
+      "Register-ScheduledTask -TaskName 'WillySecurityDemo' -Action $A "
       "-Trigger $T -Force;"
-      "Set-Content -Path 'C:\\Users\\Public\\BRUCE_WAS_HERE.txt' -Value 'DEMO: "
-      "Esta tarefa foi agendada pelo Bruce ESP32 para fins educativos.'";
+      "Set-Content -Path 'C:\\Users\\Public\\WILLY_WAS_HERE.txt' -Value 'DEMO: "
+      "Esta tarefa foi agendada pelo Willy ESP32 para fins educativos.'";
 
   sendString(psTarget.c_str());
   usbKeyboard.press(KEY_RETURN);

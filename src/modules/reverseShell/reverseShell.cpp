@@ -17,11 +17,11 @@ void ReverseShell() {
     options.clear();
 
     // Display initialization messages
-    tft.fillScreen(bruceConfig.bgColor);
+    tft.fillScreen(willyConfig.bgColor);
     tft.setTextSize(FM);
-    tft.setTextColor(TFT_RED, bruceConfig.bgColor);
+    tft.setTextColor(TFT_RED, willyConfig.bgColor);
     tft.drawCentreString("Reverse Shell", tftWidth / 2, 10, 1);
-    tft.setTextColor(TFT_WHITE, bruceConfig.bgColor);
+    tft.setTextColor(TFT_WHITE, willyConfig.bgColor);
     tft.setTextSize(FP);
     tft.setCursor(15, 33);
     tft.println("Developed by Fourier (github.com/9dl)");

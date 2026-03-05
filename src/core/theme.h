@@ -57,7 +57,7 @@ struct themeInfo {
     themeFiles paths;
 };
 
-class BruceTheme {
+class WillyTheme {
 public:
     themeInfo theme;
     String themePath = "";

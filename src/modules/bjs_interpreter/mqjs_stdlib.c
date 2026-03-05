@@ -226,7 +226,7 @@ static const JSPropDef js_math[] = {
     JS_CFUNC_SPECIAL_DEF("log2", 1, f_f, js_log2 ),
     JS_CFUNC_SPECIAL_DEF("log10", 1, f_f, js_log10 ),
 
-    /* Bruce: additional math helpers */
+    /* Willy: additional math helpers */
     JS_CFUNC_DEF("acosh", 1, native_math_acosh),
     JS_CFUNC_DEF("asinh", 1, native_math_asinh),
     JS_CFUNC_DEF("atanh", 1, native_math_atanh),
@@ -458,7 +458,7 @@ static const JSPropDef js_device[] = {
     JS_CFUNC_DEF("getName", 0, native_getDeviceName),
     JS_CFUNC_DEF("getBoard", 0, native_getBoard),
     JS_CFUNC_DEF("getModel", 0, native_getBoard),
-    JS_CFUNC_DEF("getBruceVersion", 0, native_getBruceVersion),
+    JS_CFUNC_DEF("getWillyVersion", 0, native_getWillyVersion),
     JS_CFUNC_DEF("getBatteryCharge", 0, native_getBattery),
     JS_CFUNC_DEF("getBatteryDetailed", 0, native_getBatteryDetailed),
     JS_CFUNC_DEF("getFreeHeapSize", 0, native_getFreeHeapSize),
@@ -716,7 +716,7 @@ static const JSPropDef js_global_object[] = {
     JS_CFUNC_DEF("setInterval", 2, js_setInterval),
     JS_CFUNC_DEF("clearInterval", 1, js_clearInterval),
 
-    /* Bruce functions */
+    /* Willy functions */
     /* Global functions */
     JS_PROP_CLASS_DEF("exports", &js_exports_obj),
 

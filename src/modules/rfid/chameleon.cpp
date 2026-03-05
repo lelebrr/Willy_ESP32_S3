@@ -466,7 +466,7 @@ bool Chameleon::writeFileLF(String filename) {
 
     if (!file) { return false; }
 
-    file.println("Filetype: Bruce RFID 125kHz File");
+    file.println("Filetype: Willy RFID 125kHz File");
     file.println("Version 1");
     file.println("UID: " + printableLFUID);
 
@@ -742,7 +742,7 @@ bool Chameleon::writeFileHF(String filename) {
 
     if (!file) { return false; }
 
-    file.println("Filetype: Bruce RFID File");
+    file.println("Filetype: Willy RFID File");
     file.println("Version 1");
     file.println("Device type: " + printableHFUID.piccType);
     file.println("# UID, ATQA and SAK are common for all formats");
@@ -973,7 +973,7 @@ void Chameleon::saveScanResult() {
 
     if (!file) { return; }
 
-    file.println("Filetype: Bruce RFID Scan Result");
+    file.println("Filetype: Willy RFID Scan Result");
     for (ScanResult scanResult : _scanned_tags) { file.println(scanResult.tagType + " | " + scanResult.uid); }
 
     file.close();

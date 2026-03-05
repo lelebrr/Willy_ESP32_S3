@@ -1,6 +1,6 @@
 // --- wifi_recover.cpp ---
 /*
-  WiFi Password Cracker for Bruce (ESP32-S3 / T-Embed)
+  WiFi Password Cracker for Willy (ESP32-S3 / T-Embed)
   - Reads passwords from wordlist file
   - Tests against PCAP handshake using PBKDF2 + PMK verification
   - Single unified workflow
@@ -8,7 +8,7 @@
 
 #include "wifi_recover.h"
 
-// Bruce core includes
+// Willy core includes
 #include "core/display.h"
 #include "core/menu_items/WifiMenu.h"
 #include "core/mykeyboard.h"
@@ -146,7 +146,7 @@ static bool parse_pcap_handshake(FS &fs, const String &path,
     return false;
   }
 
-  // Bruce uses network type 105 (802.11 raw, no radiotap)
+  // Willy uses network type 105 (802.11 raw, no radiotap)
   if (gh.network != 105) {
     padprintf("Aviso: Tipo rede %u (esperado 105)\n", (unsigned int)gh.network);
   }
@@ -186,7 +186,7 @@ static bool parse_pcap_handshake(FS &fs, const String &path,
 
     packet_count++;
 
-    // Bruce PCAP has NO radiotap - start directly at 802.11 header
+    // Willy PCAP has NO radiotap - start directly at 802.11 header
     size_t pos = 0;
 
     // Parse 802.11 header (minimum 24 bytes)
@@ -704,9 +704,9 @@ void wifi_crack_handshake(const String &wordlist_path,
     padprintln("");
 
     // Single green title line
-    tft.setTextColor(TFT_GREEN, bruceConfig.bgColor);
+    tft.setTextColor(TFT_GREEN, willyConfig.bgColor);
     padprintln("SENHA ENCONTRADA!");
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
 
     padprintln(""); // small gap
 
@@ -739,9 +739,9 @@ void wifi_crack_handshake(const String &wordlist_path,
     }
 
   } else {
-    tft.setTextColor(TFT_RED, bruceConfig.bgColor);
+    tft.setTextColor(TFT_RED, willyConfig.bgColor);
     padprintln("Senha nao encontrada");
-    tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
     displayError("Sem match", true);
     vTaskDelay(pdMS_TO_TICKS(3000));
   }
@@ -780,7 +780,7 @@ void wifi_recover_menu() {
     return;
   }
 
-  // Ensure BrucePCAP folder exists, create if needed
+  // Ensure WillyPCAP folder exists, create if needed
   const String PCAP_DIR = "/WillyPCAP";
   if (!(*fs).exists(PCAP_DIR)) {
     if ((*fs).mkdir(PCAP_DIR)) {

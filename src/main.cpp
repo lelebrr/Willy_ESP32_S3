@@ -2,6 +2,7 @@
 #include "core/main_menu.h"
 #include <globals.h>
 
+#include "core/headless_mode.h"
 #include "core/powerSave.h"
 #include "core/serial_commands/cli.h"
 #include "core/settings.h"
@@ -20,9 +21,11 @@
 #if !defined(LITE_VERSION) && !defined(DISABLE_INTERPRETER)
 #include "modules/bjs_interpreter/interpreter.h"
 #endif
+
+bool tftInitialized = false;
 io_expander ioExpander;
-BruceConfig bruceConfig;
-BruceConfigPins bruceConfigPins;
+WillyConfig willyConfig;
+WillyConfigPins willyConfigPins;
 
 SerialCli serialCli;
 WillyUSBSerial usbSerial(&Serial);
@@ -64,6 +67,8 @@ volatile int EncoderLedChange = 0;
 TouchPoint touchPoint;
 
 keyStroke KeyStroke;
+
+SemaphoreHandle_t spiMutex = NULL;
 
 TaskHandle_t xHandle;
 void __attribute__((weak)) InputHandler() {
@@ -158,8 +163,8 @@ void begin_storage() {
     LittleFS.format(), LittleFS.begin();
   }
   bool checkFS = setupSdCard();
-  bruceConfig.fromFile(checkFS);
-  bruceConfigPins.fromFile(checkFS);
+  willyConfig.fromFile(checkFS);
+  willyConfigPins.fromFile(checkFS);
 }
 
 /*********************************************************************
@@ -198,18 +203,18 @@ void setup_gpio() {
   ioExpander.init(IO_EXPANDER_ADDRESS, &Wire);
 
 #if TFT_MOSI > 0
-  if (bruceConfigPins.CC1101_bus.mosi == (gpio_num_t)TFT_MOSI)
+  if (willyConfigPins.CC1101_bus.mosi == (gpio_num_t)TFT_MOSI)
     initCC1101once(&tft.getSPIinstance()); // (T_EMBED), CORE2 and others
   else
 #endif
-      if (bruceConfigPins.CC1101_bus.mosi == bruceConfigPins.SDCARD_bus.mosi)
+      if (willyConfigPins.CC1101_bus.mosi == willyConfigPins.SDCARD_bus.mosi)
     initCC1101once(
         &sdcardSPI); // (ARDUINO_M5STACK_CARDPUTER) and (ESP32S3DEVKITC1) and
                      // devices that share CC1101 pin with only SDCard
   else
     initCC1101once(NULL);
   // (ARDUINO_M5STICK_C_PLUS) || (ARDUINO_M5STICK_C_PLUS2) and others that
-  // doesn´t share SPI with other devices (need to change it when Bruce board
+  // doesn´t share SPI with other devices (need to change it when Willy board
   // comes to shore)
 }
 
@@ -218,21 +223,21 @@ void setup_gpio() {
  **  Config tft
  *********************************************************************/
 void begin_tft() {
-  Serial.println("[BOOT] Iniciando tft.begin()...");
-  tft.begin(); // agora com User_Setup.h vai funcionar
+  Serial.println("[BOOT] Iniciando tft.init()...");
 
-  tft.setRotation(
-      bruceConfigPins.rotation); // sometimes it misses the first command
-  tft.invertDisplay(bruceConfig.colorInverted);
-  tft.setRotation(bruceConfigPins.rotation);
+  tft.init();
+  tft.setRotation(1); // teste 0, 1, 2 ou 3 se a imagem ficar invertida
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextSize(2);
+  tft.drawString("WILLY ESP S3", 20, 100);
+  tft.drawString("TELA OK!", 60, 150);
+
   tftWidth = tft.width();
-#ifdef HAS_TOUCH
-  tftHeight = tft.height() - 20;
-#else
   tftHeight = tft.height();
-#endif
-  resetTftDisplay();
-  setBrightness(bruceConfig.bright, false);
+
+  tftInitialized = true;
+  Serial.println("[DISPLAY] TFT inicializado com sucesso!");
 }
 
 /*********************************************************************
@@ -241,14 +246,14 @@ void begin_tft() {
  *********************************************************************/
 void boot_screen() {
   Serial.println("[BOOT] Inside boot_screen()...");
-  tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
   tft.setTextSize(FM);
-  tft.drawPixel(0, 0, bruceConfig.bgColor);
+  tft.drawPixel(0, 0, willyConfig.bgColor);
   Serial.println("[BOOT] Drawing 'Willy' string...");
   tft.drawCentreString("Willy", tftWidth / 2, 10, 1);
   tft.setTextSize(FP);
   Serial.println("[BOOT] Drawing version string...");
-  tft.drawCentreString(BRUCE_VERSION, tftWidth / 2, 25, 1);
+  tft.drawCentreString(WILLY_VERSION, tftWidth / 2, 25, 1);
   tft.setTextSize(FM);
   Serial.println("[BOOT] Drawing 'WILLY FIRMWARE' string...");
   tft.drawCentreString("WILLY FIRMWARE", tftWidth / 2, tftHeight + 2,
@@ -291,12 +296,12 @@ void boot_screen_anim() {
   // Start image loop
   while (millis() < (unsigned long)(i + 7000)) { // boot image lasts for 5 secs
     if ((millis() - i > 2000) && !drawn) {
-      tft.fillRect(0, 45, tftWidth, tftHeight - 45, bruceConfig.bgColor);
+      tft.fillRect(0, 45, tftWidth, tftHeight - 45, willyConfig.bgColor);
       if (boot_img > 0 && !drawn) {
-        tft.fillScreen(bruceConfig.bgColor);
+        tft.fillScreen(willyConfig.bgColor);
         if (boot_img == 5) {
-          drawImg(*bruceConfig.themeFS(),
-                  bruceConfig.getThemeItemImg(bruceConfig.theme.paths.boot_img),
+          drawImg(*willyConfig.themeFS(),
+                  willyConfig.getThemeItemImg(willyConfig.theme.paths.boot_img),
                   0, 0, true, 3600);
           Serial.println("Image from SD theme");
         } else if (boot_img == 1) {
@@ -319,31 +324,31 @@ void boot_screen_anim() {
     }
 #if !defined(LITE_VERSION)
     if (!boot_img && (millis() - i > 2200) && (millis() - i) < 2700)
-      tft.drawRect(2 * tftWidth / 3, tftHeight / 2, 2, 2, bruceConfig.priColor);
+      tft.drawRect(2 * tftWidth / 3, tftHeight / 2, 2, 2, willyConfig.priColor);
     if (!boot_img && (millis() - i > 2700) && (millis() - i) < 2900)
-      tft.fillRect(0, 45, tftWidth, tftHeight - 45, bruceConfig.bgColor);
+      tft.fillRect(0, 45, tftWidth, tftHeight - 45, willyConfig.bgColor);
     if (!boot_img && (millis() - i > 2900) && (millis() - i) < 3400)
       tft.drawXBitmap(2 * tftWidth / 3 - 30, 5 + tftHeight / 2,
-                      bruce_small_bits, bruce_small_width, bruce_small_height,
-                      bruceConfig.bgColor, bruceConfig.priColor);
+                      willy_small_bits, willy_small_width, willy_small_height,
+                      willyConfig.bgColor, willyConfig.priColor);
     if (!boot_img && (millis() - i > 3400) && (millis() - i) < 3600)
-      tft.fillScreen(bruceConfig.bgColor);
+      tft.fillScreen(willyConfig.bgColor);
     if (!boot_img && (millis() - i > 3600))
       tft.drawXBitmap((tftWidth - 238) / 2, (tftHeight - 133) / 2, bits,
-                      bits_width, bits_height, bruceConfig.bgColor,
-                      bruceConfig.priColor);
+                      bits_width, bits_height, willyConfig.bgColor,
+                      willyConfig.priColor);
 #endif
     if (check(AnyKeyPress)) // If any key or M5 key is pressed, it'll jump the
                             // boot screen
     {
-      tft.fillScreen(bruceConfig.bgColor);
+      tft.fillScreen(willyConfig.bgColor);
       delay(10);
       return;
     }
   }
 
   // Clear splashscreen
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
 }
 
 /*********************************************************************
@@ -400,7 +405,7 @@ void init_led() {
  **  Play sound or tone depending on device hardware
  *********************************************************************/
 void startup_sound() {
-  if (bruceConfig.soundEnabled == 0)
+  if (willyConfig.soundEnabled == 0)
     return; // if sound is disabled, do not play sound
 #if !defined(LITE_VERSION)
 #if defined(BUZZ_PIN)
@@ -411,10 +416,10 @@ void startup_sound() {
   /*  2fix: menu infinite loop */
 #elif defined(HAS_NS4168_SPKR)
   // play a boot sound
-  if (bruceConfig.theme.boot_sound) {
+  if (willyConfig.theme.boot_sound) {
     playAudioFile(
-        bruceConfig.themeFS(),
-        bruceConfig.getThemeItemImg(bruceConfig.theme.paths.boot_sound));
+        willyConfig.themeFS(),
+        willyConfig.getThemeItemImg(willyConfig.theme.paths.boot_sound));
   } else if (SD.exists("/boot.wav")) {
     playAudioFile(&SD, "/boot.wav");
   } else if (LittleFS.exists("/boot.wav")) {
@@ -432,6 +437,7 @@ void setup() {
   Serial.begin(115200);
   delay(500);
   Serial.println("\n=== WILLY ESP S3 - BOOT CORRIGIDO ===");
+  spiMutex = xSemaphoreCreateMutex();
 
   Serial.println("[BOOT] Initializing system...");
 
@@ -454,25 +460,30 @@ void setup() {
   sdcardMounted = false;
   wifiConnected = false;
   BLEConnected = false;
-  bruceConfig.bright = 100; // theres is no value yet
-  bruceConfigPins.rotation = ROTATION;
+  willyConfig.bright = 100; // theres is no value yet
+  willyConfigPins.rotation = ROTATION;
 
   Serial.println("[BOOT] Initializing GPIOs...");
   setup_gpio();
 
 #if defined(HAS_SCREEN)
-  Serial.println("Starting begin_tft()...");
-  begin_tft(); // ← aqui fica o tft.init() oficial
-  Serial.println("begin_tft() OK");
+  begin_tft();
 #else
   tft.begin();
+  tftInitialized =
+      true; // For devices without HAS_SCREEN explicitly but using tft
 #endif
 
   Serial.println("Starting begin_storage()...");
   begin_storage();
 
-  Serial.println("Starting initLVGL()...");
-  initLVGL();
+  if (tftInitialized) {
+    Serial.println("[BOOT] Iniciando LVGL + Cyber Menu...");
+    initLVGL();
+  } else {
+    Serial.println("[WARNING] MODO HEADLESS ATIVADO - Tela não encontrada");
+    Serial.println("[INFO] Serial + Web Dashboard ainda funcionam normalmente");
+  }
 
   init_clock();
   init_led();
@@ -508,13 +519,13 @@ void setup() {
   );
   // #endif
 #if defined(HAS_SCREEN)
-  bruceConfig.openThemeFile(bruceConfig.themeFS(), bruceConfig.themePath,
+  willyConfig.openThemeFile(willyConfig.themeFS(), willyConfig.themePath,
                             false);
-  if (!bruceConfig.instantBoot) {
+  if (!willyConfig.instantBoot) {
     boot_screen_anim();
     startup_sound();
   }
-  if (bruceConfig.wifiAtStartup) {
+  if (willyConfig.wifiAtStartup) {
     log_i("Loading Wifi at Startup");
     xTaskCreate(wifiConnectTask,   // Task function
                 "wifiConnectTask", // Task Name
@@ -529,9 +540,9 @@ void setup() {
   startSerialCommandsHandlerTask(true);
 
   wakeUpScreen();
-  if (bruceConfig.startupApp != "" &&
-      !startupApp.startApp(bruceConfig.startupApp)) {
-    bruceConfig.setStartupApp("");
+  if (willyConfig.startupApp != "" &&
+      !startupApp.startApp(willyConfig.startupApp)) {
+    willyConfig.setStartupApp("");
   }
 }
 
@@ -560,7 +571,7 @@ void loop() {
         millis(); // ensure that will not dim screen when get back to menu
   }
 #endif
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
 
   mainMenu.begin();
   delay(1);
@@ -582,7 +593,7 @@ void loop() {
                  "At your command:");
 
   // Enable navigation through webUI
-  tft.fillScreen(bruceConfig.bgColor);
+  tft.fillScreen(willyConfig.bgColor);
   mainMenu.begin();
   vTaskDelay(10 / portTICK_PERIOD_MS);
 }

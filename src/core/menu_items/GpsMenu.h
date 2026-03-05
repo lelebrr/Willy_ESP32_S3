@@ -10,8 +10,8 @@ public:
     void optionsMenu(void);
     void wardrivingMenu(void);
     void drawIcon(float scale);
-    bool hasTheme() { return bruceConfig.theme.gps; }
-    String themePath() { return bruceConfig.theme.paths.gps; }
+    bool hasTheme() { return willyConfig.theme.gps; }
+    String themePath() { return willyConfig.theme.paths.gps; }
 
 private:
     void configMenu(void);

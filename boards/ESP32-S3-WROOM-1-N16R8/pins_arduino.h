@@ -148,7 +148,7 @@ static const uint8_t MISO = 13;
 #define JOY_BTN_PIN 6 // Digital, INPUT_PULLUP
 #endif
 
-// --- Grove / I2C aliases (para compatibilidade com o firmware Bruce) ---
+// --- Grove / I2C aliases (para compatibilidade com o firmware Willy) ---
 #ifndef GROVE_SDA
 #define GROVE_SDA SDA
 #endif
