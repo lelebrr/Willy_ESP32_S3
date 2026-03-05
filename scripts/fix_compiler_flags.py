@@ -68,6 +68,29 @@ if framework_dir and os.path.isdir(os.path.join(framework_dir, "libraries")):
         src_path = os.path.join(lib_dir, lib, "src")
         if os.path.isdir(src_path):
             env.Append(CPPPATH=[src_path])
-            # Also add to CCFLAGS just in case CPPIPATH isn't enough for some sub-SCons
-            # env.Append(CCFLAGS=["-I" + src_path])
     print("[FIX] Added framework libraries to include path.")
+
+def clean_mquickjs_library(*args, **kwargs):
+    pioenv = env.get("PIOENV", "")
+    project_dir = env.get("PROJECT_DIR", "")
+    if pioenv and project_dir:
+        lib_path = os.path.join(project_dir, ".pio", "libdeps", pioenv, "mquickjs")
+        if os.path.isdir(lib_path):
+            files_to_delete = [
+                "example.c",
+                "example_stdlib.c",
+                "mqjs.c",
+                "mqjs_stdlib.c",
+                "readline.c",
+                "readline_tty.c"
+            ]
+            for f in files_to_delete:
+                filepath = os.path.join(lib_path, f)
+                if os.path.isfile(filepath):
+                    try:
+                        os.remove(filepath)
+                        print(f"[FIX] Deleted {f} from mquickjs to prevent compilation.")
+                    except OSError:
+                        pass
+
+clean_mquickjs_library()

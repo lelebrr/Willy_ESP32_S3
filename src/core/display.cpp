@@ -9,7 +9,6 @@
 #include <lvgl.h>
 #include <memory>
 
-
 #define MAX_MENU_SIZE (int)(tftHeight / 25)
 
 // Send the ST7789 into or out of sleep mode
@@ -57,6 +56,23 @@ void my_disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area,
 }
 
 /* Read the touchpad */
+void updateTouchPoint() {
+#ifdef HAS_TOUCH
+  uint16_t tx, ty;
+  if (tft.getTouch(&tx, &ty)) {
+    touchPoint.x = tft.width() - tx;
+    touchPoint.y = tft.height() - ty;
+    touchPoint.pressed = true;
+    touchHeatMap(touchPoint);
+    if (wakeUpScreen()) {
+      AnyKeyPress = true;
+    }
+  } else {
+    touchPoint.pressed = false;
+  }
+#endif
+}
+
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
   if (touchPoint.pressed) {
     data->state = LV_INDEV_STATE_PR;

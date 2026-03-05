@@ -1,9 +1,7 @@
-#ifndef __GLOBALS__
-#define __GLOBALS__
-
+#pragma once
+#include "interface.h"
 #include "precompiler_flags.h"
-
-#include <interface.h>
+#include <Arduino.h>
 
 // Globals.h
 
@@ -16,7 +14,6 @@
 #include "core/serial_commands/cli.h"
 #include "core/startup_app.h"
 #include "willy_logger.h"
-#include <Arduino.h>
 #include <ESP32Time.h>
 #include <LittleFS.h>
 #include <NTPClient.h>
@@ -263,5 +260,3 @@ extern inline bool check(volatile bool &btn, bool resetButtonStatus = true) {
 extern gpio_num_t mic_bclk_pin; // used to configure Cardputer ADV Microphone
 
 extern SemaphoreHandle_t spiMutex;
-
-#endif

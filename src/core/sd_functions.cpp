@@ -76,11 +76,27 @@ bool setupSdCard() {
 #else
   // Not using InputHandler (SdCard on default &SPI bus)
   if (task) {
-    // Try with default frequency first, then 4MHz
-    if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs)) {
-      Serial.println("SD.begin failed with default freq, trying 4MHz...");
-      if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, SPI, 4000000))
-        result = false;
+    // Check if SDCARD shares bus with TFT
+    if (willyConfigPins.SDCARD_bus.mosi == (gpio_num_t)TFT_MOSI &&
+        willyConfigPins.SDCARD_bus.mosi != GPIO_NUM_NC) {
+#if TFT_MOSI > 0
+      Serial.println("[SD] Touch device: SD shares TFT SPI bus");
+      if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance())) {
+        Serial.println("SD.begin (TFT SPI touch) failed, trying 4MHz...");
+        if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance(),
+                      4000000))
+          result = false;
+      }
+#else
+      result = false;
+#endif
+    } else {
+      // SD on its own bus, use default SPI
+      if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs)) {
+        Serial.println("SD.begin failed with default freq, trying 4MHz...");
+        if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, SPI, 4000000))
+          result = false;
+      }
     }
   }
   // SDCard in the same Bus as TFT, in this case we call the SPI TFT Instance

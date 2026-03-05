@@ -1,8 +1,7 @@
-#include "../../include/interface.h"
+#include "interface.h"
 #include <Arduino.h>
 
-
-// Externs for button states from globals.h, needed by InputHandler
+// Externs for global variables, breaking dependency on globals.h
 extern volatile bool PrevPress;
 extern volatile bool NextPress;
 extern volatile bool UpPress;
@@ -10,6 +9,10 @@ extern volatile bool DownPress;
 extern volatile bool SelPress;
 extern volatile bool AnyKeyPress;
 extern volatile bool EscPress;
+
+// Externs for functions defined elsewhere
+extern void updateTouchPoint();
+extern bool wakeUpScreen();
 
 /***************************************************************************************
 ** Function name: _setup_gpio()
@@ -96,6 +99,14 @@ void InputHandler(void) {
 
   // Reset flags
   static bool btn_last_state = HIGH;
+
+#ifdef HAS_TOUCH
+  updateTouchPoint();
+  // Wake screen on touch
+  if (wakeUpScreen()) {
+    AnyKeyPress = true;
+  }
+#endif
 
 #ifdef JOY_BTN_PIN
   if (JOY_BTN_PIN >= 0) {

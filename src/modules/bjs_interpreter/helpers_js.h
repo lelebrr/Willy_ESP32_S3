@@ -6,6 +6,39 @@
 
 extern "C" {
 #include <mquickjs.h>
+
+static inline int JS_IsObject(JSContext *ctx, JSValue val) {
+  return JS_GetClassID(ctx, val) >= 0;
+}
+
+static inline int JS_ToBool(JSContext *ctx, JSValue val) {
+  if (JS_IsBool(val))
+    return JS_VALUE_GET_SPECIAL_VALUE(val);
+  if (JS_IsInt(val))
+    return JS_VALUE_GET_INT(val) != 0;
+  if (JS_IsNull(val) || JS_IsUndefined(val))
+    return 0;
+  return 1;
+}
+
+static inline const char *JS_GetTypedArrayBuffer(JSContext *ctx, size_t *plen,
+                                                 JSValue obj) {
+  if (plen)
+    *plen = 0;
+  return NULL;
+}
+
+static inline const char *JS_GetOwnPropertyByIndex(JSContext *ctx,
+                                                   uint32_t index,
+                                                   uint32_t *prop_count,
+                                                   JSValue obj) {
+  return NULL;
+}
+
+static inline JSValue JS_NewUint8ArrayCopy(JSContext *ctx, const uint8_t *buf,
+                                           size_t len) {
+  return JS_NewStringLen(ctx, (const char *)buf, len);
+}
 }
 
 #include <globals.h>

@@ -14,6 +14,7 @@ extern "C" {
 #include "mquickjs.h"
 }
 #include "core/mykeyboard.h"
+#include "helpers_js.h"
 #include "modules/badusb_ble/ducky_typer.h"
 #include "modules/ir/ys_irtm.h"
 #include "modules/rf/rf_send.h"
@@ -23,7 +24,6 @@ extern "C" {
 #include <LittleFS.h>
 #include <SD.h>
 #include <WiFi.h>
-
 
 // Forward declarations
 extern int getBattery();

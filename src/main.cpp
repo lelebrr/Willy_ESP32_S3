@@ -1,5 +1,6 @@
 #include "core/led_control.h"
 #include "core/main_menu.h"
+#include <Arduino.h>
 #include <globals.h>
 
 #include "core/headless_mode.h"
@@ -228,10 +229,15 @@ void begin_tft() {
   tft.init();
   tft.setRotation(1); // teste 0, 1, 2 ou 3 se a imagem ficar invertida
   tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setTextSize(2);
-  tft.drawString("WILLY ESP S3", 20, 100);
-  tft.drawString("TELA OK!", 60, 150);
+
+#ifdef HAS_TOUCH
+  // Calibration data from clean_demo
+  uint16_t calData[5] = {280, 3555, 298, 3505, 7};
+  tft.setTouch(calData);
+  Serial.println("[DISPLAY] Touch calibration applied.");
+#endif
+
+  Serial.println("[DISPLAY] Screen cleared, ready for LVGL.");
 
   tftWidth = tft.width();
   tftHeight = tft.height();
@@ -522,8 +528,9 @@ void setup() {
   willyConfig.openThemeFile(willyConfig.themeFS(), willyConfig.themePath,
                             false);
   if (!willyConfig.instantBoot) {
-    boot_screen_anim();
-    startup_sound();
+    // TEMPORARY BYPASS: Checking if splash screen or sound hang the device
+    // boot_screen_anim();
+    // startup_sound();
   }
   if (willyConfig.wifiAtStartup) {
     log_i("Loading Wifi at Startup");
