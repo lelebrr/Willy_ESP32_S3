@@ -1,5 +1,6 @@
 #include "interface.h"
 #include <Arduino.h>
+#include <algorithm> // for std::max_element, std::min_element
 
 // Externs for global variables, breaking dependency on globals.h
 extern volatile bool PrevPress;
@@ -14,50 +15,162 @@ extern volatile bool EscPress;
 extern void updateTouchPoint();
 extern bool wakeUpScreen();
 
+// ===== Runtime device detection flags =====
+// These are set once during _setup_gpio() and never change after.
+static bool joystickDetected = false;
+static bool joystickButtonDetected = false;
+
+/**
+ * Detect if an analog joystick axis is physically connected.
+ * A connected joystick at rest reads ~2048 (mid-range 12-bit ADC)
+ * with very low variance between successive reads.
+ * A floating (disconnected) pin produces erratic, high-variance readings.
+ *
+ * Returns true if a real joystick is detected on the given pin.
+ */
+static bool detectAnalogDevice(int pin, const char *name) {
+  if (pin < 0)
+    return false;
+
+  const int NUM_SAMPLES = 8;
+  int samples[NUM_SAMPLES];
+  int minVal = 4095, maxVal = 0;
+  long sum = 0;
+
+  for (int i = 0; i < NUM_SAMPLES; i++) {
+    samples[i] = analogRead(pin);
+    if (samples[i] < minVal)
+      minVal = samples[i];
+    if (samples[i] > maxVal)
+      maxVal = samples[i];
+    sum += samples[i];
+    delayMicroseconds(500);
+  }
+
+  int avg = sum / NUM_SAMPLES;
+  int range = maxVal - minVal;
+
+  // A real joystick at rest:
+  //   - average near center (800..3200 for 12-bit ADC)
+  //   - range < 150 (very stable readings)
+  // A floating pin:
+  //   - erratic average (often near 0 or 4095)
+  //   - range > 200 (high variance)
+  bool detected = (range < 150 && avg > 800 && avg < 3200);
+
+  Serial.printf("[GPIO] %s (pin %d): avg=%d, range=%d -> %s\n", name, pin, avg,
+                range, detected ? "DETECTED" : "NOT CONNECTED (disabled)");
+
+  return detected;
+}
+
+/**
+ * Detect if a digital button is physically connected (pulled-up).
+ * A properly connected button with INPUT_PULLUP reads HIGH when not pressed.
+ * A floating pin may read random values.
+ *
+ * We take multiple reads: if all are HIGH or all LOW consistently, it's likely
+ * connected.
+ */
+static bool detectDigitalButton(int pin, const char *name) {
+  if (pin < 0)
+    return false;
+
+  pinMode(pin, INPUT_PULLUP);
+  delay(2); // let the pullup settle
+
+  int highCount = 0;
+  const int NUM_SAMPLES = 10;
+  for (int i = 0; i < NUM_SAMPLES; i++) {
+    if (digitalRead(pin) == HIGH)
+      highCount++;
+    delayMicroseconds(200);
+  }
+
+  // With INPUT_PULLUP and no press, should read HIGH consistently
+  // A floating pin will read mixed HIGH/LOW
+  bool detected = (highCount >= 9); // allow 1 glitch
+
+  Serial.printf("[GPIO] %s (pin %d): %d/%d HIGH -> %s\n", name, pin, highCount,
+                NUM_SAMPLES,
+                detected ? "DETECTED" : "NOT CONNECTED (disabled)");
+
+  return detected;
+}
+
 /***************************************************************************************
 ** Function name: _setup_gpio()
 ** Location: main.cpp
-** Description:   initial setup for the device
+** Description:   initial setup for the device with auto-detection of
+* peripherals
 ***************************************************************************************/
 void _setup_gpio() {
-  // Initial basic pin setup for S3 boards
+  Serial.println("[GPIO] === Peripheral Auto-Detection ===");
+
+  // ---- RGB LED ----
 #ifdef RGB_LED
   if (RGB_LED >= 0) {
     pinMode(RGB_LED, OUTPUT);
     digitalWrite(RGB_LED, LOW);
+    Serial.printf("[GPIO] RGB LED on pin %d configured\n", RGB_LED);
   }
 #endif
+
+  // ---- Status LED ----
 #ifdef LED
   if (LED >= 0) {
     pinMode(LED, OUTPUT);
     digitalWrite(LED, LOW);
+    Serial.printf("[GPIO] LED on pin %d configured\n", LED);
   }
 #endif
 
-  // Setup Joystick Button
+  // ---- Joystick Analog Axes (auto-detect) ----
+  bool joyX = false, joyY = false;
+#ifdef JOY_X_PIN
+  joyX = detectAnalogDevice(JOY_X_PIN, "Joystick X-axis");
+#endif
+#ifdef JOY_Y_PIN
+  joyY = detectAnalogDevice(JOY_Y_PIN, "Joystick Y-axis");
+#endif
+  // Only enable joystick if BOTH axes are detected
+  joystickDetected = joyX && joyY;
+  if (!joystickDetected && (joyX || joyY)) {
+    Serial.println(
+        "[GPIO] WARNING: Only one joystick axis detected, disabling joystick");
+  }
+
+  // ---- Joystick Button (auto-detect) ----
 #ifdef JOY_BTN_PIN
   if (JOY_BTN_PIN >= 0) {
-    pinMode(JOY_BTN_PIN, INPUT_PULLUP);
+    joystickButtonDetected =
+        detectDigitalButton(JOY_BTN_PIN, "Joystick Button");
   }
 #endif
 
-  // CC1101 GDO Pins
+  // ---- CC1101 GDO Pins (input only, safe even if disconnected) ----
 #ifdef CC1101_GDO0
-  if (CC1101_GDO0 >= 0)
+  if (CC1101_GDO0 >= 0) {
     pinMode(CC1101_GDO0, INPUT);
+  }
 #endif
 #ifdef CC1101_GDO2
-  if (CC1101_GDO2 >= 0)
+  if (CC1101_GDO2 >= 0) {
     pinMode(CC1101_GDO2, INPUT);
+  }
 #endif
 
-  // NRF24 CE Pin
+  // ---- NRF24 CE Pin ----
 #ifdef NRF24_CE_PIN
-  if (NRF24_CE_PIN >= 0)
+  if (NRF24_CE_PIN >= 0) {
     pinMode(NRF24_CE_PIN, OUTPUT);
+  }
 #endif
 
-  // startupApp is user-configurable, do not force here
+  Serial.printf("[GPIO] Summary: Joystick=%s, JoyBtn=%s\n",
+                joystickDetected ? "YES" : "NO",
+                joystickButtonDetected ? "YES" : "NO");
+  Serial.println("[GPIO] === Auto-Detection Complete ===");
 }
 
 /***************************************************************************************
@@ -88,8 +201,8 @@ void _setBrightness(uint8_t brightval) {
 
 /*********************************************************************
 ** Function: InputHandler
-** Handles the variables PrevPress, NextPress, SelPress, AnyKeyPress and
-* EscPress
+** Handles input from all detected devices (touch, joystick, buttons).
+** Devices that were not detected at startup are safely skipped.
 **********************************************************************/
 void InputHandler(void) {
   static uint32_t last_check = 0;
@@ -97,19 +210,19 @@ void InputHandler(void) {
     return;
   last_check = millis();
 
-  // Reset flags
   static bool btn_last_state = HIGH;
 
+  // ---- Touch Input (always active if HAS_TOUCH) ----
 #ifdef HAS_TOUCH
   updateTouchPoint();
-  // Wake screen on touch
   if (wakeUpScreen()) {
     AnyKeyPress = true;
   }
 #endif
 
+  // ---- Joystick Button (only if detected at startup) ----
 #ifdef JOY_BTN_PIN
-  if (JOY_BTN_PIN >= 0) {
+  if (joystickButtonDetected) {
     bool btn_state = digitalRead(JOY_BTN_PIN);
     if (btn_state == LOW && btn_last_state == HIGH) {
       SelPress = true;
@@ -119,35 +232,42 @@ void InputHandler(void) {
   }
 #endif
 
-  // Joystick Navigation - KY-023 Funduino Shield Configuration
-  // Valores calibrados para KY-023: ponto central ~2048, faixa de ativação
-  // ~1500-3500
+  // ---- Joystick Analog Axes (only if detected at startup) ----
+  if (!joystickDetected)
+    return; // Skip all analog reads if no joystick
+
 #ifdef JOY_X_PIN
   if (JOY_X_PIN >= 0) {
-    int x = analogRead(JOY_X_PIN);
-    // Centro: ~2048, Limite inferior: < 1500 (esquerda), Limite superior: >
-    // 3500 (direita)
-    if (x < 1500) {
-      PrevPress = true;
-      AnyKeyPress = true;
-    } else if (x > 3500) {
-      NextPress = true;
-      AnyKeyPress = true;
+    int x1 = analogRead(JOY_X_PIN);
+    delayMicroseconds(100);
+    int x2 = analogRead(JOY_X_PIN);
+    if (abs(x1 - x2) < 200) {
+      int x = (x1 + x2) / 2;
+      if (x < 1000) {
+        PrevPress = true;
+        AnyKeyPress = true;
+      } else if (x > 3800) {
+        NextPress = true;
+        AnyKeyPress = true;
+      }
     }
   }
 #endif
 
 #ifdef JOY_Y_PIN
   if (JOY_Y_PIN >= 0) {
-    int y = analogRead(JOY_Y_PIN);
-    // Centro: ~2048, Limite inferior: < 1500 (cima), Limite superior: > 3500
-    // (baixo)
-    if (y < 1500) {
-      UpPress = true;
-      AnyKeyPress = true;
-    } else if (y > 3500) {
-      DownPress = true;
-      AnyKeyPress = true;
+    int y1 = analogRead(JOY_Y_PIN);
+    delayMicroseconds(100);
+    int y2 = analogRead(JOY_Y_PIN);
+    if (abs(y1 - y2) < 200) {
+      int y = (y1 + y2) / 2;
+      if (y < 1000) {
+        UpPress = true;
+        AnyKeyPress = true;
+      } else if (y > 3800) {
+        DownPress = true;
+        AnyKeyPress = true;
+      }
     }
   }
 #endif

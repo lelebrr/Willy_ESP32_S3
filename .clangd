@@ -1,5 +1,16 @@
 CompileFlags:
   CompilationDatabase: .
   Remove: [-m*, -f*]
+  Add:
+    - -ID:/Projetos/Willy_ESP32_S3/boards/ESP32-S3-WROOM-1-N16R8
+    - -ID:/Projetos/Willy_ESP32_S3/include
+    - -ID:/Projetos/Willy_ESP32_S3/src
+    - -ID:/Projetos/Willy_ESP32_S3/lib/HAL
+    - -DHAS_TOUCH=1
+    - -DHAS_SCREEN=1
+    - -DUSER_SETUP_LOADED=1
+    - -DILI9341_DRIVER=1
+    - -DUSE_HSPI_PORT=1
+    - -DARDUINO_USB_CDC_ON_BOOT=1
 Diagnostics:
   UnusedIncludes: None

@@ -24,6 +24,7 @@
 #endif
 
 bool tftInitialized = false;
+volatile bool lvgl_rendering_active = false;
 io_expander ioExpander;
 WillyConfig willyConfig;
 WillyConfigPins willyConfigPins;
@@ -84,8 +85,9 @@ void __attribute__((weak)) taskInputHandler(void *parameter) {
     // Input detection
     InputHandler();
 
-    // Sole owner of LVGL timer processing for stability
-    if (lvgl_mutex && xSemaphoreTake(lvgl_mutex, pdMS_TO_TICKS(5)) == pdTRUE) {
+    // Only process LVGL when explicitly enabled (splash or cyber menu)
+    if (lvgl_rendering_active && lvgl_mutex &&
+        xSemaphoreTake(lvgl_mutex, pdMS_TO_TICKS(5)) == pdTRUE) {
       lv_timer_handler();
       xSemaphoreGive(lvgl_mutex);
     }
@@ -240,7 +242,11 @@ void begin_tft() {
   Serial.println("[DISPLAY] Screen cleared, ready for LVGL.");
 
   tftWidth = tft.width();
+#ifdef HAS_TOUCH
+  tftHeight = tft.height() - 20; // Reserve 20px for touch footer
+#else
   tftHeight = tft.height();
+#endif
 
   tftInitialized = true;
   Serial.println("[DISPLAY] TFT inicializado com sucesso!");
@@ -486,6 +492,33 @@ void setup() {
   if (tftInitialized) {
     Serial.println("[BOOT] Iniciando LVGL + Cyber Menu...");
     initLVGL();
+
+    // Show LVGL splash screen (orca animation)
+    Serial.println("[BOOT] Showing splash screen...");
+    lvgl_rendering_active = true;
+    lv_obj_t *splash_scr = lv_scr_act();
+    show_willy_splash(splash_scr);
+    // Drive LVGL rendering for splash duration (~5s)
+    unsigned long splashStart = millis();
+    while (millis() - splashStart < 5000) {
+      if (lvgl_mutex &&
+          xSemaphoreTake(lvgl_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        lv_timer_handler();
+        xSemaphoreGive(lvgl_mutex);
+      }
+      vTaskDelay(pdMS_TO_TICKS(15));
+      // Allow skipping splash with any key
+      if (AnyKeyPress) {
+        AnyKeyPress = false;
+        Serial.println("[BOOT] Splash skipped by user.");
+        break;
+      }
+    }
+    // Clean up splash and disable LVGL rendering for TFT direct menu
+    lv_obj_clean(splash_scr);
+    lvgl_rendering_active = false;
+    Serial.println("[BOOT] Splash complete. LVGL paused for TFT menu.");
+
   } else {
     Serial.println("[WARNING] MODO HEADLESS ATIVADO - Tela não encontrada");
     Serial.println("[INFO] Serial + Web Dashboard ainda funcionam normalmente");
@@ -528,9 +561,8 @@ void setup() {
   willyConfig.openThemeFile(willyConfig.themeFS(), willyConfig.themePath,
                             false);
   if (!willyConfig.instantBoot) {
-    // TEMPORARY BYPASS: Checking if splash screen or sound hang the device
-    // boot_screen_anim();
-    // startup_sound();
+    // boot_screen_anim() removed — replaced by LVGL splash in setup()
+    startup_sound();
   }
   if (willyConfig.wifiAtStartup) {
     log_i("Loading Wifi at Startup");

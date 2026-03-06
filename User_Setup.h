@@ -1,29 +1,29 @@
-// User_Setup.h - WILLY ESP S3 + ILI9341 (só LCD conectado - 05/03/2026)
+// User_Setup.h - WILLY ESP S3 + ILI9341 (LCD + Touch - 06/03/2026)
 #define USER_SETUP_LOADED
 #define ILI9341_DRIVER
 
 #define TFT_WIDTH 240
 #define TFT_HEIGHT 320
 
-// === PINAGEM ATUAL (só LCD) ===
+// === PINAGEM ATUAL (LCD + Touch) ===
 #define TFT_CS 10
 #define TFT_DC 9
 #define TFT_RST 14
 #define TFT_MOSI 11
 #define TFT_SCLK 12
 #define TFT_MISO 13
-#define TFT_BL -1 // backlight fixo em 3.3V
+#define TFT_BL 3
 
-// === TOUCH DESABILITADO (IRQ removido) ===
-#define TOUCH_CS -1
-#define TOUCH_IRQ -1 // ← CRÍTICO: evita init de touch
+// === TOUCH HABILITADO ===
+#define TOUCH_CS 15
+#define TOUCH_IRQ -1
 
-// === CONFIGURAÇÃO OBRIGATÓRIA PARA ESP32-S3 (resolve StoreProhibited) ===
+// === CONFIGURAÇÃO OBRIGATÓRIA PARA ESP32-S3 ===
 #define USE_HSPI_PORT
 #define TFT_SPI_PORT 1
 
-#define SPI_FREQUENCY 40000000
-#define SPI_READ_FREQUENCY 20000000
+#define SPI_FREQUENCY 20000000
+#define SPI_READ_FREQUENCY 10000000
 #define SPI_TOUCH_FREQUENCY 2500000
 
 #define LOAD_GLCD

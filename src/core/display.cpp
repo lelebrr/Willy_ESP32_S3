@@ -59,7 +59,17 @@ void my_disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area,
 void updateTouchPoint() {
 #ifdef HAS_TOUCH
   uint16_t tx, ty;
-  if (tft.getTouch(&tx, &ty)) {
+  bool touched = false;
+
+  // Guard SPI bus access with mutex — tft.getTouch() internally uses
+  // SPI.beginTransaction/endTransaction, which conflicts with LVGL's
+  // my_disp_flush() running on the same SPI bus from another context.
+  if (spiMutex && xSemaphoreTake(spiMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+    touched = tft.getTouch(&tx, &ty);
+    xSemaphoreGive(spiMutex);
+  }
+
+  if (touched) {
     touchPoint.x = tft.width() - tx;
     touchPoint.y = tft.height() - ty;
     touchPoint.pressed = true;
@@ -119,7 +129,8 @@ void initLVGL() {
   /*Initialize the display*/
   lv_disp_drv_init(&disp_drv);
   disp_drv.hor_res = tftWidth;
-  disp_drv.ver_res = tftHeight + 20; // Include footer area
+  disp_drv.ver_res =
+      tft.height(); // Use actual display height (tftHeight has footer offset)
   disp_drv.flush_cb = my_disp_flush;
   disp_drv.draw_buf = &draw_buf;
   lv_disp_drv_register(&disp_drv);
