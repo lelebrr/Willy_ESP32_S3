@@ -18,6 +18,22 @@
 
 #define ACCENT_COLOR 0x00FFFF
 
+// LVGL animation wrapper functions — lv_obj_set_style_* takes 3 args
+// (obj, value, selector) but lv_anim_exec_xcb_t passes only 2 (obj, value).
+// These wrappers bridge the gap safely.
+static void anim_set_x(void *obj, int32_t v) {
+  lv_obj_set_x((lv_obj_t *)obj, (lv_coord_t)v);
+}
+static void anim_set_y(void *obj, int32_t v) {
+  lv_obj_set_y((lv_obj_t *)obj, (lv_coord_t)v);
+}
+static void anim_set_opa(void *obj, int32_t v) {
+  lv_obj_set_style_opa((lv_obj_t *)obj, (lv_opa_t)v, 0);
+}
+static void anim_set_transform_angle(void *obj, int32_t v) {
+  lv_obj_set_style_transform_angle((lv_obj_t *)obj, (int16_t)v, 0);
+}
+
 // ====================== CONFIGURAÇÕES ======================
 struct WillySplashConfig {
   int velocidade = 1; // 0 = lento, 1 = normal, 2 = rápido
@@ -43,8 +59,8 @@ static lv_obj_t *circuits[8] = {nullptr};
 
 // ====================== FUNÇÕES DE CONFIG ======================
 void load_willy_config() {
-  if (!LittleFS.begin())
-    return;
+  // LittleFS is already mounted by begin_storage() in main.cpp
+  // Do NOT call LittleFS.begin() again here.
   File f = LittleFS.open("/willy_splash.conf", "r");
   if (f) {
     willySplashCfg.velocidade = f.readStringUntil('\n').toInt();
@@ -75,16 +91,16 @@ static void play_orca_boot_sound() {
   if (willySplashCfg.tipoSom == 0 || willySplashCfg.tipoSom == 1) {
     // Rugido grave da orca
     _tone(180, 280);
-    delay(320);
+    vTaskDelay(pdMS_TO_TICKS(320));
     _tone(140, 420);
-    delay(450);
+    vTaskDelay(pdMS_TO_TICKS(450));
   }
   if (willySplashCfg.tipoSom == 0 || willySplashCfg.tipoSom == 1) {
     // Esguicho digital
     _tone(920, 90);
-    delay(100);
+    vTaskDelay(pdMS_TO_TICKS(100));
     _tone(1250, 70);
-    delay(80);
+    vTaskDelay(pdMS_TO_TICKS(80));
     _tone(680, 110);
   }
 }
@@ -149,7 +165,7 @@ static void create_orca(lv_obj_t *parent) {
   lv_obj_align(willy_text, LV_ALIGN_CENTER, 0, 78);
 
   version_text = lv_label_create(parent);
-  lv_label_set_text(version_text, "v2.1");
+  lv_label_set_text(version_text, WILLY_VERSION);
   lv_obj_set_style_text_color(version_text, lv_color_hex(ACCENT_COLOR), 0);
   lv_obj_set_style_text_font(version_text, &lv_font_montserrat_14, 0);
   lv_obj_set_style_opa(version_text, 0, 0);
@@ -191,7 +207,7 @@ static void start_animations() {
   lv_anim_set_var(&a, orca_container);
   lv_anim_set_values(&a, -220, 0);
   lv_anim_set_time(&a, base);
-  lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_x);
+  lv_anim_set_exec_cb(&a, anim_set_x);
   lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
   lv_anim_start(&a);
 
@@ -200,7 +216,7 @@ static void start_animations() {
   lv_anim_set_var(&a, orca_container);
   lv_anim_set_values(&a, -8, 8);
   lv_anim_set_time(&a, base - 400);
-  lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_y);
+  lv_anim_set_exec_cb(&a, anim_set_y);
   lv_anim_set_playback_time(&a, base - 400);
   lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
   lv_anim_start(&a);
@@ -210,7 +226,7 @@ static void start_animations() {
   lv_anim_set_var(&a, orca_tail);
   lv_anim_set_values(&a, -420, 420);
   lv_anim_set_time(&a, 750);
-  lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_transform_angle);
+  lv_anim_set_exec_cb(&a, anim_set_transform_angle);
   lv_anim_set_playback_time(&a, 750);
   lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
   lv_anim_start(&a);
@@ -221,7 +237,7 @@ static void start_animations() {
   lv_anim_set_values(&a, 120, 255);
   lv_anim_set_time(&a, 680);
   lv_anim_set_playback_time(&a, 680);
-  lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_opa);
+  lv_anim_set_exec_cb(&a, anim_set_opa);
   lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
   lv_anim_start(&a);
 
@@ -232,7 +248,7 @@ static void start_animations() {
     lv_anim_set_values(&a, 140, -30);
     lv_anim_set_time(&a, 1800 + (i * 140));
     lv_anim_set_delay(&a, i * 120);
-    lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_y);
+    lv_anim_set_exec_cb(&a, anim_set_y);
     lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
     lv_anim_start(&a);
   }
@@ -243,7 +259,7 @@ static void start_animations() {
     lv_anim_set_values(&a, 140, -30);
     lv_anim_set_time(&a, 2000 + (i * 200));
     lv_anim_set_delay(&a, i * 150 + 500);
-    lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_y);
+    lv_anim_set_exec_cb(&a, anim_set_y);
     lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
     lv_anim_start(&a);
   }
@@ -254,7 +270,7 @@ static void start_animations() {
   lv_anim_set_values(&a, 0, 255);
   lv_anim_set_time(&a, 1100);
   lv_anim_set_delay(&a, base - 300);
-  lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_opa);
+  lv_anim_set_exec_cb(&a, anim_set_opa);
   lv_anim_start(&a);
 
   lv_anim_init(&a);
@@ -262,7 +278,7 @@ static void start_animations() {
   lv_anim_set_values(&a, 0, 255);
   lv_anim_set_time(&a, 900);
   lv_anim_set_delay(&a, base + 200);
-  lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_style_opa);
+  lv_anim_set_exec_cb(&a, anim_set_opa);
   lv_anim_start(&a);
 }
 

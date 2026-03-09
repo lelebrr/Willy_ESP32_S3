@@ -165,7 +165,11 @@ void begin_storage() {
   if (!LittleFS.begin(true)) {
     LittleFS.format(), LittleFS.begin();
   }
-  bool checkFS = setupSdCard();
+  // SD card disabled temporarily — infinite retries flood serial and block CPU
+  // Uncomment the next line when SD card is physically connected and ready
+  // bool checkFS = setupSdCard();
+  bool checkFS = false;
+  Serial.println("[SD] SD card DISABLED for debug — display/touch fix first");
   willyConfig.fromFile(checkFS);
   willyConfigPins.fromFile(checkFS);
 }
@@ -223,23 +227,20 @@ void setup_gpio() {
 
 /*********************************************************************
  **  Function: begin_tft
- **  Config tft
+ **  Config tft display hardware only (no touch calibration here).
+ **  Touch calibration is done in setup_touch() AFTER begin_storage().
  *********************************************************************/
 void begin_tft() {
   Serial.println("[BOOT] Iniciando tft.init()...");
 
   tft.init();
-  tft.setRotation(1); // teste 0, 1, 2 ou 3 se a imagem ficar invertida
+  tft.setRotation(1); // Rotation 1 = landscape (320x240)
+  tft.invertDisplay(
+      false); // ILI9341: set to false for normal colors (true inverts all)
   tft.fillScreen(TFT_BLACK);
 
-#ifdef HAS_TOUCH
-  // Calibration data from clean_demo
-  uint16_t calData[5] = {280, 3555, 298, 3505, 7};
-  tft.setTouch(calData);
-  Serial.println("[DISPLAY] Touch calibration applied.");
-#endif
-
-  Serial.println("[DISPLAY] Screen cleared, ready for LVGL.");
+  Serial.printf("[DISPLAY] TFT resolution after rotation: %dx%d\n", tft.width(),
+                tft.height());
 
   tftWidth = tft.width();
 #ifdef HAS_TOUCH
@@ -249,7 +250,91 @@ void begin_tft() {
 #endif
 
   tftInitialized = true;
-  Serial.println("[DISPLAY] TFT inicializado com sucesso!");
+  Serial.printf("[DISPLAY] TFT initialized! tftWidth=%d, tftHeight=%d\n",
+                tftWidth, tftHeight);
+}
+
+/*********************************************************************
+ **  Function: setup_touch
+ **  Load or run touch calibration. Must be called AFTER begin_storage()
+ **  so LittleFS is already mounted.
+ *********************************************************************/
+void setup_touch() {
+#ifdef HAS_TOUCH
+  uint16_t calData[5];
+  bool needsCalibration = false;
+
+  // Add a small delay to let the SPI bus settle after initializations
+  delay(100);
+
+  // Check if calibration file exists (LittleFS already mounted by
+  // begin_storage)
+  if (!LittleFS.exists("/touch_cal.dat")) {
+    needsCalibration = true;
+    Serial.println("[TOUCH] No calibration file found");
+  }
+
+#ifdef JOY_BTN_PIN
+  // Hold joystick button during boot to force recalibration
+  pinMode(JOY_BTN_PIN, INPUT_PULLUP);
+  delay(5);
+  if (digitalRead(JOY_BTN_PIN) == LOW) {
+    needsCalibration = true;
+    Serial.println("[TOUCH] Joystick button held - forcing recalibration");
+  }
+#endif
+
+  if (needsCalibration) {
+    Serial.println("[TOUCH] Starting CALIBRATION - touch the crosshairs!");
+    tft.fillScreen(TFT_BLACK);
+
+    // Attempt calibration but define a timeout or fallback if possible
+    // (TFT_eSPI's calibrateTouch is blocking, but we can verify results after)
+    tft.calibrateTouch(calData, TFT_RED, TFT_BLACK, 25);
+
+    // Basic sanity check on calData: if all are 0 or 65535, it failed
+    if (calData[0] == 0 || calData[0] == 0xFFFF) {
+      Serial.println(
+          "[TOUCH] Calibration FAILED or TIMED OUT. Using defaults.");
+      calData[0] = 280;
+      calData[1] = 3555;
+      calData[2] = 298;
+      calData[3] = 3505;
+      calData[4] = 7;
+    } else {
+      // Save to LittleFS (now guaranteed to be mounted)
+      File f = LittleFS.open("/touch_cal.dat", "w");
+      if (f) {
+        f.write((uint8_t *)calData, 10);
+        f.close();
+        Serial.println("[TOUCH] Calibration SAVED to /touch_cal.dat");
+      } else {
+        Serial.println("[TOUCH] WARNING: Could not save calibration!");
+      }
+    }
+    tft.fillScreen(TFT_BLACK);
+  } else {
+    // Load existing calibration
+    File f = LittleFS.open("/touch_cal.dat", "r");
+    if (f) {
+      f.read((uint8_t *)calData, 10);
+      f.close();
+      Serial.println("[TOUCH] Calibration loaded from /touch_cal.dat");
+    } else {
+      // Fallback defaults for rotation=1 (landscape)
+      calData[0] = 280;
+      calData[1] = 3555;
+      calData[2] = 298;
+      calData[3] = 3505;
+      calData[4] = 7;
+      Serial.println("[TOUCH] Using hardcoded default calibration");
+    }
+  }
+
+  tft.setTouch(calData);
+  Serial.printf("[TOUCH] CalData: %d,%d,%d,%d,%d\n", calData[0], calData[1],
+                calData[2], calData[3], calData[4]);
+#endif
 }
 
 /*********************************************************************
@@ -488,6 +573,11 @@ void setup() {
 
   Serial.println("Starting begin_storage()...");
   begin_storage();
+
+#if defined(HAS_SCREEN) && defined(HAS_TOUCH)
+  // Touch calibration MUST happen after begin_storage() so LittleFS is mounted
+  setup_touch();
+#endif
 
   if (tftInitialized) {
     Serial.println("[BOOT] Iniciando LVGL + Cyber Menu...");

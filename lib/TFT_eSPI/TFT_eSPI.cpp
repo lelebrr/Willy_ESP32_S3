@@ -90,7 +90,8 @@ SemaphoreHandle_t tftMutex;
 ** Description:             Start SPI transaction for writes and select TFT
 ***************************************************************************************/
 inline void TFT_eSPI::begin_tft_write(void) {
-  xSemaphoreTakeRecursive(tftMutex, portMAX_DELAY);
+  if (tftMutex)
+    xSemaphoreTakeRecursive(tftMutex, portMAX_DELAY);
   if (locked) {
     locked = false; // Flag to show SPI access now unlocked
 #if defined(SPI_HAS_TRANSACTION) && defined(SUPPORT_TRANSACTIONS) &&           \
@@ -135,7 +136,8 @@ inline void TFT_eSPI::end_tft_write(void) {
 #endif
     }
   }
-  xSemaphoreGiveRecursive(tftMutex);
+  if (tftMutex)
+    xSemaphoreGiveRecursive(tftMutex);
 }
 
 // Non-inlined version to permit override
@@ -687,7 +689,8 @@ void TFT_eSPI::begin(uint8_t tc) { init(tc); }
 ** Description:             Reset, then initialise the TFT display registers
 ***************************************************************************************/
 void TFT_eSPI::init(uint8_t tc) {
-  tftMutex = xSemaphoreCreateRecursiveMutex();
+  if (!tftMutex)
+    tftMutex = xSemaphoreCreateRecursiveMutex();
   if (_booted) {
     initBus();
 

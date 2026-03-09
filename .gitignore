@@ -19,3 +19,6 @@ gps_tracker.cpp
 build_*
 falta*.txt
 compile_commands.json
+Willy*.bin
+Willy-*.bin
+*.bak

@@ -6,6 +6,18 @@
 #include <Arduino.h>
 #include <time.h>
 
+// LVGL animation wrapper functions — lv_obj_set_style_* takes 3 args
+// (obj, value, selector) but lv_anim_exec_xcb_t passes only 2 (obj, value).
+static void anim_set_opa(void *obj, int32_t v) {
+  lv_obj_set_style_opa((lv_obj_t *)obj, (lv_opa_t)v, 0);
+}
+static void anim_set_y(void *obj, int32_t v) {
+  lv_obj_set_y((lv_obj_t *)obj, (lv_coord_t)v);
+}
+static void anim_set_shadow_width(void *obj, int32_t v) {
+  lv_obj_set_style_shadow_width((lv_obj_t *)obj, (lv_coord_t)v, 0);
+}
+
 // Forward declarations of Willy callbacks - implemented below
 static void wifi_cb(lv_event_t *e);
 static void ble_cb(lv_event_t *e);
@@ -114,14 +126,19 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text,
   lv_obj_set_style_shadow_width(btn, 15, 0);
   lv_obj_set_style_shadow_opa(btn, LV_OPA_60, 0);
 
-  // Modern gradient background
-  lv_style_t *style = (lv_style_t *)lv_mem_alloc(sizeof(lv_style_t));
-  lv_style_init(style);
-  lv_style_set_bg_grad_dir(style, LV_GRAD_DIR_VER);
-  lv_style_set_bg_color(style, primary);
-  lv_style_set_bg_grad_color(style, secondary);
-  lv_style_set_bg_opa(style, LV_OPA_90);
-  lv_obj_add_style(btn, style, 0);
+  // Use a single static style shared by all icons to avoid memory leak.
+  // Previously each icon allocated a dynamic lv_style_t that was never freed.
+  static lv_style_t icon_gradient_style;
+  static bool style_initialized = false;
+  if (!style_initialized) {
+    lv_style_init(&icon_gradient_style);
+    style_initialized = true;
+  }
+  lv_style_set_bg_grad_dir(&icon_gradient_style, LV_GRAD_DIR_VER);
+  lv_style_set_bg_color(&icon_gradient_style, primary);
+  lv_style_set_bg_grad_color(&icon_gradient_style, secondary);
+  lv_style_set_bg_opa(&icon_gradient_style, LV_OPA_90);
+  lv_obj_add_style(btn, &icon_gradient_style, 0);
 
   // Text label
   lv_obj_t *text = lv_label_create(btn);
@@ -137,7 +154,7 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text,
   lv_anim_set_values(&a_fade, 0, LV_OPA_100);
   lv_anim_set_time(&a_fade, 400);
   lv_anim_set_delay(&a_fade, 100 * index);
-  lv_anim_set_exec_cb(&a_fade, (lv_anim_exec_xcb_t)lv_obj_set_style_opa);
+  lv_anim_set_exec_cb(&a_fade, anim_set_opa);
   lv_anim_set_path_cb(&a_fade, lv_anim_path_ease_in_out);
   lv_anim_start(&a_fade);
 
@@ -148,7 +165,7 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text,
   lv_anim_set_values(&a_slide, y + 40, y);
   lv_anim_set_time(&a_slide, 400);
   lv_anim_set_delay(&a_slide, 100 * index);
-  lv_anim_set_exec_cb(&a_slide, (lv_anim_exec_xcb_t)lv_obj_set_y);
+  lv_anim_set_exec_cb(&a_slide, anim_set_y);
   lv_anim_set_path_cb(&a_slide, lv_anim_path_ease_in_out);
   lv_anim_start(&a_slide);
 
@@ -160,8 +177,7 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text,
   lv_anim_set_time(&a_pulse, 1500);
   lv_anim_set_playback_time(&a_pulse, 1500);
   lv_anim_set_repeat_count(&a_pulse, LV_ANIM_REPEAT_INFINITE);
-  lv_anim_set_exec_cb(&a_pulse,
-                      (lv_anim_exec_xcb_t)lv_obj_set_style_shadow_width);
+  lv_anim_set_exec_cb(&a_pulse, anim_set_shadow_width);
   lv_anim_start(&a_pulse);
 
   // Hover effect (Modern & Smooth)
@@ -238,7 +254,7 @@ lv_obj_t *create_notification_bar(lv_obj_t *parent) {
   lv_anim_set_values(&a_notify, 0, LV_OPA_100);
   lv_anim_set_time(&a_notify, 500);
   lv_anim_set_delay(&a_notify, 1000);
-  lv_anim_set_exec_cb(&a_notify, (lv_anim_exec_xcb_t)lv_obj_set_style_opa);
+  lv_anim_set_exec_cb(&a_notify, anim_set_opa);
   lv_anim_start(&a_notify);
 
   // Allocate safe memory for cross-thread timer usage if not already created

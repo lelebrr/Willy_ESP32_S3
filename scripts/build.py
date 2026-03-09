@@ -77,7 +77,7 @@ def _merge_bins_callback(target, source, env):
                     continue
                 name, ptype, subtype, offset, size = cols[:5]
                 subtype = subtype.lower()
-                if subtype == "ota_0" and ota_size is None:
+                if subtype in ("ota_0", "factory") and ota_size is None:
                     try:
                         ota_size = int(size, 0)
                         ota0_offset = int(offset, 0)

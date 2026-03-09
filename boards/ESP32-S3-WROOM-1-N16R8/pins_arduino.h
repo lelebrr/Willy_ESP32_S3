@@ -6,7 +6,7 @@
 
 
 // =============================================================================
-// Willy ESP32-S3-WROOM-1-N8R2 — Definição Completa de Pinos (13 Módulos)
+// Willy ESP32-S3-WROOM-1-N16R8 — Definição Completa de Pinos (13 Módulos)
 // =============================================================================
 
 // --- LED RGB Built-in (NeoPixel WS2812) ---

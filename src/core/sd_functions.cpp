@@ -221,7 +221,7 @@ bool ToggleSDCard() {
 ** Function name: deleteFromSd
 ** Description:   delete file or folder
 ***************************************************************************************/
-bool deleteFromSd(FS fs, String path) {
+bool deleteFromSd(fs::FS fs, String path) {
   if (&fs == &SD && spiMutex &&
       xSemaphoreTake(spiMutex, pdMS_TO_TICKS(1000)) != pdTRUE) {
     return false;
@@ -263,7 +263,7 @@ bool deleteFromSd(FS fs, String path) {
 ** Function name: renameFile
 ** Description:   rename file or folder
 ***************************************************************************************/
-bool renameFile(FS fs, String path, String filename) {
+bool renameFile(fs::FS fs, String path, String filename) {
   String newName = keyboard(filename, 76, "Digite o novo Nome:");
   // Rename the file of folder
   if (fs.rename(path,
@@ -279,7 +279,7 @@ bool renameFile(FS fs, String path, String filename) {
 ** Function name: copyToFs
 ** Description:   copy file from SD or LittleFS to LittleFS or SD
 ***************************************************************************************/
-bool copyToFs(FS from, FS to, String path, bool draw) {
+bool copyToFs(fs::FS from, fs::FS to, String path, bool draw) {
   // Using Global Buffer
   bool result = false;
   if (!sdcardMounted) {
@@ -368,7 +368,7 @@ bool copyToFs(FS from, FS to, String path, bool draw) {
 ** Function name: copyFile
 ** Description:   copy file address to memory
 ***************************************************************************************/
-bool copyFile(FS fs, String path) {
+bool copyFile(fs::FS fs, String path) {
   File file = fs.open(path, FILE_READ);
   if (!file.isDirectory()) {
     fileToCopy = path;
@@ -385,7 +385,7 @@ bool copyFile(FS fs, String path) {
 ** Function name: pasteFile
 ** Description:   paste file to new folder
 ***************************************************************************************/
-bool pasteFile(FS fs, String path) {
+bool pasteFile(fs::FS fs, String path) {
   // Using Global Buffer
 
   // Abrir o arquivo original
@@ -454,7 +454,7 @@ bool pasteFile(FS fs, String path) {
 ** Function name: createFolder
 ** Description:   create new folder
 ***************************************************************************************/
-bool createFolder(FS fs, String path) {
+bool createFolder(fs::FS fs, String path) {
   String foldername = keyboard("", 76, "Nome da Pasta: ");
   if (!fs.mkdir(path + "/" + foldername)) {
     displayRedStripe("Nao foi possivel criar pasta");
@@ -487,7 +487,7 @@ String readLineFromFile(File myFile) {
 * string
 **                on any error returns an empty string
 ***************************************************************************************/
-String readSmallFile(FS &fs, String filepath) {
+String readSmallFile(fs::FS &fs, String filepath) {
   String fileContent = "";
   File file;
 
@@ -541,7 +541,7 @@ String readSmallFile(FS &fs, String filepath) {
 ** Description:   read file and return its contents as a char*
 **                caller needs to call free()
 ***************************************************************************************/
-char *readBigFile(FS *fs, String filepath, bool binary, size_t *fileSize) {
+char *readBigFile(fs::FS *fs, String filepath, bool binary, size_t *fileSize) {
   if (fs == &SD && spiMutex &&
       xSemaphoreTake(spiMutex, pdMS_TO_TICKS(1000)) != pdTRUE) {
     return NULL;
@@ -589,7 +589,7 @@ char *readBigFile(FS *fs, String filepath, bool binary, size_t *fileSize) {
 ** Function name: getFileSize
 ** Description:   get a file size without opening
 ***************************************************************************************/
-size_t getFileSize(FS &fs, String filepath) {
+size_t getFileSize(fs::FS &fs, String filepath) {
   File file = fs.open(filepath, FILE_READ);
   if (!file)
     return 0;
@@ -598,7 +598,7 @@ size_t getFileSize(FS &fs, String filepath) {
   return fileSize;
 }
 
-String md5File(FS &fs, String filepath) {
+String md5File(fs::FS &fs, String filepath) {
   File file = fs.open(filepath, FILE_READ);
   if (!file)
     return "";
@@ -623,7 +623,7 @@ String md5File(FS &fs, String filepath) {
   return String(s);
 }
 
-String crc32File(FS &fs, String filepath) {
+String crc32File(fs::FS &fs, String filepath) {
   File file = fs.open(filepath, FILE_READ);
   if (!file)
     return "";
@@ -690,7 +690,7 @@ bool checkExt(String ext, String pattern) {
 ** Function name: readFs
 ** Description:   read files/folders from a folder
 ***************************************************************************************/
-void readFs(FS fs, String folder, String allowed_ext) {
+void readFs(fs::FS fs, String folder, String allowed_ext) {
   if (&fs == &SD && spiMutex &&
       xSemaphoreTake(spiMutex, pdMS_TO_TICKS(1000)) != pdTRUE) {
     return;
@@ -752,7 +752,8 @@ void readFs(FS fs, String folder, String allowed_ext) {
 **  Function: loopSD
 **  Where you choose what to do with your SD Files
 **********************************************************************/
-String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
+String loopSD(fs::FS &fs, bool filePicker, String allowed_ext,
+              String rootPath) {
   delay(10);
 
   // Ensure SD is mounted before checking if paths exist!

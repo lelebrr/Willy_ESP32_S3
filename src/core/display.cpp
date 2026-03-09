@@ -26,7 +26,7 @@ void panelSleep(bool on) {
   tft.setSleepMode(on);
 }
 
-bool __attribute__((weak)) isCharging() { return false; }
+// isCharging() is provided by the board-specific interface.cpp
 
 /* LVGL related static variables */
 static lv_disp_draw_buf_t draw_buf;
@@ -70,9 +70,18 @@ void updateTouchPoint() {
   }
 
   if (touched) {
-    touchPoint.x = tft.width() - tx;
-    touchPoint.y = tft.height() - ty;
+    // FIX: Match clean_demo orientation inversion
+    tx = tft.width() - tx;
+    ty = tft.height() - ty;
+
+    touchPoint.x = tx;
+    touchPoint.y = ty;
     touchPoint.pressed = true;
+    static uint32_t lastTouchLog = 0;
+    if (millis() - lastTouchLog > 500) {
+      Serial.printf("[TOUCH] x=%d y=%d\n", touchPoint.x, touchPoint.y);
+      lastTouchLog = millis();
+    }
     touchHeatMap(touchPoint);
     if (wakeUpScreen()) {
       AnyKeyPress = true;

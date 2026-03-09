@@ -56,7 +56,7 @@ static bool detectAnalogDevice(int pin, const char *name) {
   // A floating pin:
   //   - erratic average (often near 0 or 4095)
   //   - range > 200 (high variance)
-  bool detected = (range < 150 && avg > 800 && avg < 3200);
+  bool detected = (range < 400 && avg > 300 && avg < 3800);
 
   Serial.printf("[GPIO] %s (pin %d): avg=%d, range=%d -> %s\n", name, pin, avg,
                 range, detected ? "DETECTED" : "NOT CONNECTED (disabled)");
@@ -164,6 +164,45 @@ void _setup_gpio() {
 #ifdef NRF24_CE_PIN
   if (NRF24_CE_PIN >= 0) {
     pinMode(NRF24_CE_PIN, OUTPUT);
+  }
+#endif
+
+  // ---- SPI Chip Selects (CRITICAL: Pull HIGH to prevent SPI collisions) ----
+  Serial.println("[GPIO] Securing SPI Bus (Pulling CS pins HIGH)...");
+#ifdef TFT_CS
+  if (TFT_CS >= 0) {
+    pinMode(TFT_CS, OUTPUT);
+    digitalWrite(TFT_CS, HIGH);
+  }
+#endif
+#ifdef TOUCH_CS
+  if (TOUCH_CS >= 0) {
+    pinMode(TOUCH_CS, OUTPUT);
+    digitalWrite(TOUCH_CS, HIGH);
+  }
+#endif
+#ifdef SDCARD_CS
+  if (SDCARD_CS >= 0) {
+    pinMode(SDCARD_CS, OUTPUT);
+    digitalWrite(SDCARD_CS, HIGH);
+  }
+#endif
+#ifdef NRF24_CS_PIN
+  if (NRF24_CS_PIN >= 0) {
+    pinMode(NRF24_CS_PIN, OUTPUT);
+    digitalWrite(NRF24_CS_PIN, HIGH);
+  }
+#endif
+#ifdef NRF24_CS2_PIN
+  if (NRF24_CS2_PIN >= 0) {
+    pinMode(NRF24_CS2_PIN, OUTPUT);
+    digitalWrite(NRF24_CS2_PIN, HIGH);
+  }
+#endif
+#ifdef CC1101_CS_PIN
+  if (CC1101_CS_PIN >= 0) {
+    pinMode(CC1101_CS_PIN, OUTPUT);
+    digitalWrite(CC1101_CS_PIN, HIGH);
   }
 #endif
 

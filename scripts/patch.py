@@ -93,27 +93,48 @@ def load_checksum_file(input_file):
 
 
 def minify_css(c: Any) -> Any:
-    minify_req = requests.post(
-        "https://www.toptal.com/developers/cssminifier/api/raw",
-        {"input": c.read().decode('utf-8')},
-    )
-    return c if minify_req is False else minify_req.text.encode('utf-8')
+    try:
+        minify_req = requests.post(
+            "https://www.toptal.com/developers/cssminifier/api/raw",
+            {"input": c.read().decode('utf-8')},
+            timeout=10,
+        )
+        if minify_req.status_code == 200 and minify_req.text:
+            return minify_req.text.encode('utf-8')
+    except Exception as e:
+        print(f"Warning: CSS minification failed ({e}), using original.")
+    c.seek(0)
+    return c.read()
 
 
 def minify_js(js):
-    minify_req = requests.post(
-        'https://www.toptal.com/developers/javascript-minifier/api/raw',
-        {'input': js.read().decode('utf-8')},
-    )
-    return js if minify_req is False else minify_req.text.encode('utf-8')
+    try:
+        minify_req = requests.post(
+            'https://www.toptal.com/developers/javascript-minifier/api/raw',
+            {'input': js.read().decode('utf-8')},
+            timeout=10,
+        )
+        if minify_req.status_code == 200 and minify_req.text:
+            return minify_req.text.encode('utf-8')
+    except Exception as e:
+        print(f"Warning: JS minification failed ({e}), using original.")
+    js.seek(0)
+    return js.read()
 
 
 def minify_html(html):
-    minify_req = requests.post(
-        'https://www.toptal.com/developers/html-minifier/api/raw',
-        {'input': html.read().decode('utf-8')},
-    )
-    return html if minify_req is False else minify_req.text.encode('utf-8')
+    try:
+        minify_req = requests.post(
+            'https://www.toptal.com/developers/html-minifier/api/raw',
+            {'input': html.read().decode('utf-8')},
+            timeout=10,
+        )
+        if minify_req.status_code == 200 and minify_req.text:
+            return minify_req.text.encode('utf-8')
+    except Exception as e:
+        print(f"Warning: HTML minification failed ({e}), using original.")
+    html.seek(0)
+    return html.read()
 
 
 # gzip web files

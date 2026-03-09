@@ -1,9 +1,3 @@
-// Borrowed from https://github.com/justcallmekoko/ESP32Marauder/
-// Learned from https://github.com/risinek/esp32-wifi-penetration-tool/
-// Arduino IDE needs to be tweeked to work, follow the instructions:
-// https://github.com/justcallmekoko/ESP32Marauder/wiki/arduino-ide-setup But
-// change the file in: C:\Users\<YOur
-// User>\AppData\Local\Arduino15\packages\m5stack\hardware\esp32\2.0.9
 #include "wifi_atks.h"
 #include "core/display.h"
 #include "core/main_menu.h"
@@ -17,9 +11,16 @@
 #include "sniffer.h"
 #include "vector"
 #include <Arduino.h>
+#include <FS.h>
+#include <LittleFS.h>
+#include <SD.h>
 #include <WiFi.h>
+#include <esp_random.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <nvs_flash.h>
-
+#include <sys/time.h>
+#include <unistd.h>
 
 #define WIFI_ATK_NAME "WillyAttack"
 extern bool showHiddenNetworks;
@@ -51,8 +52,8 @@ constexpr size_t BEACON_PKT_LEN = 109;
 const uint8_t beaconPacketTemplate[BEACON_PKT_LEN] = {
     /*  0 - 3  */ 0x80, 0x00, 0x00, 0x00, // Type/Subtype: management beacon frame
     /*  4 - 9  */ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // Destination: broadcast
-    /* 10 - 15 */ 0x01, 0x02,  0x03, 0x04, 0x05, 0x06, // Source (placeholder - overwritten)
-    /* 16 - 21 */ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, // BSSID (placeholder - overwritten)
+    /* 10 - 15 */ 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, // Source (MAC will be generated at runtime)
+    /* 16 - 21 */ 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, // BSSID (MAC will be generated at runtime)
     /* 22 - 23 */ 0x00, 0x00, // Fragment & sequence number (SDK will set)
     /* 24 - 31 */ 0x83, 0x51, 0xf7, 0x8f, 0x0f, 0x00, 0x00, 0x00, // Timestamp
     /* 32 - 33 */ 0xe8, 0x03, // Interval (1s)
@@ -131,7 +132,7 @@ void nextChannel() {
 ***************************************************************************************/
 void send_raw_frame(const uint8_t *frame_buffer, int size) {
   esp_wifi_80211_tx(WIFI_IF_AP, frame_buffer, size, false);
-  vTaskDelay(1 / portTICK_RATE_MS);
+  vTaskDelay(1 / portTICK_PERIOD_MS);
   esp_wifi_80211_tx(WIFI_IF_AP, frame_buffer, size, false);
   vTaskDelay(1 / portTICK_PERIOD_MS);
   esp_wifi_80211_tx(WIFI_IF_AP, frame_buffer, size, false);
@@ -172,7 +173,7 @@ void wifi_atk_info(String tssid, String mac, uint8_t channel) {
   // desenhar a tela
   drawMainBorder();
   tft.setTextColor(willyConfig.priColor);
-  tft.drawCentreString("-=Informações=-", tft.width() / 2, 28, SMOOTH_FONT);
+  tft.drawCentreString("-=Informações=-", tftWidth / 2, 28, SMOOTH_FONT);
   tft.drawString("AP: " + tssid, 10, 48);
   tft.drawString("Canal: " + String(channel), 10, 66);
   tft.drawString(mac, 10, 84);
@@ -493,23 +494,23 @@ void capture_handshake(String tssid, String mac, uint8_t channel) {
 
   bool hsExists = false;
   bool captured = false;
-  FS *fs;
+  fs::FS *fs;
   if (setupSdCard()) {
-    fs = &SD;
+    fs = (fs::FS *)&SD;
     isLittleFS = false;
-    if (!SD.exists("/WillyPCAP/handshakes")) {
-      SD.mkdir("/WillyPCAP");
-      SD.mkdir("/WillyPCAP/handshakes");
+    if (!fs->exists("/WillyPCAP/handshakes")) {
+      fs->mkdir("/WillyPCAP");
+      fs->mkdir("/WillyPCAP/handshakes");
     }
-    hsExists = SD.exists(hsFileName);
+    hsExists = fs->exists(hsFileName);
   } else {
-    fs = &LittleFS;
+    fs = (fs::FS *)&LittleFS;
     isLittleFS = true;
-    if (!LittleFS.exists("/WillyPCAP/handshakes")) {
-      LittleFS.mkdir("/WillyPCAP");
-      LittleFS.mkdir("/WillyPCAP/handshakes");
+    if (!fs->exists("/WillyPCAP/handshakes")) {
+      fs->mkdir("/WillyPCAP");
+      fs->mkdir("/WillyPCAP/handshakes");
     }
-    hsExists = LittleFS.exists(hsFileName);
+    hsExists = fs->exists(hsFileName);
   }
 
   // Register the file path so the sniffer knows to save the capture to it
@@ -809,8 +810,11 @@ void target_atk(String tssid, String mac, uint8_t channel) {
 }
 
 void generateRandomWiFiMac(uint8_t *mac) {
+  // Generate a random MAC address with locally administered address (0x02)
+  // to avoid conflicts with real manufacturer addresses
+  mac[0] = 0x02; // Locally administered bit
   for (int i = 1; i < 6; i++) {
-    mac[i] = random(0, 255);
+    mac[i] = esp_random() & 0xFF;
   }
 }
 
