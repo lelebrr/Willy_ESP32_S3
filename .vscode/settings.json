@@ -101,6 +101,8 @@
         "editor.codeActionsOnSave": {
             "source.organizeImports": "explicit"
         },
-        "editor.formatOnType": true,
+        "editor.formatOnType": true
     },
+    "platformio-ide.projectDir": "${workspaceFolder}",
+    "platformio-ide.useBuiltinPIOCore": true
 }

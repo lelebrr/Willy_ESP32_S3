@@ -4,7 +4,7 @@
 
 #ifndef __WIFI_COMMON_H__
 #define __WIFI_COMMON_H__
-// TODO wrap in a class
+// Functions wrapped in WifiManager class (see WifiManager.h)
 
 // public
 /**
@@ -23,7 +23,8 @@ bool wifiConnectMenu(wifi_mode_t = WIFI_MODE_STA);
 /**
  * @brief Scans the networks and tries to connect to a known network
  * @param mode connection mode(void)
- * @note This is the primary entry point for establishing connections in the Headless environment
+ * @note This is the primary entry point for establishing connections in the
+ * Headless environment
  * @note returns true if connected successfully
  */
 bool wifiConnecttoKnownNet(void);
@@ -36,12 +37,13 @@ String checkMAC();
 /**
  * @brief tries to connect to min(found_networks, maxSearch) networks
  * using stored passwords
- * @TODO fix: rn it skips open networks due to password == "" check
+ * Note: Open networks (no password) are handled separately
  */
 void wifiConnectTask(void *pvParameters);
 
 /**
- * @brief Ensures esp_netif and the default event loop are initialized (idempotent)
+ * @brief Ensures esp_netif and the default event loop are initialized
+ * (idempotent)
  */
 void ensureWifiPlatform();
 

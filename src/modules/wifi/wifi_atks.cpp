@@ -22,6 +22,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+
 #define WIFI_ATK_NAME "WillyAttack"
 extern bool showHiddenNetworks;
 

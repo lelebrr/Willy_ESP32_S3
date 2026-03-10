@@ -24,15 +24,271 @@
 String fileToCopy;
 std::vector<FileList> fileList;
 
+// Pino de detecção de cartão (CD) - pode ser configurado via definição
+#ifndef SDCARD_CD_PIN
+#define SDCARD_CD_PIN -1
+#endif
+
+/***************************************************************************************
+** Function name: sdCardPresent
+** Description:   Verifica se o cartão está fisicamente presente usando pino CD
+***************************************************************************************/
+bool sdCardPresent() {
+#if SDCARD_CD_PIN >= 0
+  // Se temos pino de detecção configurado, usamos ele
+  // Cartão presente quando pino está em LOW (comum) ou HIGH (depende do
+  // adaptador)
+  pinMode(SDCARD_CD_PIN, INPUT_PULLUP);
+  bool present = digitalRead(SDCARD_CD_PIN) == LOW; // Assumindo active LOW
+  Serial.printf("[SD] Detecção de cartão (pino %d): %s\n", SDCARD_CD_PIN,
+                present ? "PRESENTE" : "AUSENTE");
+  return present;
+#else
+  // Sem pino de detecção, assumimos presente se montado
+  return sdcardMounted;
+#endif
+}
+
+/***************************************************************************************
+** Function name: tryRecoverSdCard
+** Description:   Tenta recuperar cartão com problemas de montagem
+***************************************************************************************/
+bool tryRecoverSdCard() {
+  Serial.println("[SD] Tentando recuperar cartão SD...");
+
+  // 1. Verifica se cartão está presente
+  if (!sdCardPresent()) {
+    Serial.println("[SD] Cartão não detectado fisicamente");
+    return false;
+  }
+
+  // 2. Tenta reinicializar o SPI
+  Serial.println("[SD] Reinicializando SPI...");
+  if (willyConfigPins.SDCARD_bus.mosi != (gpio_num_t)TFT_MOSI ||
+      willyConfigPins.SDCARD_bus.mosi == GPIO_NUM_NC) {
+    sdcardSPI.end();
+    delay(100);
+    sdcardSPI.begin((int8_t)willyConfigPins.SDCARD_bus.sck,
+                    (int8_t)willyConfigPins.SDCARD_bus.miso,
+                    (int8_t)willyConfigPins.SDCARD_bus.mosi,
+                    (int8_t)willyConfigPins.SDCARD_bus.cs);
+    delay(100);
+  }
+
+  // 3. Tenta montar novamente com frequência baixa
+  Serial.println("[SD] Tentando montar com 1MHz...");
+  if (SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs,
+               willyConfigPins.SDCARD_bus.mosi == (gpio_num_t)TFT_MOSI
+                   ? tft.getSPIinstance()
+                   : sdcardSPI,
+               1000000)) {
+    Serial.println("[SD] Recuperado com sucesso a 1MHz!");
+    return true;
+  }
+
+  Serial.println("[SD] Não foi possível recuperar o cartão");
+  return false;
+}
+
+/***************************************************************************************
+** Function name: getSdCardInfo
+** Description:   Retorna informações detalhadas do cartão SD
+***************************************************************************************/
+String getSdCardInfo() {
+  if (!sdcardMounted) {
+    return "Cartão SD não montado";
+  }
+
+  String info = "Tipo: ";
+  switch (SD.cardType()) {
+  case CARD_NONE:
+    info += "Nenhum";
+    break;
+  case CARD_MMC:
+    info += "MMC";
+    break;
+  case CARD_SD:
+    info += "SDSC";
+    break;
+  case CARD_SDHC:
+    info += "SDHC";
+    break;
+  default:
+    info += "Desconhecido";
+    break;
+  }
+
+  uint64_t size = SD.cardSize();
+  uint64_t used = SD.usedBytes();
+  uint64_t free = size - used;
+
+  info += "\nTamanho: " + String(size / 1073741824.0, 2) + " GB";
+  info += "\nUsado: " + String(used / 1073741824.0, 2) + " GB";
+  info += "\nLivre: " + String(free / 1073741824.0, 2) + " GB";
+
+  return info;
+}
+
+/***************************************************************************************
+** Function name: diagnoseSdCard
+** Description:   Diagnóstico completo do cartão SD
+***************************************************************************************/
+void diagnoseSdCard() {
+  Serial.println("\n=== DIAGNÓSTICO DO CARTÃO SD ===");
+
+  // 1. Verifica pinos configurados
+  Serial.printf(
+      "Pinos: SCK=%d, MISO=%d, MOSI=%d, CS=%d\n",
+      (int)willyConfigPins.SDCARD_bus.sck, (int)willyConfigPins.SDCARD_bus.miso,
+      (int)willyConfigPins.SDCARD_bus.mosi, (int)willyConfigPins.SDCARD_bus.cs);
+
+  // 2. Verifica conflitos
+  bool conflict = false;
+  if (willyConfigPins.CC1101_bus.checkConflict(willyConfigPins.SDCARD_bus.cs)) {
+    Serial.println("CONFLITO: CS do SD conflita com CC1101!");
+    conflict = true;
+  }
+  if (willyConfigPins.NRF24_bus.checkConflict(willyConfigPins.SDCARD_bus.cs)) {
+    Serial.println("CONFLITO: CS do SD conflita com NRF24!");
+    conflict = true;
+  }
+  if (!conflict) {
+    Serial.println("Sem conflitos de CS detectados");
+  }
+
+  // 3. Verifica detecção física
+#if SDCARD_CD_PIN >= 0
+  pinMode(SDCARD_CD_PIN, INPUT_PULLUP);
+  bool present = digitalRead(SDCARD_CD_PIN) == LOW;
+  Serial.printf("Detecção CD (pino %d): %s\n", SDCARD_CD_PIN,
+                present ? "PRESENTE" : "AUSENTE");
+#else
+  Serial.println("Pino CD não configurado");
+#endif
+
+  // 4. Tenta montar se ainda não montado
+  if (!sdcardMounted) {
+    Serial.println("Tentando montar cartão...");
+    if (setupSdCard()) {
+      Serial.println("Montagem: SUCESSO");
+    } else {
+      Serial.println("Montagem: FALHOU");
+    }
+  } else {
+    Serial.println("Cartão já montado");
+  }
+
+  // 5. Informações do cartão se montado
+  if (sdcardMounted) {
+    Serial.printf("Tipo: %s\n", SD.cardType() == CARD_NONE   ? "Nenhum"
+                                : SD.cardType() == CARD_MMC  ? "MMC"
+                                : SD.cardType() == CARD_SD   ? "SDSC"
+                                : SD.cardType() == CARD_SDHC ? "SDHC"
+                                                             : "Desconhecido");
+    Serial.printf("Tamanho: %llu bytes (%.2f GB)\n", SD.cardSize(),
+                  SD.cardSize() / 1073741824.0);
+    Serial.printf("Livre: %llu bytes (%.2f GB)\n",
+                  SD.totalBytes() - SD.usedBytes(),
+                  (SD.totalBytes() - SD.usedBytes()) / 1073741824.0);
+  }
+
+  Serial.println("=== FIM DO DIAGNÓSTICO ===\n");
+}
+
+/***************************************************************************************
+** Function name: recoverSdCardInteractive
+** Description:   Menu interativo de recuperação do cartão SD
+***************************************************************************************/
+void recoverSdCardInteractive() {
+  if (!sdCardPresent()) {
+    displayError("Cartão não detectado fisicamente", true);
+    return;
+  }
+
+  std::vector<String> options = {"Tentar recuperação automática",
+                                 "Ver diagnóstico serial", "Cancelar"};
+
+  size_t selected = 0;
+  while (true) {
+    resetTftDisplay();
+    drawMainBorderWithTitle("Recuperação SD");
+    padprintln("");
+    padprintln("Cartão detectado mas com erro.");
+    padprintln("Escolha uma opção:");
+    padprintln("");
+
+    for (size_t i = 0; i < options.size(); i++) {
+      if (i == selected) {
+        tft.setTextColor(TFT_BLACK, TFT_GREEN);
+        padprintln("> " + options[i]);
+        tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
+      } else {
+        padprintln("  " + options[i]);
+      }
+    }
+
+    // Verifica entrada do usuário
+    if (check(AnyKeyPress)) {
+      delay(200);
+      if (check(UpPress)) {
+        selected = (selected - 1 + options.size()) % options.size();
+      } else if (check(DownPress)) {
+        selected = (selected + 1) % options.size();
+      } else if (check(SelPress)) {
+        delay(200);
+        switch (selected) {
+        case 0: // Recuperação automática
+          displayError("Tentando recuperar...", false);
+          if (tryRecoverSdCard()) {
+            displaySuccess("Cartão recuperado!", true);
+          } else {
+            displayError("Recuperação falhou", true);
+          }
+          return;
+
+        case 1: // Diagnóstico
+          diagnoseSdCard();
+          displaySuccess("Diagnóstico completo no serial", true);
+          return;
+
+        case 2: // Cancelar
+          return;
+        }
+      } else if (check(EscPress)) {
+        return;
+      }
+    }
+    delay(50);
+  }
+}
+
 /***************************************************************************************
 ** Function name: setupSdCard
 ** Description:   Start SD Card
 ***************************************************************************************/
 bool setupSdCard() {
 #ifndef USE_SD_MMC
-  if (willyConfigPins.SDCARD_bus.sck < 0) {
+  // Verifica se os pinos do SD estão configurados
+  if (willyConfigPins.SDCARD_bus.sck < 0 ||
+      willyConfigPins.SDCARD_bus.miso < 0 ||
+      willyConfigPins.SDCARD_bus.mosi < 0 ||
+      willyConfigPins.SDCARD_bus.cs < 0) {
+    Serial.println("[SD] Pinos do SD não configurados");
     sdcardMounted = false;
     return false;
+  }
+
+  // Verifica conflitos de pinos com outros dispositivos SPI
+  Serial.printf(
+      "[SD] Pinos configurados: SCK=%d, MISO=%d, MOSI=%d, CS=%d\n",
+      (int)willyConfigPins.SDCARD_bus.sck, (int)willyConfigPins.SDCARD_bus.miso,
+      (int)willyConfigPins.SDCARD_bus.mosi, (int)willyConfigPins.SDCARD_bus.cs);
+
+  // Verifica conflitos
+  if (willyConfigPins.CC1101_bus.checkConflict(willyConfigPins.SDCARD_bus.cs) ||
+      willyConfigPins.NRF24_bus.checkConflict(willyConfigPins.SDCARD_bus.cs)) {
+    Serial.println(
+        "[SD] AVISO: Pino CS do SD conflita com outro dispositivo SPI!");
   }
 
   // Explicitly set CS pin to OUTPUT and HIGH to ensure it's in a known state
@@ -40,38 +296,55 @@ bool setupSdCard() {
   if (willyConfigPins.SDCARD_bus.cs >= 0) {
     pinMode(willyConfigPins.SDCARD_bus.cs, OUTPUT);
     digitalWrite(willyConfigPins.SDCARD_bus.cs, HIGH);
+    Serial.printf("[SD] CS pin %d set to HIGH\n",
+                  (int)willyConfigPins.SDCARD_bus.cs);
   }
 
   // SPI CS Safeguard: Ensure shared devices on the same bus have CS HIGH
   if (willyConfigPins.CC1101_bus.cs >= 0) {
     pinMode(willyConfigPins.CC1101_bus.cs, OUTPUT);
     digitalWrite(willyConfigPins.CC1101_bus.cs, HIGH);
+    Serial.printf("[SD] CC1101 CS pin %d set to HIGH\n",
+                  (int)willyConfigPins.CC1101_bus.cs);
   }
   if (willyConfigPins.NRF24_bus.cs >= 0) {
     pinMode(willyConfigPins.NRF24_bus.cs, OUTPUT);
     digitalWrite(willyConfigPins.NRF24_bus.cs, HIGH);
+    Serial.printf("[SD] NRF24 CS pin %d set to HIGH\n",
+                  (int)willyConfigPins.NRF24_bus.cs);
   }
 #if !defined(LITE_VERSION)
   if (willyConfigPins.W5500_bus.cs >= 0) {
     pinMode(willyConfigPins.W5500_bus.cs, OUTPUT);
     digitalWrite(willyConfigPins.W5500_bus.cs, HIGH);
+    Serial.printf("[SD] W5500 CS pin %d set to HIGH\n",
+                  (int)willyConfigPins.W5500_bus.cs);
   }
 #endif
 #endif
 
   // avoid unnecessary remounting
-  if (sdcardMounted)
+  if (sdcardMounted) {
+    Serial.println("[SD] SD já montado, retornando true");
     return true;
-  bool result = true;
+  }
+
+  Serial.println("[SD] Tentando montar cartão SD...");
+
+  bool result = false;
   bool task = false; // devices that doesn't use InputHandler task
 #ifdef USE_TFT_eSPI_TOUCH
   task = true;
 #endif
 
 #ifdef USE_SD_MMC
+  Serial.println("[SD] Usando modo SDMMC");
   if (!SD.begin("/sdcard", true)) {
+    Serial.println("[SD] SD.begin SDMMC falhou");
     sdcardMounted = false;
     result = false;
+  } else {
+    result = true;
   }
 #else
   // Not using InputHandler (SdCard on default &SPI bus)
@@ -81,63 +354,102 @@ bool setupSdCard() {
         willyConfigPins.SDCARD_bus.mosi != GPIO_NUM_NC) {
 #if TFT_MOSI > 0
       Serial.println("[SD] Touch device: SD shares TFT SPI bus");
+      Serial.println("[SD] Tentando montar com SPI da TFT...");
       if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance())) {
-        Serial.println("SD.begin (TFT SPI touch) failed, trying 4MHz...");
+        Serial.println("[SD] SD.begin (TFT SPI) falhou, tentando 4MHz...");
         if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance(),
-                      4000000))
+                      4000000)) {
+          Serial.println("[SD] SD.begin (TFT SPI 4MHz) falhou");
           result = false;
+        } else {
+          Serial.println("[SD] SD montado com sucesso a 4MHz via TFT SPI");
+          result = true;
+        }
+      } else {
+        Serial.println("[SD] SD montado com sucesso via TFT SPI (freq padrão)");
+        result = true;
       }
 #else
+      Serial.println("[SD] ERRO: TFT_MOSI não definido, impossível montar");
       result = false;
 #endif
     } else {
       // SD on its own bus, use default SPI
+      Serial.println("[SD] SD em barramento próprio, usando SPI padrão");
       if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs)) {
-        Serial.println("SD.begin failed with default freq, trying 4MHz...");
-        if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, SPI, 4000000))
-          result = false;
+        Serial.println("[SD] SD.begin padrão falhou, tentando 4MHz...");
+        if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, SPI, 4000000)) {
+          Serial.println("[SD] SD.begin 4MHz falhou, tentando 1MHz...");
+          if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, SPI, 1000000)) {
+            Serial.println("[SD] SD.begin 1MHz falhou");
+            result = false;
+          } else {
+            Serial.println("[SD] SD montado com sucesso a 1MHz");
+            result = true;
+          }
+        } else {
+          Serial.println("[SD] SD montado com sucesso a 4MHz");
+          result = true;
+        }
+      } else {
+        Serial.println("[SD] SD montado com sucesso na frequência padrão");
+        result = true;
       }
     }
   }
   // SDCard in the same Bus as TFT, in this case we call the SPI TFT Instance
   else if (willyConfigPins.SDCARD_bus.mosi == (gpio_num_t)TFT_MOSI &&
            willyConfigPins.SDCARD_bus.mosi != GPIO_NUM_NC) {
-    Serial.println("SDCard in the same Bus as TFT, using TFT SPI instance");
+    Serial.println(
+        "[SD] SDCard no mesmo barramento que TFT, usando instância TFT SPI");
 #if TFT_MOSI > 0 // condition for Headless and 8bit displays (no SPI bus)
     if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance())) {
-      Serial.println("SD.begin (TFT SPI) failed, trying 4MHz...");
+      Serial.println("[SD] SD.begin (TFT SPI) falhou, tentando 4MHz...");
       if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance(),
                     4000000)) {
+        Serial.println("[SD] SD.begin (TFT SPI 4MHz) falhou");
         result = false;
-        Serial.println("SDCard in the same Bus as TFT, but failed to mount");
-      } else
+        Serial.println(
+            "[SD] SDCard no mesmo barramento que TFT, mas falhou ao montar");
+      } else {
+        Serial.println("[SD] SD montado com sucesso a 4MHz via TFT SPI");
         result = true;
+      }
+    } else {
+      Serial.println("[SD] SD montado com sucesso via TFT SPI");
+      result = true;
     }
 #else
-    goto NEXT; // destination for Headless and 8bit displays (no SPI bus)
+    Serial.println("[SD] ERRO: TFT_MOSI não definido, impossível montar");
+    result = false;
 #endif
 
   }
   // If not using TFT Bus, use a specific bus
   else {
-    Serial.printf("[SD] Starting SPI: SCK=%d, MISO=%d, MOSI=%d, CS=%d\n",
-                  (int)willyConfigPins.SDCARD_bus.sck,
-                  (int)willyConfigPins.SDCARD_bus.miso,
-                  (int)willyConfigPins.SDCARD_bus.mosi,
-                  (int)willyConfigPins.SDCARD_bus.cs);
+    Serial.printf(
+        "[SD] Iniciando SPI dedicado: SCK=%d, MISO=%d, MOSI=%d, CS=%d\n",
+        (int)willyConfigPins.SDCARD_bus.sck,
+        (int)willyConfigPins.SDCARD_bus.miso,
+        (int)willyConfigPins.SDCARD_bus.mosi,
+        (int)willyConfigPins.SDCARD_bus.cs);
     sdcardSPI.begin(
         (int8_t)willyConfigPins.SDCARD_bus.sck,
         (int8_t)willyConfigPins.SDCARD_bus.miso,
         (int8_t)willyConfigPins.SDCARD_bus.mosi,
         (int8_t)willyConfigPins.SDCARD_bus.cs); // start SPI communications
     delay(10);
+    Serial.println("[SD] SPI iniciado, tentando SD.begin...");
     if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, sdcardSPI)) {
-      Serial.println("SD.begin (sdcardSPI) failed, trying 4MHz...");
+      Serial.println("[SD] SD.begin (sdcardSPI) falhou, tentando 4MHz...");
       if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, sdcardSPI,
                     4000000)) {
-        Serial.println("SD.begin (sdcardSPI) failed at 4MHz, trying 1MHz...");
+        Serial.println(
+            "[SD] SD.begin (sdcardSPI 4MHz) falhou, tentando 1MHz...");
         if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, sdcardSPI,
                       1000000)) {
+          Serial.println("[SD] SD.begin (sdcardSPI 1MHz) falhou - cartão não "
+                         "detectado ou danificado");
           result = false;
 #if defined(ARDUINO_M5STICK_C_PLUS) || defined(ARDUINO_M5STICK_C_PLUS2)
           if (willyConfigPins.SDCARD_bus.miso !=
@@ -145,30 +457,75 @@ bool setupSdCard() {
             sdcardSPI.end();
 #endif
         } else {
-          Serial.println("SDCARD mounted at 1MHz");
+          Serial.println("[SD] SDCARD montado com sucesso a 1MHz");
           result = true;
         }
-      } else
+      } else {
+        Serial.println("[SD] SDCARD montado com sucesso a 4MHz");
         result = true;
+      }
+    } else {
+      Serial.println("[SD] SDCARD montado com sucesso na frequência padrão");
+      result = true;
     }
-    Serial.println("SDCard in a different Bus, using sdcardSPI instance");
+    Serial.println(
+        "[SD] SDCard em barramento diferente, usando instância sdcardSPI");
   }
 #endif
 
   if (result == false) {
-    Serial.println("[SD] SDCARD NOT mounted, check wiring and format");
+    Serial.println(
+        "[SD] ERRO: SDCARD NÃO montado - verifique wiring e formato");
+    Serial.println("[SD] Dicas de diagnóstico:");
+
+    // Verifica se cartão está presente
+    if (!sdCardPresent()) {
+      Serial.println("[SD]   - Cartão não detectado fisicamente (pino CD)");
+    } else {
+      Serial.println("[SD]   - Cartão detectado mas não montou");
+      Serial.println(
+          "[SD]   - Possível cartão corrompido ou formato incompatível");
+    }
+
+    Serial.println("[SD] Soluções sugeridas:");
+    Serial.println(
+        "[SD]   1. Verifique se o cartão está inserido corretamente");
+    Serial.println("[SD]   2. Teste o cartão em outro dispositivo");
+    Serial.println("[SD]   3. Tente formatar o cartão como FAT32");
+    Serial.println(
+        "[SD]   4. Verifique se os pinos SPI estão corretos e sem conflitos");
+    Serial.println("[SD]   5. Tente usar frequência mais baixa (1MHz)");
+    Serial.println("[SD]   6. Verifique se o adaptador SD está funcionando");
+
     sdcardMounted = false;
     return false;
   } else {
-    Serial.println("[SD] SDCARD mounted successfully");
+    Serial.println("[SD] SUCCESS: SDCARD montado com sucesso!");
     sdcardMounted = true;
+
+    // Verifica informações do cartão
+    Serial.printf("[SD] Tipo: %s\n", SD.cardType() == CARD_NONE   ? "Nenhum"
+                                     : SD.cardType() == CARD_MMC  ? "MMC"
+                                     : SD.cardType() == CARD_SD   ? "SDSC"
+                                     : SD.cardType() == CARD_SDHC ? "SDHC"
+                                                                  : "SDXC");
+    Serial.printf("[SD] Tamanho: %llu bytes (%.2f GB)\n", SD.cardSize(),
+                  SD.cardSize() / 1073741824.0);
+
+    // Cria diretórios necessários
     if (spiMutex && xSemaphoreTake(spiMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+      Serial.println("[SD] Criando diretórios...");
       SD.mkdir("/WillyPCAP");
       SD.mkdir("/WillyLogs");
       SD.mkdir("/WillyRFID");
       SD.mkdir("/WillyGPS");
+      SD.mkdir("/WPS");
+      SD.mkdir("/WillyWebUI");
       xSemaphoreGive(spiMutex);
+      Serial.println("[SD] Diretórios criados/verificados");
     }
+
+    Serial.println("[SD] Cartão SD pronto para uso");
     return true;
   }
 }
@@ -221,8 +578,8 @@ bool ToggleSDCard() {
 ** Function name: deleteFromSd
 ** Description:   delete file or folder
 ***************************************************************************************/
-bool deleteFromSd(fs::FS fs, String path) {
-  if (&fs == &SD && spiMutex &&
+bool deleteFromSd(fs::FS &fs, String path) {
+  if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD) && spiMutex &&
       xSemaphoreTake(spiMutex, pdMS_TO_TICKS(1000)) != pdTRUE) {
     return false;
   }
@@ -232,7 +589,7 @@ bool deleteFromSd(fs::FS fs, String path) {
   if (!dir.isDirectory()) {
     dir.close();
     bool res = fs.remove(path.c_str());
-    if (&fs == &SD && spiMutex)
+    if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD) && spiMutex)
       xSemaphoreGive(spiMutex);
     return res;
   }
@@ -254,7 +611,7 @@ bool deleteFromSd(fs::FS fs, String path) {
   dir.close();
   // Apaga a própria pasta depois de apagar seu conteúdo
   success &= fs.rmdir(path.c_str());
-  if (&fs == &SD && spiMutex)
+  if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD) && spiMutex)
     xSemaphoreGive(spiMutex);
   return success;
 }
@@ -263,7 +620,7 @@ bool deleteFromSd(fs::FS fs, String path) {
 ** Function name: renameFile
 ** Description:   rename file or folder
 ***************************************************************************************/
-bool renameFile(fs::FS fs, String path, String filename) {
+bool renameFile(fs::FS &fs, String path, String filename) {
   String newName = keyboard(filename, 76, "Digite o novo Nome:");
   // Rename the file of folder
   if (fs.rename(path,
@@ -279,7 +636,7 @@ bool renameFile(fs::FS fs, String path, String filename) {
 ** Function name: copyToFs
 ** Description:   copy file from SD or LittleFS to LittleFS or SD
 ***************************************************************************************/
-bool copyToFs(fs::FS from, fs::FS to, String path, bool draw) {
+bool copyToFs(fs::FS &from, fs::FS &to, String path, bool draw) {
   // Using Global Buffer
   bool result = false;
   if (!sdcardMounted) {
@@ -309,10 +666,10 @@ bool copyToFs(fs::FS from, fs::FS to, String path, bool draw) {
     return false;
   }
   size_t bytesRead;
-  int tot = source.size();
-  int prog = 0;
+  size_t tot = source.size();
+  size_t prog = 0;
 
-  if (&to == &LittleFS &&
+  if (&to == static_cast<fs::FS *>(&LittleFS) &&
       (LittleFS.totalBytes() - LittleFS.usedBytes()) < tot) {
     displayError("Espaco insuficiente", true);
     return false;
@@ -368,7 +725,7 @@ bool copyToFs(fs::FS from, fs::FS to, String path, bool draw) {
 ** Function name: copyFile
 ** Description:   copy file address to memory
 ***************************************************************************************/
-bool copyFile(fs::FS fs, String path) {
+bool copyFile(fs::FS &fs, String path) {
   File file = fs.open(path, FILE_READ);
   if (!file.isDirectory()) {
     fileToCopy = path;
@@ -385,7 +742,7 @@ bool copyFile(fs::FS fs, String path) {
 ** Function name: pasteFile
 ** Description:   paste file to new folder
 ***************************************************************************************/
-bool pasteFile(fs::FS fs, String path) {
+bool pasteFile(fs::FS &fs, String path) {
   // Using Global Buffer
 
   // Abrir o arquivo original
@@ -408,7 +765,7 @@ bool pasteFile(fs::FS fs, String path) {
   // Ler dados do arquivo original e escrever no arquivo de destino
   size_t bytesRead;
   int tot = sourceFile.size();
-  int prog = 0;
+  size_t prog = 0;
   size_t bufSize = 1024;
   uint8_t *buff = nullptr;
 
@@ -454,7 +811,7 @@ bool pasteFile(fs::FS fs, String path) {
 ** Function name: createFolder
 ** Description:   create new folder
 ***************************************************************************************/
-bool createFolder(fs::FS fs, String path) {
+bool createFolder(fs::FS &fs, String path) {
   String foldername = keyboard("", 76, "Nome da Pasta: ");
   if (!fs.mkdir(path + "/" + foldername)) {
     displayRedStripe("Nao foi possivel criar pasta");
@@ -491,13 +848,13 @@ String readSmallFile(fs::FS &fs, String filepath) {
   String fileContent = "";
   File file;
 
-  if (&fs == &SD && spiMutex &&
+  if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD) && spiMutex &&
       xSemaphoreTake(spiMutex, pdMS_TO_TICKS(1000)) != pdTRUE) {
     return "";
   }
   file = fs.open(filepath, FILE_READ);
   if (!file) {
-    if (&fs == &SD && spiMutex)
+    if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD) && spiMutex)
       xSemaphoreGive(spiMutex);
     return "";
   }
@@ -506,7 +863,7 @@ String readSmallFile(fs::FS &fs, String filepath) {
   if (fileSize > SAFE_STACK_BUFFER_SIZE || fileSize > ESP.getFreeHeap()) {
     displayError("Arquivo muito grande", true);
     file.close();
-    if (&fs == &SD && spiMutex)
+    if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD) && spiMutex)
       xSemaphoreGive(spiMutex);
     return "";
   }
@@ -531,7 +888,7 @@ String readSmallFile(fs::FS &fs, String filepath) {
   }
 
   file.close();
-  if (&fs == &SD && spiMutex)
+  if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD) && spiMutex)
     xSemaphoreGive(spiMutex);
   return fileContent;
 }
@@ -542,14 +899,14 @@ String readSmallFile(fs::FS &fs, String filepath) {
 **                caller needs to call free()
 ***************************************************************************************/
 char *readBigFile(fs::FS *fs, String filepath, bool binary, size_t *fileSize) {
-  if (fs == &SD && spiMutex &&
+  if (static_cast<fs::FS *>(fs) == static_cast<fs::FS *>(&SD) && spiMutex &&
       xSemaphoreTake(spiMutex, pdMS_TO_TICKS(1000)) != pdTRUE) {
     return NULL;
   }
   File file = fs->open(filepath);
   if (!file) {
     Serial.printf("Could not open file: %s\n", filepath.c_str());
-    if (fs == &SD && spiMutex)
+    if (static_cast<fs::FS *>(fs) == static_cast<fs::FS *>(&SD) && spiMutex)
       xSemaphoreGive(spiMutex);
     return NULL;
   }
@@ -563,7 +920,7 @@ char *readBigFile(fs::FS *fs, String filepath, bool binary, size_t *fileSize) {
 
   if (!buf) {
     Serial.printf("Could not allocate memory for file: %s\n", filepath.c_str());
-    if (fs == &SD && spiMutex)
+    if (static_cast<fs::FS *>(fs) == static_cast<fs::FS *>(&SD) && spiMutex)
       xSemaphoreGive(spiMutex);
     return NULL;
   }
@@ -579,12 +936,11 @@ char *readBigFile(fs::FS *fs, String filepath, bool binary, size_t *fileSize) {
   }
   buf[bytesRead] = '\0';
   file.close();
-  if (fs == &SD && spiMutex)
+  if (static_cast<fs::FS *>(fs) == static_cast<fs::FS *>(&SD) && spiMutex)
     xSemaphoreGive(spiMutex);
 
   return buf;
 }
-
 /***************************************************************************************
 ** Function name: getFileSize
 ** Description:   get a file size without opening
@@ -650,10 +1006,10 @@ bool sortList(const FileList &a, const FileList &b) {
   if (a.folder != b.folder) {
     return a.folder > b.folder; // true if a is a folder and b is not
   }
-  // Order items alphabetically
+  // Order items alphabetically case-insensitive
   String fa = a.filename.c_str();
-  fa.toUpperCase();
   String fb = b.filename.c_str();
+  fa.toUpperCase();
   fb.toUpperCase();
   return fa < fb;
 }
@@ -690,8 +1046,8 @@ bool checkExt(String ext, String pattern) {
 ** Function name: readFs
 ** Description:   read files/folders from a folder
 ***************************************************************************************/
-void readFs(fs::FS fs, String folder, String allowed_ext) {
-  if (&fs == &SD && spiMutex &&
+void readFs(fs::FS &fs, String folder, String allowed_ext) {
+  if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD) && spiMutex &&
       xSemaphoreTake(spiMutex, pdMS_TO_TICKS(1000)) != pdTRUE) {
     return;
   }
@@ -700,7 +1056,7 @@ void readFs(fs::FS fs, String folder, String allowed_ext) {
 
   File root = fs.open(folder);
   if (!root || !root.isDirectory()) {
-    if (&fs == &SD && spiMutex)
+    if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD) && spiMutex)
       xSemaphoreGive(spiMutex);
     return;
   }
@@ -731,7 +1087,7 @@ void readFs(fs::FS fs, String folder, String allowed_ext) {
     }
   }
   root.close();
-  if (&fs == &SD && spiMutex)
+  if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD) && spiMutex)
     xSemaphoreGive(spiMutex);
 
   // Sort folders/files
@@ -757,7 +1113,7 @@ String loopSD(fs::FS &fs, bool filePicker, String allowed_ext,
   delay(10);
 
   // Ensure SD is mounted before checking if paths exist!
-  if (&fs == &SD) {
+  if (&fs == static_cast<fs::FS *>(&SD)) {
     if (!setupSdCard()) {
       displayError("Falha ao Montar SD", true);
       return "";
@@ -771,7 +1127,7 @@ String loopSD(fs::FS &fs, bool filePicker, String allowed_ext,
       rootPath = "/";
       if (!fs.exists(rootPath)) {
         Serial.println("loopSD-> 2nd exist test failed");
-        if (&fs == &SD)
+        if (&fs == static_cast<fs::FS *>(&SD))
           sdcardMounted = false;
         return "";
       }
@@ -911,14 +1267,14 @@ String loopSD(fs::FS &fs, bool filePicker, String allowed_ext,
         if (fileList[index].folder == true &&
             fileList[index].operation == false) {
           options = {
-              Option{"Nova Pasta", [=]() { createFolder(fs, Folder); }},
+              Option{"Nova Pasta", [&]() { createFolder(fs, Folder); }},
               Option{"Renomear",
-                     [=]() {
+                     [&]() {
                        renameFile(fs, Folder + fileList[index].filename,
                                   fileList[index].filename);
                      }},
               Option{"Deletar",
-                     [=]() {
+                     [&]() {
                        deleteFromSd(fs,
                                     Folder + "/" + fileList[index].filename);
                      }},
@@ -935,11 +1291,11 @@ String loopSD(fs::FS &fs, bool filePicker, String allowed_ext,
           goto Files;
         } else {
           options = {
-              Option{"Nova Pasta", [=]() { createFolder(fs, Folder); }},
+              Option{"Nova Pasta", [&]() { createFolder(fs, Folder); }},
           };
           if (fileToCopy != "")
             options.push_back(
-                Option{"Colar", [=]() { pasteFile(fs, Folder); }});
+                Option{"Colar", [&]() { pasteFile(fs, Folder); }});
           options.push_back(Option{"Fechar Menu", [&]() { yield(); }});
           options.push_back(Option{"Menu Principal", [&]() { exit = true; }});
           loopOptions(options);
@@ -970,23 +1326,24 @@ String loopSD(fs::FS &fs, bool filePicker, String allowed_ext,
               .clear(); // Clear memory to allow other functions to work better
 
           options = {
-              Option{"Ver Arquivo", [=]() { viewFile(fs, filepath); }},
-              Option{"Info do Arquivo", [=]() { fileInfo(fs, filepath); }},
-              Option{"Renomear", [=]() { renameFile(fs, filepath, filename); }},
-              Option{"Copiar", [=]() { copyFile(fs, filepath); }},
-              Option{"Deletar", [=]() { deleteFromSd(fs, filepath); }},
-              Option{"Nova Pasta", [=]() { createFolder(fs, Folder); }},
+              Option{"Ver Arquivo", [&]() { viewFile(fs, filepath); }},
+              Option{"Info do Arquivo", [&]() { fileInfo(fs, filepath); }},
+              Option{"Renomear", [&]() { renameFile(fs, filepath, filename); }},
+              Option{"Copiar", [&]() { copyFile(fs, filepath); }},
+              Option{"Deletar", [&]() { deleteFromSd(fs, filepath); }},
+              Option{"Nova Pasta", [&]() { createFolder(fs, Folder); }},
           };
           if (fileToCopy != "")
             options.push_back(
-                Option{"Colar", [=]() { pasteFile(fs, Folder); }});
-          if (&fs == &SD)
-            options.push_back(Option{"Copiar->LittleFS", [=]() {
+                Option{"Colar", [&]() { pasteFile(fs, Folder); }});
+          if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&SD))
+            options.push_back(Option{"Copiar->LittleFS", [&]() {
                                        copyToFs(SD, LittleFS, filepath);
                                      }});
-          if (&fs == &LittleFS && sdcardMounted)
+          if (static_cast<fs::FS *>(&fs) == static_cast<fs::FS *>(&LittleFS) &&
+              sdcardMounted)
             options.push_back(Option{
-                "Copiar->SD", [=]() { copyToFs(LittleFS, SD, filepath); }});
+                "Copiar->SD", [&]() { copyToFs(LittleFS, SD, filepath); }});
 
           // custom file formats commands added in front
           if (filepath.endsWith(".jpg") || filepath.endsWith(".gif") ||
@@ -1078,10 +1435,28 @@ String loopSD(fs::FS &fs, bool filePicker, String allowed_ext,
                          if (plaintext.length() == 0)
                            return displayError("Decryption failed", true);
                          plaintext.trim(); // remove newlines
-                                           // if(plaintext.length()<..)
-                         displaySuccess(plaintext, true);
-                         // else
-                         // TODO: show in the text viewer
+
+                         // Show decrypted text: use text viewer for longer text
+                         if (plaintext.length() > 200) {
+                           // Create temporary file in the same FS
+                           String tmpPath = "/tmp_decrypted_view.txt";
+                           File tmpFile = fs.open(tmpPath, FILE_WRITE);
+                           if (!tmpFile) {
+                             displayError("Failed to create temp file", true);
+                             return;
+                           }
+                           tmpFile.print(plaintext);
+                           tmpFile.close();
+
+                           // Show in text viewer
+                           viewFile(fs, tmpPath);
+
+                           // Clean up
+                           fs.remove(tmpPath);
+                         } else {
+                           // Short text: show directly
+                           displaySuccess(plaintext, true);
+                         }
                        }});
           }
 #if defined(HAS_NS4168_SPKR)
@@ -1152,7 +1527,7 @@ String loopSD(fs::FS &fs, bool filePicker, String allowed_ext,
 **  Function: viewFile
 **  Display file content
 **********************************************************************/
-void viewFile(FS fs, String filepath) {
+void viewFile(FS &fs, String filepath) {
   File file = fs.open(filepath, FILE_READ);
   if (!file)
     return;
@@ -1206,7 +1581,7 @@ bool getFsStorage(FS *&fs) {
 **  Function: fileInfo
 **  Display file info
 **********************************************************************/
-void fileInfo(FS fs, String filepath) {
+void fileInfo(FS &fs, String filepath) {
   File file = fs.open(filepath, FILE_READ);
   if (!file)
     return;

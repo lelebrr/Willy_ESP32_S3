@@ -32,6 +32,11 @@ static bool detectAnalogDevice(int pin, const char *name) {
   if (pin < 0)
     return false;
 
+  // Set pin to INPUT_PULLUP. If disconnected, it will read 4095.
+  // If connected to a joystick (~10k pot), it will read near center.
+  pinMode(pin, INPUT_PULLUP);
+  delay(10); // let it settle
+
   const int NUM_SAMPLES = 8;
   int samples[NUM_SAMPLES];
   int minVal = 4095, maxVal = 0;
@@ -50,16 +55,18 @@ static bool detectAnalogDevice(int pin, const char *name) {
   int avg = sum / NUM_SAMPLES;
   int range = maxVal - minVal;
 
-  // A real joystick at rest:
-  //   - average near center (800..3200 for 12-bit ADC)
-  //   - range < 150 (very stable readings)
-  // A floating pin:
-  //   - erratic average (often near 0 or 4095)
-  //   - range > 200 (high variance)
-  bool detected = (range < 400 && avg > 300 && avg < 3800);
+  // With INPUT_PULLUP:
+  // - Disconnected: avg ~ 4095, range very small.
+  // - Connected (at rest): avg ~ 2048, range very small.
+  // - Connected (moving): range larger.
+  // - Floating (if pullup fails): range large.
 
-  Serial.printf("[GPIO] %s (pin %d): avg=%d, range=%d -> %s\n", name, pin, avg,
-                range, detected ? "DETECTED" : "NOT CONNECTED (disabled)");
+  // We consider it NOT CONNECTED if it's pegged at the high rail (PULLUP).
+  bool detected = (avg < 3900 && avg > 100);
+
+  Serial.printf(
+      "[GPIO] %s (pin %d): avg=%d, range=%d -> %s\n", name, pin, avg, range,
+      detected ? "DETECTED" : "NOT CONNECTED (sticking to high rail)");
 
   return detected;
 }

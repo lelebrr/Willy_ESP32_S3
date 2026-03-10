@@ -6,18 +6,19 @@
 
 class SerialCli {
 public:
-    SerialCli();
-    void setup(void);
+  SerialCli();
+  void setup(void);
 
-    SimpleCLI getCli() { return _cli; };
-    bool parse(const String &input) { return _cli.parse(input); }
+  SimpleCLI getCli() { return _cli; };
+  bool parse(const String &input) { return _cli.parse(input); }
 
 private:
-    SimpleCLI _cli;
+  SimpleCLI _cli;
 };
 
 void cliErrorCallback(cmd_error *e);
 
 #endif
 
-//  TODO: more commands https://docs.flipper.net/development/cli#0Z9fs
+// Additional commands can be added following Flipper CLI conventions
+// See: https://docs.flipper.net/development/cli

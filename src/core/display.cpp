@@ -64,9 +64,17 @@ void updateTouchPoint() {
   // Guard SPI bus access with mutex — tft.getTouch() internally uses
   // SPI.beginTransaction/endTransaction, which conflicts with LVGL's
   // my_disp_flush() running on the same SPI bus from another context.
-  if (spiMutex && xSemaphoreTake(spiMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+  // Increased timeout from 50ms to 100ms for better reliability under load
+  if (spiMutex && xSemaphoreTake(spiMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
     touched = tft.getTouch(&tx, &ty);
     xSemaphoreGive(spiMutex);
+  } else if (spiMutex) {
+    // Debug: log occasional mutex failures (not every frame to avoid spam)
+    static uint32_t lastFail = 0;
+    if (millis() - lastFail > 5000) {
+      Serial.println("[TOUCH] WARNING: Failed to acquire SPI mutex (timeout)");
+      lastFail = millis();
+    }
   }
 
   if (touched) {
@@ -277,17 +285,17 @@ void displayRedStripe(String text, uint16_t fgcolor, uint16_t bgcolor) {
   tft.setTextColor(fgcolor, bgcolor);
   if (size == FM) {
     tft.setTextSize(FM);
-    tft.drawCentreString(text, tftWidth / 2, tftHeight / 2 - 8);
+    tft.drawCentreString(text, tftWidth / 2, tftHeight / 2 - 8, FM);
   } else {
     tft.setTextSize(FP);
     int text_size = text.length();
     if (text_size < (tftWidth - 20) / (LW * FP))
-      tft.drawCentreString(text, tftWidth / 2, tftHeight / 2 - 8);
+      tft.drawCentreString(text, tftWidth / 2, tftHeight / 2 - 8, FP);
     else {
       tft.drawCentreString(text.substring(0, text_size / 2), tftWidth / 2,
-                           tftHeight / 2 - 9);
+                           tftHeight / 2 - 9, FP);
       tft.drawCentreString(text.substring(text_size / 2), tftWidth / 2,
-                           tftHeight / 2 + 1);
+                           tftHeight / 2 + 1, FP);
     }
   }
 }
@@ -1841,10 +1849,6 @@ bool drawImg(FS &fs, String filename, int x, int y, bool center,
              int playDurationMs, bool resetButtonStatus) {
   String ext = filename.substring(filename.lastIndexOf('.'));
   ext.toLowerCase();
-  uint8_t fls = 2; // 2 for Little FS
-  if (&fs == &SD)
-    fls = 0; // 0 for SD
-  tft.imageToBin(fls, filename, x, y, center, playDurationMs);
   if (ext.endsWith("jpg"))
     return showJpeg(fs, filename, x, y, center);
   else if (ext.endsWith("bmp"))

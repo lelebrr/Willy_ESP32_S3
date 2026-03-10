@@ -1,0 +1,70 @@
+9:JsonDocument WillyConfig::toJson() const {
+90:void WillyConfig::fromFile(bool checkFS) {
+426:void WillyConfig::saveFile() {
+447:void WillyConfig::factoryReset() {
+454:void WillyConfig::validateConfig() {
+479:void WillyConfig::setUiColor(uint16_t primary, uint16_t *secondary, uint16_t *background) {
+484:void WillyConfig::setDimmer(int value) {
+490:void WillyConfig::validateDimmerValue() {
+495:void WillyConfig::setBright(uint8_t value) {
+501:void WillyConfig::validateBrightValue() {
+505:void WillyConfig::setAutomaticTimeUpdateViaNTP(bool value) {
+510:void WillyConfig::setTmz(float value) {
+516:void WillyConfig::validateTmzValue() {
+520:void WillyConfig::setDST(bool value) {
+525:void WillyConfig::setClock24Hr(bool value) {
+530:void WillyConfig::setSoundEnabled(int value) {
+536:void WillyConfig::setSoundVolume(int value) {
+542:void WillyConfig::validateSoundEnabledValue() {
+546:void WillyConfig::validateSoundVolumeValue() {
+550:void WillyConfig::setWifiAtStartup(int value) {
+556:void WillyConfig::validateWifiAtStartupValue() {
+561:void WillyConfig::setLedBright(int value) {
+567:void WillyConfig::validateLedBrightValue() { ledBright = max(0, min(100, ledBright)); }
+569:void WillyConfig::setLedColor(uint32_t value) {
+575:void WillyConfig::validateLedColorValue() {
+579:void WillyConfig::setLedBlinkEnabled(int value) {
+585:void WillyConfig::validateLedBlinkEnabledValue() {
+589:void WillyConfig::setLedEffect(int value) {
+595:void WillyConfig::validateLedEffectValue() {
+599:void WillyConfig::setLedEffectSpeed(int value) {
+605:void WillyConfig::validateLedEffectSpeedValue() {
+614:void WillyConfig::setLedEffectDirection(int value) {
+620:void WillyConfig::validateLedEffectDirectionValue() {
+626:void WillyConfig::setWebUICreds(const String &usr, const String &pwd) {
+632:void WillyConfig::setWifiApCreds(const String &ssid, const String &pwd) {
+638:void WillyConfig::addWifiCredential(const String &ssid, const String &pwd) {
+643:String WillyConfig::getWifiPassword(const String &ssid) const {
+649:void WillyConfig::addEvilWifiName(String value) {
+654:void WillyConfig::removeEvilWifiName(String value) {
+659:void WillyConfig::setEvilEndpointCreds(String value) {
+665:void WillyConfig::validateEvilEndpointCreds() {
+675:void WillyConfig::setEvilEndpointSsid(String value) {
+681:void WillyConfig::validateEvilEndpointSsid() {
+691:void WillyConfig::setEvilAllowEndpointDisplay(bool value) {
+696:void WillyConfig::setEvilAllowGetCreds(bool value) {
+701:void WillyConfig::setEvilAllowSetSsid(bool value) {
+706:void WillyConfig::setEvilPasswordMode(EvilPortalPasswordMode value) {
+711:void WillyConfig::validateEvilPasswordMode() {
+715:void WillyConfig::setStartupApp(String value) {
+720:void WillyConfig::setStartupAppLuaScript(String value) {
+725:void WillyConfig::setWigleBasicToken(String value) {
+730:void WillyConfig::setDevMode(int value) {
+736:void WillyConfig::validateDevModeValue() {
+740:void WillyConfig::setColorInverted(int value) {
+746:void WillyConfig::validateColorInverted() {
+750:void WillyConfig::setBadUSBBLEKeyboardLayout(int value) {
+756:void WillyConfig::validateBadUSBBLEKeyboardLayout() {
+760:void WillyConfig::setBadUSBBLEKeyDelay(uint16_t value) {
+766:void WillyConfig::validateBadUSBBLEKeyDelay() {
+770:void WillyConfig::setBadUSBBLEShowOutput(bool value) {
+774:void WillyConfig::addMifareKey(String value) { MifareKeysManager::addKey(mifareKeys, value); }
+776:void WillyConfig::validateMifareKeysItems() { MifareKeysManager::validateKeys(mifareKeys); }
+778:void WillyConfig::addDisabledMenu(String value) {
+784:void WillyConfig::addQrCodeEntry(const String &menuName, const String &content) {
+789:void WillyConfig::removeQrCodeEntry(const String &menuName) {
+806:void WillyConfig::addWebUISession(const String &token) {
+813:void WillyConfig::removeWebUISession(const String &token) {
+823:bool WillyConfig::isValidWebUISession(const String &token) {
+846:String WillyConfig::encryptString(const String &input) const {
+858:String WillyConfig::decryptString(const String &input) const {

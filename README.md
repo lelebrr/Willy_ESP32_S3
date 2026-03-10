@@ -38,20 +38,14 @@
 [![GZ](https://img.shields.io/badge/GZ-Compressed-green.svg)](https://www.gzip.org/)
 
 ![Willy Banner](media/pictures/logo_readme.png)
-![Willy HD](media/pictures/bruce_hd.png)
 
 ### Transforme seu ESP32-S3 em uma poderosa ferramenta de pesquisa em segurança
 
 ### 🖼️ Galeria do Hardware
 
-![Display TFT 2.4"](media/pictures/cyd.png)
-![ESP32-S3 Core](media/pictures/core.png)
-![GPS NEO-6M](media/pictures/neo6m_internal.png)
 
 ### 🔧 Diagrama de Conexões
 
-![Diagrama de Conexões](media/pictures/pic1.png)
-![Layout dos Componentes](media/pictures/pic2.png)
 
 ### 🎯 Estatísticas do Projeto
 
@@ -536,195 +530,22 @@ A versão avançada do Willy suporta a integração de **dois módulos NRF24L01+
 
 [🔍 Ver Mais Recursos Sub-GHz](docs/rf_advanced_attacks.md)
 
-#### 🚀 Aplicações Avançadas Disponíveis
+#### 🚀 Aplicações Avançadas
 
 | Categoria | Protocolo | Dispositivo | Frequência | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **Segurança** | **KeeLoq** | Controles de Portão | 315/433 MHz | ✅ Implementado |
-| **Segurança** | **HCS301** | Alarmes e Segurança | 315/433 MHz | ✅ Implementado |
-| **Automotivo** | **TPMS** | Sensores de Pressão de Pneu | 315/433 MHz | ✅ Implementado |
-| **Automotivo** | **Keyless Entry** | Sistemas de Entrada sem Chave | 315/433 MHz | ✅ Implementado |
-| **Climatização** | **Weather Stations** | Estações Meteorológicas | 433 MHz | ✅ Implementado |
-| **Climatização** | **Thermostats** | Termostatos Inteligentes | 433/868 MHz | ✅ Implementado |
-| **Doméstico** | **Wireless Switches** | Interruptores sem Fio | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Smart Plugs** | Tomadas Inteligentes | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Doorbells** | Campainhas sem Fio | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Lighting** | Controle de Iluminação | 433/868 MHz | ✅ Implementado |
-| **Doméstico** | **Garage Doors** | Portões de Garagem | 315/433 MHz | ✅ Implementado |
-| **Doméstico** | **Roller Shutters** | Persianas Automáticas | 433/868 MHz | ✅ Implementado |
-| **Doméstico** | **Pool/Spa** | Controle de Piscina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Irrigation** | Sistemas de Irrigação | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Security Sensors** | Sensores de Segurança | 433/868 MHz | ✅ Implementado |
-| **Doméstico** | **Smoke Detectors** | Detectores de Fumaça | 433 MHz | ✅ Implementado |
-| **Doméstico** | **CO Detectors** | Detectores de Monóxido | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Water Leak Sensors** | Sensores de Vazamento | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Motion Sensors** | Sensores de Movimento | 433/868 MHz | ✅ Implementado |
-| **Doméstico** | **Door/Window Sensors** | Sensores de Abertura | 433/868 MHz | ✅ Implementado |
-| **Doméstico** | **Temperature Sensors** | Sensores de Temperatura | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Humidity Sensors** | Sensores de Umidade | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Air Quality Sensors** | Sensores de Qualidade do Ar | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Energy Meters** | Medidores de Energia | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Water Meters** | Medidores de Água | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Gas Meters** | Medidores de Gás | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Smart Locks** | Fechaduras Inteligentes | 433/868 MHz | ✅ Implementado |
-| **Doméstico** | **Baby Monitors** | Monitores de Bebê | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Pet Trackers** | Rastreadores de Animais | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Pet Feeders** | Alimentadores Automáticos | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Pet Doors** | Portas para Animais | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Plant Sensors** | Sensores de Plantas | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Lawn Mowers** | Cortadores de Grama | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Sprinklers** | Sistemas de Aspersão | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Fountains** | Fontes Decorativas | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Pond Pumps** | Bombas de Estação | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Aquarium Controllers** | Controladores de Aquário | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Terrarium Controllers** | Controladores de Terrário | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Greenhouse Controllers** | Controladores de Estufa | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Chicken Coop Controllers** | Controladores de Galinheiro | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Beehive Monitors** | Monitores de Colmeia | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Compost Monitors** | Monitores de Compostagem | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Rain Barrels** | Barris de Água da Chuva | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Solar Controllers** | Controladores Solares | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Wind Turbine Monitors** | Monitores de Turbinas | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Battery Monitors** | Monitores de Bateria | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Generator Monitors** | Monitores de Gerador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **UPS Monitors** | Monitores de UPS | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Inverter Monitors** | Monitores de Inversor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Charge Controller Monitors** | Monitores de Controlador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Power Strip Monitors** | Monitores de Fita Elétrica | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Outlet Monitors** | Monitores de Tomada | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Light Switch Monitors** | Monitores de Interruptor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Dimmer Monitors** | Monitores de Dimmer | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Fan Controllers** | Controladores de Ventilador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Heater Controllers** | Controladores de Aquecedor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **AC Controllers** | Controladores de Ar Condicionado | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Humidifier Controllers** | Controladores de Umidificador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Dehumidifier Controllers** | Controladores de Desumidificador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Air Purifier Controllers** | Controladores de Purificador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Air Conditioner Controllers** | Controladores de Condicionador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Water Purifier Controllers** | Controladores de Purificador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Water Softener Controllers** | Controladores de Amaciador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Water Heater Controllers** | Controladores de Aquecedor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Water Cooler Controllers** | Controladores de Bebedouro | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Refrigerator Controllers** | Controladores de Geladeira | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Freezer Controllers** | Controladores de Freezer | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Oven Controllers** | Controladores de Forno | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Microwave Controllers** | Controladores de Microondas | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Dishwasher Controllers** | Controladores de Lava Louça | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Washing Machine Controllers** | Controladores de Máquina de Lavar | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Dryer Controllers** | Controladores de Secadora | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Iron Controllers** | Controladores de Ferro | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Vacuum Cleaner Controllers** | Controladores de Aspirador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Robot Vacuum Controllers** | Controladores de Aspirador Robô | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Lawn Mower Controllers** | Controladores de Cortador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Leaf Blower Controllers** | Controladores de Soprador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Weed Eater Controllers** | Controladores de Cortador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Hedge Trimmer Controllers** | Controladores de Cortador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Chainsaw Controllers** | Controladores de Serra | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Drill Controllers** | Controladores de Furadeira | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Sander Controllers** | Controladores de Lixadeira | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Saw Controllers** | Controladores de Serra | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Router Controllers** | Controladores de Roteador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Planer Controllers** | Controladores de Plaina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Jointer Controllers** | Controladores de Tupia | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Lathe Controllers** | Controladores de Torno | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Mill Controllers** | Controladores de Fresa | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Laser Cutter Controllers** | Controladores de Cortador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **3D Printer Controllers** | Controladores de Impressora | 433 MHz | ✅ Implementado |
-| **Doméstico** | **CNC Controllers** | Controladores de CNC | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Plotter Controllers** | Controladores de Plotter | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Sewing Machine Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Knitting Machine Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Embroidery Machine Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Weweaving Machine Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Spinning Wheel Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Loom Controllers** | Controladores de Tear | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Pottery Wheel Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Glass Blowing Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Metal Casting Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Wood Burning Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Painting Machine Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Drawing Machine Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Writing Machine Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Typewriter Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Calculator Controllers** | Controladores de Máquina | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Clock Controllers** | Controladores de Relógio | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Watch Controllers** | Controladores de Relógio | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Timer Controllers** | Controladores de Temporizador | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Stopwatch Controllers** | Controladores de Cronômetro | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Metronome Controllers** | Controladores de Metrônomo | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Thermostat Controllers** | Controladores de Termostato | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Humidistat Controllers** | Controladores de Higróstato | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Dehumidistat Controllers** | Controladores de Desumidistato | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Air Quality Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Water Quality Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Soil Quality Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Light Quality Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Sound Quality Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Vibration Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Motion Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Proximity Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Pressure Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Force Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Weight Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Flow Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Level Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Position Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Speed Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Acceleration Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Rotation Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Tilt Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Inclination Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Angle Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Direction Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Orientation Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Location Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **GPS Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Compass Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Altimeter Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Barometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Hygrometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Anemometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Pyranometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Spectrometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Photometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Radiometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Magnetometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Gyroscope Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Accelerometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Inclinometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Tiltmeter Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Seismometer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Geophone Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Hydrophone Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Microphone Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Speaker Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Headphone Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Earphone Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Microphone Array Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Speaker Array Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Headphone Array Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Earphone Array Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Mixer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Amplifier Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Equalizer Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Compressor Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Limiter Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Gate Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Expander Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Reverb Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Delay Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Chorus Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Flanger Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Phaser Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Tremolo Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Vibrato Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Wah Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Fuzz Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Distortion Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Overdrive Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Boost Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Cut Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
-| **Doméstico** | **Audio Boost/Cut Monitor Controllers** | Controladores de Monitor | 433 MHz | ✅ Implementado |
+| **Segurança** | KeeLoq | Controles de Portão | 315/433 MHz | ✅ Implementado |
+| **Segurança** | HCS301 | Alarmes e Segurança | 315/433 MHz | ✅ Implementado |
+| **Automotivo** | TPMS | Sensores de Pressão de Pneu | 315/433 MHz | ✅ Implementado |
+| **Automotivo** | Keyless Entry | Sistemas de Entrada sem Chave | 315/433 MHz | ✅ Implementado |
+| **Climatização** | Weather Stations | Estações Meteorológicas | 433 MHz | ✅ Implementado |
+| **Climatização** | Thermostats | Termostatos Inteligentes | 433/868 MHz | ✅ Implementado |
+| **Doméstico** | Wireless Switches | Interruptores sem Fio | 433 MHz | ✅ Implementado |
+| **Doméstico** | Smart Plugs | Tomadas Inteligentes | 433 MHz | ✅ Implementado |
+| **Doméstico** | Garage Doors | Portões de Garagem | 315/433 MHz | ✅ Implementado |
+| **Doméstico** | Security Sensors | Sensores de Segurança | 433/868 MHz | ✅ Implementado |
+
+[🔍 Ver Mais Aplicações](docs/rf_advanced_attacks.md)
 
 ### 💳 NFC/RFID (PN532)
 
@@ -765,11 +586,11 @@ ENTER
 
 ---
 
-## 🚀 Willy 2.1 Refinements
+## 🚀 Melhorias Willy 2.1
 
 A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos forenses avançados e desenvolvimento de ferramentas de geolocalização para pentest para o repositório oficial.
 
-### 🌍 GPS Mapping & Geolocalização Avançada
+### 🌍 Mapeamento GPS & Geolocalização Avançada
 
 - **Tracker e Mapping**: GPS tracker integrado com gravação de rotas e coordenadas em tempo real.
 - **Wardriving Integrado**: Escaneamento simultâneo de WiFi e rastreamento geográfico para auditoria sem fio.
@@ -804,7 +625,7 @@ A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos
 - **Layout Responsivo**: Adaptação automática para diferentes tamanhos de tela com grid system inteligente.
 - **Cache de Recursos**: Sistema de cache para ícones e animações para melhor performance em dispositivos lentos.
 
-### 🕵️ Forensic Logging System
+### 🕵️ Sistema de Logs Forenses
 
 - **Logs Estruturados**: Gravação automática de eventos em `/WILLY_LOGS/` no formato CSV.
 - **Rastreamento Operacional**: Registro detalhado de ataques WiFi, BLE e inicialização de módulos.
@@ -823,7 +644,7 @@ A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos
 - **Armazenamento Seguro**: Logs podem ser armazenados em cartão SD criptografado ou enviados para servidor remoto.
 - **Interface Web de Análise**: Visualização e análise dos logs diretamente pela interface web com filtros avançados.
 
-### 🌐 Futuristic Web Dashboard
+### 🌐 Dashboard Web Futurista
 
 - **Painel Responsivo**: Controle total do dispositivo via navegador com estética glassmorphism.
 - **Live Stats**: Gráficos e indicadores em tempo real (RSSI, Heap, Uptime).
@@ -860,7 +681,7 @@ A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos
 - **QR Code Phishing**: Geração de QR codes para redirecionamento malicioso
 - **Social Engineering Toolkit**: Coleção de ferramentas para testes de engenharia social
 
-#### 🔍 OSINT & Intelligence Gathering
+#### 🔍 OSINT & Coleta de Inteligência
 
 - **Reconhecimento Automatizado**: Coleta de informações alvos via APIs públicas
 - **Análise de Redes Sociais**: Extração de dados perfis e relacionamentos
@@ -920,7 +741,7 @@ A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos
 - **Recording**: Gravação de áudio e vídeo de streams
 - **Playlist Management**: Criação e gerenciamento de playlists
 
-### 🏢 Business & Productivity
+### 🏢 Business & Produtividade
 
 #### 📊 Business Intelligence
 
@@ -930,7 +751,7 @@ A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos
 - **Data Visualization**: Gráficos e visualizações interativas
 - **API Integration**: Conexão com sistemas de negócios existentes
 
-#### 🔄 Process Automation
+#### 🔄 Automação de Processos
 
 - **Workflow Engine**: Motor de automação de processos
 - **Task Scheduler**: Agendamento de tarefas automáticas
@@ -940,7 +761,7 @@ A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos
 
 ### 🎨 Criatividade & Design
 
-#### 🎨 Design Tools
+#### 🎨 Ferramentas de Design
 
 - **Color Palette Generator**: Geração de paletas de cores harmoniosas
 - **Font Pairing**: Sugestões de combinações de fontes
@@ -948,7 +769,7 @@ A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos
 - **Icon Library**: Biblioteca de ícones vetoriais
 - **Template System**: Sistema de templates para designs
 
-#### 🎵 Music & Audio
+#### 🎵 Música & Áudio
 
 - **Audio Processing**: Ferramentas de processamento de áudio
 - **Music Theory**: Acompanhamento teórico musical
@@ -966,7 +787,7 @@ A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos
 - **Package Manager**: Gerenciamento de dependências
 - **Build System**: Sistema de compilação e deploy
 
-#### 🧪 Testing & QA
+#### 🧪 Testes & QA
 
 - **Unit Testing**: Framework de testes unitários
 - **Integration Testing**: Testes de integração de módulos
@@ -986,17 +807,6 @@ A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos
 | **Display TFT SPI** | 2.4" ILI9341, 320x240, Touch XPT2046 | ⭐ Integrado |
 | **Módulos Externos** | CC1101, NRF24L01+, PN532, GPS NEO-6M | ✅ Suportados |
 
-### 🔄 Outros Dispositivos Suportados
-
-| Dispositivo | Display | Touch | SD Card | USB | Status |
-| ------------- | --------- | ------- | --------- | ----- | -------- |
-| **M5Stack Core2 Pro** | 2.0" TFT | Capacitivo | ✅ | USB‑C | ✅ Suportado |
-| **Lilygo T‑Display Pro** | 2.0" TFT | Capacitivo | ✅ | USB‑C | ✅ Suportado |
-| **ESP32‑S3‑DevKitM** | 2.4" TFT | Capacitivo | ✅ | USB‑C | ✅ Suportado |
-| **ESP32‑S2‑DevKitC** | 2.4" TFT | ❌ | ✅ | USB‑C | ✅ Suportado |
-| **Flipper Zero** | 1.8" LCD | ❌ | ✅ | Micro‑USB | ✅ Suportado |
-
-[**🔍 Ver Mais Hardware**](docs/hardware_externo.md)
 
 ### 🔌 Módulos Externos Suportados
 
@@ -1065,7 +875,6 @@ A nova versão **Willy 2.1** traz uma experiência de usuário premium, recursos
 
 #### 🎯 Dashboard Web
 
-![Dashboard Web](media/artworks/bruce-working.jpg)
 
 #### 🔧 Módulos Ativos
 
@@ -1190,6 +999,30 @@ Para informações sobre licenciamento comercial ou autorizações especiais, en
 - 🚀 **Atualizações**: [GitHub Releases](https://github.com/lelebrr/Willy_ESP_s3/releases)
 
 **[⬆ Voltar ao Topo](#willy-firmware)**
+
+---
+
+## 🚀 Em Breve / Próximas Implementações
+
+Estamos trabalhando ativamente em várias funcionalidades novas para tornar o Willy ainda mais poderoso e versátil. Aqui está o roadmap de alto nível do que está planejado para as próximas versões:
+
+- Consulte o arquivo dedicado [IMPLEMENTACOES.md](./docs/IMPLEMENTACOES.md) para ver a lista completa, detalhes técnicos, prioridades, dependências de hardware e status de cada ideia/feature.
+
+**Principais destaques planejados (resumo):**
+- Suporte a mais protocolos Sub-GHz (ex: rolling codes avançados, novos dispositivos)
+- Ataques e defesas BLE mais completos (incluindo Apple AirTag-like tracking)
+- Integração com mais displays (ex: telas maiores ou e-ink)
+- Modo "wardriving" avançado com mapas offline
+- Scripts automáticos de BadUSB mais sofisticados
+- Suporte a LoRa (com módulo externo)
+- Interface de voz / comandos por microfone
+
+Quer ajudar? Abra uma issue ou pull request com sugestões, testes ou implementações parciais!
+
+Mais detalhes e planejamento técnico completo estão em:
+→ [docs/IMPLEMENTACOES.md](./docs/IMPLEMENTACOES.md)
+
+---
 
 ![Logo Willy](media/pictures/Willy_hd.png)
 *Segurança em suas mãos - Willy ESP32-S3 Security Suite*

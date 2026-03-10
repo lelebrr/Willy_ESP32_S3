@@ -1,0 +1,710 @@
+#include "config.h"
+#include "mifare_keys_manager.h"
+#include "sd_functions.h"
+#include <esp_pm.h>
+
+// Declaração da instância global de configuração de pinos
+// (definida em main.cpp: WillyConfigPins willyConfigPins;)
+#include "configPins.h"
+extern WillyConfigPins willyConfigPins;
+
+const String CRYPTO_KEY = "WillyFirmwareCoreRefinement";
+const String ENC_PREFIX = "_ENC_";
+
+// Implementações dos métodos de WillyConfig
+
+JsonDocument WillyConfig::toJson() const {
+  JsonDocument jsonDoc;
+  JsonObject setting = jsonDoc.to<JsonObject>();
+
+  setting["priColor"] = String(priColor, HEX);
+  setting["secColor"] = String(secColor, HEX);
+  setting["bgColor"] = String(bgColor, HEX);
+  setting["themeFile"] = themePath;
+  setting["themeOnSd"] = theme.fs;
+
+  setting["dimmerSet"] = dimmerSet;
+  setting["bright"] = bright;
+  setting["automaticTimeUpdateViaNTP"] = automaticTimeUpdateViaNTP;
+  setting["tmz"] = tmz;
+  setting["dst"] = dst;
+  setting["clock24hr"] = clock24hr;
+  setting["soundEnabled"] = soundEnabled;
+  setting["soundVolume"] = soundVolume;
+  setting["wifiAtStartup"] = wifiAtStartup;
+  setting["instantBoot"] = instantBoot;
+
+#ifdef HAS_RGB_LED
+  setting["ledBright"] = ledBright;
+  setting["ledColor"] = String(ledColor, HEX);
+  setting["ledBlinkEnabled"] = ledBlinkEnabled;
+  setting["ledEffect"] = ledEffect;
+  setting["ledEffectSpeed"] = ledEffectSpeed;
+  setting["ledEffectDirection"] = ledEffectDirection;
+#endif
+
+  JsonObject _webUI = setting["webUI"].to<JsonObject>();
+  _webUI["user"] = webUI.user;
+  _webUI["pwd"] = encryptString(webUI.pwd);
+  JsonObject _webUISessions = setting["webUISessions"].to<JsonObject>();
+  for (size_t i = 0; i < webUISessions.size(); i++) {
+    _webUISessions[String(i + 1)] = encryptString(webUISessions[i]);
+  }
+
+  JsonObject _wifiAp = setting["wifiAp"].to<JsonObject>();
+  _wifiAp["ssid"] = wifiAp.ssid;
+  _wifiAp["pwd"] = encryptString(wifiAp.pwd);
+  setting["wifiMAC"] = wifiMAC;
+
+  setting["startupApp"] = startupApp;
+  setting["startupAppLuaScript"] = startupAppLuaScript;
+  setting["wigleBasicToken"] = encryptString(wigleBasicToken);
+  setting["devMode"] = devMode;
+  setting["colorInverted"] = colorInverted;
+
+  setting["badUSBBLEKeyboardLayout"] = badUSBBLEKeyboardLayout;
+  setting["badUSBBLEKeyDelay"] = badUSBBLEKeyDelay;
+  setting["badUSBBLEShowOutput"] = badUSBBLEShowOutput;
+
+  JsonArray dm = setting["disabledMenus"].to<JsonArray>();
+  for (size_t i = 0; i < disabledMenus.size(); i++) {
+    dm.add(disabledMenus[i]);
+  }
+
+  JsonArray qrArray = setting["qrCodes"].to<JsonArray>();
+  for (const auto &entry : qrCodes) {
+    JsonObject qrEntry = qrArray.add<JsonObject>();
+    qrEntry["menuName"] = entry.menuName;
+    qrEntry["content"] = entry.content;
+  }
+
+  setting["evilWifiPasswordMode"] = evilPortalPasswordMode;
+
+  JsonObject _evilWifiEndpoints = setting["evilWifiEndpoints"].to<JsonObject>();
+  _evilWifiEndpoints["getCredsEndpoint"] = evilPortalEndpoints.getCredsEndpoint;
+  _evilWifiEndpoints["setSsidEndpoint"] = evilPortalEndpoints.setSsidEndpoint;
+  _evilWifiEndpoints["showEndpoints"] = evilPortalEndpoints.showEndpoints;
+  _evilWifiEndpoints["allowSetSsid"] = evilPortalEndpoints.allowSetSsid;
+  _evilWifiEndpoints["allowGetCreds"] = evilPortalEndpoints.allowGetCreds;
+
+  JsonObject _wifi = setting["wifi"].to<JsonObject>();
+  for (const auto &pair : wifi) {
+    _wifi[pair.first] = encryptString(pair.second);
+  }
+
+  return jsonDoc;
+}
+
+bool WillyConfig::setSetting(const String &setting_name,
+                             const String &setting_value) {
+  if (setting_name == "priColor") {
+    setUiColor(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "secColor") {
+    return true;
+  }
+  if (setting_name == "bgColor") {
+    return true;
+  }
+  if (setting_name == "rot") {
+    willyConfigPins.setRotation(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "dimmerSet") {
+    setDimmer(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "bright") {
+    setBright(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "tmz") {
+    setTmz(setting_value.toFloat());
+    return true;
+  }
+  if (setting_name == "soundEnabled") {
+    setSoundEnabled(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "wifiAtStartup") {
+    setWifiAtStartup(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "webUI") {
+    int commaPos = setting_value.indexOf(",");
+    if (commaPos > 0) {
+      setWebUICreds(setting_value.substring(0, commaPos),
+                    setting_value.substring(commaPos + 1));
+    }
+    return true;
+  }
+  if (setting_name == "wifiAp") {
+    int commaPos = setting_value.indexOf(",");
+    if (commaPos > 0) {
+      setWifiApCreds(setting_value.substring(0, commaPos),
+                     setting_value.substring(commaPos + 1));
+    }
+    return true;
+  }
+  if (setting_name == "wifi") {
+    int commaPos = setting_value.indexOf(",");
+    if (commaPos > 0) {
+      addWifiCredential(setting_value.substring(0, commaPos),
+                        setting_value.substring(commaPos + 1));
+    }
+    return true;
+  }
+  if (setting_name == "startupApp") {
+    startupApp = setting_value;
+    return true;
+  }
+  if (setting_name == "startupAppLuaScript") {
+    startupAppLuaScript = setting_value;
+    return true;
+  }
+  if (setting_name == "wigleBasicToken") {
+    setWigleBasicToken(setting_value);
+    return true;
+  }
+  if (setting_name == "devMode") {
+    setDevMode(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "disabledMenus") {
+    addDisabledMenu(setting_value);
+    return true;
+  }
+  if (setting_name == "qrCodes") {
+    // Formato: menuName:content
+    int sepPos = setting_value.indexOf(":");
+    if (sepPos > 0) {
+      QrCodeEntry entry;
+      entry.menuName = setting_value.substring(0, sepPos);
+      entry.content = setting_value.substring(sepPos + 1);
+      qrCodes.push_back(entry);
+    }
+    return true;
+  }
+  if (setting_name == "evilWifiPasswordMode") {
+    evilPortalPasswordMode = (EvilPortalPasswordMode)setting_value.toInt();
+    return true;
+  }
+  if (setting_name == "evilWifiEndpoints") {
+    // Formato: getCreds,setSsid,show,allowSet,allowGet
+    int p1 = setting_value.indexOf(",");
+    int p2 = p1 > 0 ? setting_value.indexOf(",", p1 + 1) : -1;
+    int p3 = p2 > 0 ? setting_value.indexOf(",", p2 + 1) : -1;
+    int p4 = p3 > 0 ? setting_value.indexOf(",", p3 + 1) : -1;
+    if (p1 > 0 && p2 > 0 && p3 > 0 && p4 > 0) {
+      evilPortalEndpoints.getCredsEndpoint = setting_value.substring(0, p1);
+      evilPortalEndpoints.setSsidEndpoint = setting_value.substring(p1 + 1, p2);
+      evilPortalEndpoints.showEndpoints =
+          setting_value.substring(p2 + 1, p3).toInt();
+      evilPortalEndpoints.allowSetSsid =
+          setting_value.substring(p3 + 1, p4).toInt();
+      evilPortalEndpoints.allowGetCreds =
+          setting_value.substring(p4 + 1).toInt();
+    }
+    return true;
+  }
+  if (setting_name == "badUSBBLEKeyboardLayout") {
+    badUSBBLEKeyboardLayout = setting_value.toInt();
+    return true;
+  }
+  if (setting_name == "badUSBBLEKeyDelay") {
+    badUSBBLEKeyDelay = setting_value.toInt();
+    return true;
+  }
+  if (setting_name == "badUSBBLEShowOutput") {
+    badUSBBLEShowOutput = setting_value.toInt();
+    return true;
+  }
+  if (setting_name == "bleName") {
+    willyConfigPins.setBleName(setting_value);
+    return true;
+  }
+  if (setting_name == "irTx") {
+    willyConfigPins.setIrTxPin(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "irTxRepeats") {
+    willyConfigPins.setIrTxRepeats(static_cast<uint8_t>(setting_value.toInt()));
+    return true;
+  }
+  if (setting_name == "irRx") {
+    willyConfigPins.setIrRxPin(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "rfTx") {
+    willyConfigPins.setRfTxPin(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "rfRx") {
+    willyConfigPins.setRfRxPin(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "rfModule") {
+    willyConfigPins.setRfModule(static_cast<RFModules>(setting_value.toInt()));
+    return true;
+  }
+  if (setting_name == "rfFreq" && setting_value.toFloat()) {
+    willyConfigPins.setRfFreq(setting_value.toFloat());
+    return true;
+  }
+  if (setting_name == "rfFxdFreq") {
+    willyConfigPins.setRfFxdFreq(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "rfScanRange") {
+    willyConfigPins.setRfScanRange(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "rfidModule") {
+    willyConfigPins.setRfidModule(
+        static_cast<RFIDModules>(setting_value.toInt()));
+    return true;
+  }
+  if (setting_name == "wigleBasicToken") {
+    setWigleBasicToken(setting_value);
+    return true;
+  }
+  if (setting_name == "devMode") {
+    setDevMode(setting_value.toInt());
+    return true;
+  }
+  if (setting_name == "disabledMenus") {
+    addDisabledMenu(setting_value);
+    return true;
+  }
+  return false;
+}
+
+// Implementação das funções faltantes
+void WillyConfig::saveFile() {
+  // Salva a configuração no LittleFS
+  File file = LittleFS.open(filepath, FILE_WRITE);
+  if (!file) {
+    Serial.println("Failed to open config file for writing");
+    return;
+  }
+
+  JsonDocument jsonDoc = toJson();
+  serializeJson(jsonDoc, file);
+  file.close();
+  Serial.println("Configuration saved");
+}
+
+void WillyConfig::addQrCodeEntry(const String &menuName,
+                                 const String &content) {
+  QrCodeEntry entry;
+  entry.menuName = menuName;
+  entry.content = content;
+  qrCodes.push_back(entry);
+  saveFile();
+}
+
+void WillyConfig::removeQrCodeEntry(const String &menuName) {
+  for (auto it = qrCodes.begin(); it != qrCodes.end(); ++it) {
+    if (it->menuName == menuName) {
+      qrCodes.erase(it);
+      saveFile();
+      return;
+    }
+  }
+}
+
+String WillyConfig::getWifiPassword(const String &ssid) const {
+  auto it = wifi.find(ssid);
+  if (it != wifi.end()) {
+    return it->second;
+  }
+  return "";
+}
+
+void WillyConfig::addWifiCredential(const String &ssid, const String &pwd) {
+  wifi[ssid] = pwd;
+  saveFile();
+}
+
+// Private encryption/decryption methods
+String WillyConfig::encryptString(const String &input) const {
+  return ::encryptString(input, CRYPTO_KEY);
+}
+
+String WillyConfig::decryptString(const String &input) const {
+  // Not implemented yet - placeholder
+  return "";
+}
+
+// UI Color methods
+void WillyConfig::setUiColor(uint16_t primary, uint16_t *secondary,
+                             uint16_t *background) {
+  priColor = primary;
+  if (secondary)
+    secColor = *secondary;
+  if (background)
+    bgColor = *background;
+}
+
+// Settings methods
+void WillyConfig::setDimmer(int value) {
+  dimmerSet = value;
+  saveFile();
+}
+
+void WillyConfig::setBright(uint8_t value) {
+  bright = value;
+  saveFile();
+}
+
+void WillyConfig::setTmz(float value) {
+  tmz = value;
+  saveFile();
+}
+
+void WillyConfig::setSoundEnabled(int value) {
+  soundEnabled = value;
+  saveFile();
+}
+
+void WillyConfig::setWifiAtStartup(int value) {
+  wifiAtStartup = value;
+  saveFile();
+}
+
+void WillyConfig::setWebUICreds(const String &usr, const String &pwd) {
+  webUI.user = usr;
+  webUI.pwd = pwd;
+  saveFile();
+}
+
+void WillyConfig::setWifiApCreds(const String &ssid, const String &pwd) {
+  wifiAp.ssid = ssid;
+  wifiAp.pwd = pwd;
+  saveFile();
+}
+
+void WillyConfig::setWigleBasicToken(String value) {
+  wigleBasicToken = value;
+  saveFile();
+}
+
+void WillyConfig::setDevMode(int value) {
+  devMode = value;
+  saveFile();
+}
+
+void WillyConfig::addDisabledMenu(String value) {
+  disabledMenus.push_back(value);
+  saveFile();
+}
+
+void WillyConfig::setColorInverted(int value) {
+  colorInverted = value;
+  saveFile();
+}
+
+void WillyConfig::setBadUSBBLEKeyDelay(uint16_t value) {
+  badUSBBLEKeyDelay = value;
+  saveFile();
+}
+
+void WillyConfig::addEvilWifiName(String value) {
+  evilWifiNames.insert(value);
+  saveFile();
+}
+
+void WillyConfig::removeEvilWifiName(String value) {
+  evilWifiNames.erase(value);
+  saveFile();
+}
+
+void WillyConfig::setEvilEndpointCreds(String value) {
+  evilPortalEndpoints.getCredsEndpoint = value;
+  saveFile();
+}
+
+void WillyConfig::setEvilEndpointSsid(String value) {
+  evilPortalEndpoints.setSsidEndpoint = value;
+  saveFile();
+}
+
+void WillyConfig::setEvilAllowEndpointDisplay(bool value) {
+  evilPortalEndpoints.showEndpoints = value;
+  saveFile();
+}
+
+void WillyConfig::setEvilAllowGetCreds(bool value) {
+  evilPortalEndpoints.allowGetCreds = value;
+  saveFile();
+}
+
+void WillyConfig::setEvilAllowSetSsid(bool value) {
+  evilPortalEndpoints.allowSetSsid = value;
+  saveFile();
+}
+
+void WillyConfig::setEvilPasswordMode(EvilPortalPasswordMode value) {
+  evilPortalPasswordMode = value;
+  saveFile();
+}
+
+void WillyConfig::addMifareKey(String value) {
+  mifareKeys.insert(value);
+  saveFile();
+}
+
+void WillyConfig::setStartupApp(String value) {
+  startupApp = value;
+  saveFile();
+}
+
+void WillyConfig::setBadUSBBLEShowOutput(bool value) {
+  badUSBBLEShowOutput = value;
+  saveFile();
+}
+
+void WillyConfig::setBadUSBBLEKeyboardLayout(int value) {
+  badUSBBLEKeyboardLayout = value;
+  saveFile();
+}
+
+// Web UI Session methods
+void WillyConfig::addWebUISession(const String &token) {
+  webUISessions.push_back(token);
+  saveFile();
+}
+
+void WillyConfig::removeWebUISession(const String &token) {
+  for (auto it = webUISessions.begin(); it != webUISessions.end(); ++it) {
+    if (*it == token) {
+      webUISessions.erase(it);
+      saveFile();
+      return;
+    }
+  }
+}
+
+bool WillyConfig::isValidWebUISession(const String &token) {
+  for (const auto &session : webUISessions) {
+    if (session == token)
+      return true;
+  }
+  return false;
+}
+
+// File methods
+void WillyConfig::fromFile(bool checkFS) {
+  // Implementation needed
+}
+
+void WillyConfig::factoryReset() {
+  // Reset to defaults
+  *this = WillyConfig();
+  saveFile();
+}
+
+void WillyConfig::validateConfig() {
+  // Validation implementation
+  validateDimmerValue();
+  validateBrightValue();
+  validateTmzValue();
+  validateSoundEnabledValue();
+  validateSoundVolumeValue();
+  validateWifiAtStartupValue();
+  validateDevModeValue();
+  validateColorInverted();
+  validateBadUSBBLEKeyboardLayout();
+  validateBadUSBBLEKeyDelay();
+  validateEvilEndpointCreds();
+  validateEvilEndpointSsid();
+  validateEvilPasswordMode();
+  validateLedBrightValue();
+  validateLedColorValue();
+  validateLedBlinkEnabledValue();
+  validateLedEffectValue();
+  validateLedEffectSpeedValue();
+  validateLedEffectDirectionValue();
+}
+
+// Validation helper methods
+void WillyConfig::validateDimmerValue() {
+  if (dimmerSet < 0)
+    dimmerSet = 0;
+  if (dimmerSet > 100)
+    dimmerSet = 100;
+}
+
+void WillyConfig::validateBrightValue() {
+  if (bright < 0)
+    bright = 0;
+  if (bright > 100)
+    bright = 100;
+}
+
+void WillyConfig::validateTmzValue() {
+  if (tmz < -12)
+    tmz = -12;
+  if (tmz > 14)
+    tmz = 14;
+}
+
+void WillyConfig::validateSoundEnabledValue() {
+  if (soundEnabled < 0)
+    soundEnabled = 0;
+  if (soundEnabled > 2)
+    soundEnabled = 2;
+}
+
+void WillyConfig::validateSoundVolumeValue() {
+  if (soundVolume < 0)
+    soundVolume = 0;
+  if (soundVolume > 100)
+    soundVolume = 100;
+}
+
+void WillyConfig::validateWifiAtStartupValue() {
+  if (wifiAtStartup < 0)
+    wifiAtStartup = 0;
+  if (wifiAtStartup > 2)
+    wifiAtStartup = 2;
+}
+
+void WillyConfig::validateDevModeValue() {
+  if (devMode < 0)
+    devMode = 0;
+  if (devMode > 1)
+    devMode = 1;
+}
+
+void WillyConfig::validateColorInverted() {
+  if (colorInverted < 0)
+    colorInverted = 0;
+  if (colorInverted > 1)
+    colorInverted = 1;
+}
+
+void WillyConfig::validateBadUSBBLEKeyboardLayout() {
+  // Layout IDs 0-6 are valid
+  if (badUSBBLEKeyboardLayout < 0)
+    badUSBBLEKeyboardLayout = 0;
+  if (badUSBBLEKeyboardLayout > 6)
+    badUSBBLEKeyboardLayout = 6;
+}
+
+void WillyConfig::validateBadUSBBLEKeyDelay() {
+  if (badUSBBLEKeyDelay < 1)
+    badUSBBLEKeyDelay = 1;
+  if (badUSBBLEKeyDelay > 1000)
+    badUSBBLEKeyDelay = 1000;
+}
+
+void WillyConfig::validateEvilEndpointCreds() {
+  if (evilPortalEndpoints.getCredsEndpoint == "")
+    evilPortalEndpoints.getCredsEndpoint = "/creds";
+}
+
+void WillyConfig::validateEvilEndpointSsid() {
+  if (evilPortalEndpoints.setSsidEndpoint == "")
+    evilPortalEndpoints.setSsidEndpoint = "/ssid";
+}
+
+void WillyConfig::validateEvilPasswordMode() {
+  if (evilPortalPasswordMode < 0)
+    evilPortalPasswordMode = 0;
+  if (evilPortalPasswordMode > 3)
+    evilPortalPasswordMode = 3;
+}
+
+#ifdef HAS_RGB_LED
+void WillyConfig::setLedBright(int value) {
+  ledBright = value;
+  saveFile();
+}
+
+void WillyConfig::setLedColor(uint32_t value) {
+  ledColor = value;
+  saveFile();
+}
+
+void WillyConfig::setLedBlinkEnabled(int value) {
+  ledBlinkEnabled = value;
+  saveFile();
+}
+
+void WillyConfig::setLedEffect(int value) {
+  ledEffect = value;
+  saveFile();
+}
+
+void WillyConfig::setLedEffectSpeed(int value) {
+  ledEffectSpeed = value;
+  saveFile();
+}
+
+void WillyConfig::setLedEffectDirection(int value) {
+  ledEffectDirection = value;
+  saveFile();
+}
+
+void WillyConfig::validateLedBrightValue() {
+  if (ledBright < 0)
+    ledBright = 0;
+  if (ledBright > 100)
+    ledBright = 100;
+}
+
+void WillyConfig::validateLedColorValue() {
+  // Color is 24-bit RGB, no validation needed
+}
+
+void WillyConfig::validateLedBlinkEnabledValue() {
+  if (ledBlinkEnabled < 0)
+    ledBlinkEnabled = 0;
+  if (ledBlinkEnabled > 1)
+    ledBlinkEnabled = 1;
+}
+
+void WillyConfig::validateLedEffectValue() {
+  if (ledEffect < 0)
+    ledEffect = 0;
+  // Maximum effect depends on available effects, using 10 as safe limit
+  if (ledEffect > 10)
+    ledEffect = 10;
+}
+
+void WillyConfig::validateLedEffectSpeedValue() {
+  if (ledEffectSpeed < 1)
+    ledEffectSpeed = 1;
+  if (ledEffectSpeed > 10)
+    ledEffectSpeed = 10;
+}
+
+void WillyConfig::validateLedEffectDirectionValue() {
+  if (ledEffectDirection < -1)
+    ledEffectDirection = -1;
+  if (ledEffectDirection > 1)
+    ledEffectDirection = 1;
+}
+#endif
+
+void WillyConfig::setAutomaticTimeUpdateViaNTP(bool value) {
+  automaticTimeUpdateViaNTP = value;
+  saveFile();
+}
+
+void WillyConfig::setClock24Hr(bool value) {
+  clock24hr = value;
+  saveFile();
+}
+
+void WillyConfig::setDST(bool value) {
+  dst = value;
+  saveFile();
+}
+
+void WillyConfig::setStartupAppLuaScript(String value) {
+  startupAppLuaScript = value;
+  saveFile();
+}

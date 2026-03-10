@@ -5,85 +5,96 @@
 
 uint32_t badusbFileCallback(cmd *c) {
 #ifndef LITE_VERSION
-    // badusb run_from_file HelloWorld.txt
+  // badusb run_from_file HelloWorld.txt
 
-    Command cmd(c);
+  Command cmd(c);
 
-    Argument arg = cmd.getArgument("filepath");
-    String filepath = arg.getValue();
-    filepath.trim();
+  Argument arg = cmd.getArgument("filepath");
+  String filepath = arg.getValue();
+  filepath.trim();
 
-    if (filepath.indexOf(".txt") == -1) {
-        serialDevice->println("Invalid filename");
-        return false;
-    }
-    if (!filepath.startsWith("/")) filepath = "/" + filepath;
+  if (filepath.indexOf(".txt") == -1) {
+    serialDevice->println("Invalid filename");
+    return false;
+  }
+  if (!filepath.startsWith("/"))
+    filepath = "/" + filepath;
 
-    FS *fs;
-    if (!getFsStorage(fs)) return false;
+  FS *fs;
+  if (!getFsStorage(fs))
+    return false;
 
-    if (!(*fs).exists(filepath)) {
-        serialDevice->println("File does not exist");
-        return false;
-    }
+  if (!(*fs).exists(filepath)) {
+    serialDevice->println("File does not exist");
+    return false;
+  }
 
 #ifdef USB_as_HID
-    ducky_startKb(hid_usb, false);
-    key_input(*fs, filepath, hid_usb);
-    delete hid_usb;
-    hid_usb = nullptr;
+  ducky_startKb(hid_usb, false);
+  key_input(*fs, filepath, hid_usb);
+  delete hid_usb;
+  hid_usb = nullptr;
 
-    // TODO: need to reinit serial when finished
-    // Kb.end();
-    // USB.~ESPUSB(); // Explicit call to destructor
-    // serialDevice->begin(115200);
+  // TODO: need to reinit serial when finished
+  // Kb.end();
+  // USB.~ESPUSB(); // Explicit call to destructor
+  // serialDevice->begin(115200);
 
-    return true;
+  return true;
 #else
-    return false;
+  return false;
 #endif
 #else
-    return false;
+  return false;
 #endif
 }
 
 uint32_t badusbBufferCallback(cmd *c) {
 #ifndef LITE_VERSION
-    if (!(_setupPsramFs())) return false;
+  if (!(_setupPsramFs()))
+    return false;
 
-    char *txt = _readFileFromSerial();
-    String tmpfilepath = "/tmpramfile"; // TODO: Change to use char *txt directly
-    File f = PSRamFS.open(tmpfilepath, FILE_WRITE);
-    if (!f) return false;
+  char *txt = _readFileFromSerial();
+  if (!txt)
+    return false;
 
-    f.write((const uint8_t *)txt, strlen(txt));
-    f.close();
+  // Write buffer to temporary file for compatibility with key_input
+  String tmpfilepath = "/tmpramfile";
+  File f = PSRamFS.open(tmpfilepath, FILE_WRITE);
+  if (!f) {
     free(txt);
+    return false;
+  }
+
+  f.write((const uint8_t *)txt, strlen(txt));
+  f.close();
+  free(txt);
 
 #ifdef USB_as_HID
-    ducky_startKb(hid_usb, false);
-    key_input(PSRamFS, tmpfilepath, hid_usb);
-    delete hid_usb;
-    hid_usb = nullptr;
+  ducky_startKb(hid_usb, false);
+  key_input(PSRamFS, tmpfilepath, hid_usb);
+  delete hid_usb;
+  hid_usb = nullptr;
 
-    PSRamFS.remove(tmpfilepath);
-    return true;
+  PSRamFS.remove(tmpfilepath);
+  return true;
 #else
-    PSRamFS.remove(tmpfilepath);
-    return false;
+  PSRamFS.remove(tmpfilepath);
+  return false;
 #endif
 #else
-    return false;
+  return false;
 #endif
 }
 
 void createBadUsbCommands(SimpleCLI *cli) {
 #ifndef LITE_VERSION
-    Command badusbCmd = cli->addCompositeCmd("bu,badusb");
+  Command badusbCmd = cli->addCompositeCmd("bu,badusb");
 
-    Command fileCmd = badusbCmd.addCommand("run_from_file", badusbFileCallback);
-    fileCmd.addPosArg("filepath");
+  Command fileCmd = badusbCmd.addCommand("run_from_file", badusbFileCallback);
+  fileCmd.addPosArg("filepath");
 
-    Command bufferCmd = badusbCmd.addCommand("run_from_buffer", badusbBufferCallback);
+  Command bufferCmd =
+      badusbCmd.addCommand("run_from_buffer", badusbBufferCallback);
 #endif
 }

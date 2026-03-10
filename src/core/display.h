@@ -120,9 +120,8 @@ uint16_t getColorVariation(uint16_t color, int delta = 10, int direction = 0);
 void resetTftDisplay(int x = 0, int y = 0, uint16_t fc = willyConfig.priColor,
                      int size = FM, uint16_t bg = willyConfig.bgColor,
                      uint16_t screen = willyConfig.bgColor);
-void setTftDisplay(int x = 0, int y = 0, uint16_t fc = tft.getTextColor(),
-                   int size = tft.getTextSize(),
-                   uint16_t bg = tft.getTextBgColor());
+void setTftDisplay(int x = 0, int y = 0, uint16_t fc = TFT_WHITE, int size = 1,
+                   uint16_t bg = TFT_BLACK);
 
 void initLVGL();
 extern SemaphoreHandle_t lvgl_mutex;

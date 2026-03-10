@@ -74,7 +74,8 @@ SemaphoreHandle_t spiMutex = NULL;
 
 TaskHandle_t xHandle;
 void __attribute__((weak)) InputHandler() {
-  // Default empty implementation
+  // Read touch screen and update touchPoint
+  updateTouchPoint();
 }
 
 void __attribute__((weak)) taskInputHandler(void *parameter) {
@@ -111,6 +112,8 @@ String wifiIP;
 
 bool BLEConnected = false;
 bool returnToMenu;
+String currentLoaderApp = "";
+bool appRequiresClose = false;
 bool isSleeping = false;
 bool isScreenOff = false;
 bool dimmer = false;
@@ -138,13 +141,7 @@ tft_logger tft = tft_logger(); // Invoke custom library
 tft_sprite sprite = tft_sprite(&tft);
 tft_sprite draw = tft_sprite(&tft);
 volatile int tftWidth = TFT_HEIGHT;
-#ifdef HAS_TOUCH
-volatile int tftHeight =
-    TFT_WIDTH - 20; // 20px to draw the TouchFooter(), were the btns are being
-                    // read in touch devices.
-#else
 volatile int tftHeight = TFT_WIDTH;
-#endif
 #else
 tft_logger tft;
 SerialDisplayClass &sprite = tft;
@@ -165,11 +162,11 @@ void begin_storage() {
   if (!LittleFS.begin(true)) {
     LittleFS.format(), LittleFS.begin();
   }
-  // SD card disabled temporarily — infinite retries flood serial and block CPU
-  // Uncomment the next line when SD card is physically connected and ready
-  // bool checkFS = setupSdCard();
+  // SD card disabled during boot — SD shares TFT SPI bus and
+  // failed mount attempts corrupt SPI state, breaking touch.
+  // SD will be mounted on-demand when user accesses SD features.
   bool checkFS = false;
-  Serial.println("[SD] SD card DISABLED for debug — display/touch fix first");
+  Serial.println("[SD] SD card skipped at boot (shares SPI with touch)");
   willyConfig.fromFile(checkFS);
   willyConfigPins.fromFile(checkFS);
 }
@@ -243,11 +240,7 @@ void begin_tft() {
                 tft.height());
 
   tftWidth = tft.width();
-#ifdef HAS_TOUCH
-  tftHeight = tft.height() - 20; // Reserve 20px for touch footer
-#else
   tftHeight = tft.height();
-#endif
 
   tftInitialized = true;
   Serial.printf("[DISPLAY] TFT initialized! tftWidth=%d, tftHeight=%d\n",
@@ -271,16 +264,22 @@ void setup_touch() {
   // begin_storage)
   if (!LittleFS.exists("/touch_cal.dat")) {
     needsCalibration = true;
-    Serial.println("[TOUCH] No calibration file found");
+    Serial.println("[TOUCH] No calibration file found in LittleFS.");
   }
 
 #ifdef JOY_BTN_PIN
   // Hold joystick button during boot to force recalibration
   pinMode(JOY_BTN_PIN, INPUT_PULLUP);
-  delay(5);
-  if (digitalRead(JOY_BTN_PIN) == LOW) {
+  delay(100);
+  int btnVal = digitalRead(JOY_BTN_PIN);
+  Serial.printf(
+      "[TOUCH] Checking JOY_BTN_PIN (%d): %s\n", JOY_BTN_PIN,
+      (btnVal == LOW ? "LOW (Pressed/Force Cal)" : "HIGH (Not Pressed)"));
+  if (btnVal == LOW) {
     needsCalibration = true;
-    Serial.println("[TOUCH] Joystick button held - forcing recalibration");
+    Serial.println("[TOUCH] Joystick button HELD - deleting old data and "
+                   "forcing recalibration.");
+    LittleFS.remove("/touch_cal.dat");
   }
 #endif
 
@@ -290,12 +289,16 @@ void setup_touch() {
 
     // Attempt calibration but define a timeout or fallback if possible
     // (TFT_eSPI's calibrateTouch is blocking, but we can verify results after)
-    tft.calibrateTouch(calData, TFT_RED, TFT_BLACK, 25);
+    Serial.println("[TOUCH] Calling tft.calibrateTouch()...");
+    // Use 5 points for better accuracy (default is 25, but 5 is minimum)
+    tft.calibrateTouch(calData, TFT_RED, TFT_BLACK, 5);
+    Serial.printf("[TOUCH] Calibration finished. Result: %d,%d,%d,%d,%d\n",
+                  calData[0], calData[1], calData[2], calData[3], calData[4]);
 
     // Basic sanity check on calData: if all are 0 or 65535, it failed
-    if (calData[0] == 0 || calData[0] == 0xFFFF) {
+    if (calData[0] == 0 || calData[0] == 0xFFFF || calData[0] == calData[1]) {
       Serial.println(
-          "[TOUCH] Calibration FAILED or TIMED OUT. Using defaults.");
+          "[TOUCH] Calibration FAILED (invalid data). Using defaults.");
       calData[0] = 280;
       calData[1] = 3555;
       calData[2] = 298;
@@ -332,8 +335,8 @@ void setup_touch() {
   }
 
   tft.setTouch(calData);
-  Serial.printf("[TOUCH] CalData: %d,%d,%d,%d,%d\n", calData[0], calData[1],
-                calData[2], calData[3], calData[4]);
+  Serial.printf("[TOUCH] CalData applied: %d,%d,%d,%d,%d\n", calData[0],
+                calData[1], calData[2], calData[3], calData[4]);
 #endif
 }
 
@@ -606,6 +609,13 @@ void setup() {
     }
     // Clean up splash and disable LVGL rendering for TFT direct menu
     lv_obj_clean(splash_scr);
+    if (lvgl_mutex &&
+        xSemaphoreTake(lvgl_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+      lv_timer_handler();
+      xSemaphoreGive(lvgl_mutex);
+    }
+    tft.fillScreen(TFT_BLACK);
+    delay(200);
     lvgl_rendering_active = false;
     Serial.println("[BOOT] Splash complete. LVGL paused for TFT menu.");
 

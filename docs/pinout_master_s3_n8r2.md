@@ -47,7 +47,7 @@ graph TD
         P16[GPIO 16 - NRF1 CSN]
         P21[GPIO 21 - NRF1 CE]
         P35[GPIO 35 - NRF2 CSN]
-        P36[GPIO 36 - NRF2 CE]
+        P37[GPIO 37 - NRF2 CE]
 
         P18[GPIO 18 - CC1101 CS]
         P33[GPIO 33 - CC1101 GDO0]
@@ -118,7 +118,7 @@ graph TD
 | `16` | **NRF1_CSN** | NRF24L01+PA+LNA #1 |
 | `21` | **NRF1_CE** | NRF24L01+PA+LNA #1 |
 | `35` | **NRF2_CSN** | NRF24L01+PA+LNA #2 |
-| `36` | **NRF2_CE** | NRF24L01+PA+LNA #2 |
+| `37` | **NRF2_CE** | NRF24L01+PA+LNA #2 |
 | `18` | **CC1101_CS** | CC1101 Sub-GHz |
 | `33` | **GDO0** (Interrupção) | CC1101 Sub-GHz |
 | `34` | **GDO2** (Status) | CC1101 Sub-GHz |

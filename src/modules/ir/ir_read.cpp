@@ -19,7 +19,6 @@
 #include <IRrecv.h>
 #include <IRutils.h>
 
-
 #ifdef WILLY_IR_SERIAL
 #include "ys_irtm.h"
 #endif

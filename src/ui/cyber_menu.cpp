@@ -11,8 +11,8 @@
 static void anim_set_opa(void *obj, int32_t v) {
   lv_obj_set_style_opa((lv_obj_t *)obj, (lv_opa_t)v, 0);
 }
-static void anim_set_y(void *obj, int32_t v) {
-  lv_obj_set_y((lv_obj_t *)obj, (lv_coord_t)v);
+static void anim_set_translate_y(void *obj, int32_t v) {
+  lv_obj_set_style_translate_y((lv_obj_t *)obj, (lv_coord_t)v, 0);
 }
 static void anim_set_shadow_width(void *obj, int32_t v) {
   lv_obj_set_style_shadow_width((lv_obj_t *)obj, (lv_coord_t)v, 0);
@@ -116,7 +116,7 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text,
                             lv_color_t secondary, lv_color_t accent, int x,
                             int y, void (*click_cb)(lv_event_t *e), int index) {
   lv_obj_t *btn = lv_btn_create(parent);
-  lv_obj_set_size(btn, 90, 90);
+  lv_obj_set_size(btn, 80, 80); // Reduced from 90 to 80 to prevent clipping
   lv_obj_set_pos(btn, x, y);
   lv_obj_set_style_bg_color(btn, lv_color_black(), 0);
   lv_obj_set_style_radius(btn, 25, 0);
@@ -143,7 +143,7 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text,
   // Text label
   lv_obj_t *text = lv_label_create(btn);
   lv_label_set_text(text, icon_text);
-  lv_obj_align(text, LV_ALIGN_BOTTOM_MID, 0, 5);
+  lv_obj_align(text, LV_ALIGN_BOTTOM_MID, 0, 8); // Adjusted alignment
   lv_obj_set_style_text_color(text, lv_color_white(), 0);
   lv_obj_set_style_text_font(text, &lv_font_montserrat_14, 0);
 
@@ -158,14 +158,14 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text,
   lv_anim_set_path_cb(&a_fade, lv_anim_path_ease_in_out);
   lv_anim_start(&a_fade);
 
-  // Animation 2: Slide-up
+  // Animation 2: Slide-up (Relative Translate)
   lv_anim_t a_slide;
   lv_anim_init(&a_slide);
   lv_anim_set_var(&a_slide, btn);
-  lv_anim_set_values(&a_slide, y + 40, y);
+  lv_anim_set_values(&a_slide, 40, 0); // Slide up 40px to its aligned center
   lv_anim_set_time(&a_slide, 400);
   lv_anim_set_delay(&a_slide, 100 * index);
-  lv_anim_set_exec_cb(&a_slide, anim_set_y);
+  lv_anim_set_exec_cb(&a_slide, anim_set_translate_y);
   lv_anim_set_path_cb(&a_slide, lv_anim_path_ease_in_out);
   lv_anim_start(&a_slide);
 
@@ -204,6 +204,9 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text,
   lv_obj_add_event_cb(btn, hover_cb, LV_EVENT_PRESSED, NULL);
   lv_obj_add_event_cb(btn, nohover_cb, LV_EVENT_RELEASED, NULL);
   lv_obj_add_event_cb(btn, click_cb, LV_EVENT_CLICKED, NULL);
+
+  // Initial centering within its future parent (tile)
+  lv_obj_align(btn, LV_ALIGN_CENTER, 0, 0);
 
   return btn;
 }
@@ -298,20 +301,24 @@ static void update_bar_timer_cb(lv_timer_t *timer) {
 
 void setup_cyber_menu(lv_obj_t *menu) {
   lv_obj_set_style_bg_color(menu, lv_color_hex(0x001122), 0);
+  lv_obj_set_size(menu, LV_PCT(100), LV_PCT(100));
 
-  // Use Willy's primary/secondary colors for theme integration
-  lv_color_t primary = lv_color_hex(willyConfig.priColor);
-  lv_color_t secondary = lv_color_hex(willyConfig.secColor);
-  lv_color_t accent = lv_color_hex(0x00FFFF); // Cyber cyan
-
+  // Top bar fixed at 40px
   create_notification_bar(menu);
 
-  tileview_obj = lv_tileview_create(menu);
+  // Body container for the rest of the screen (Exactly below the bar)
+  lv_obj_t *body = lv_obj_create(menu);
+  lv_obj_set_size(body, LV_PCT(100), LV_VER_RES - 40);
+  lv_obj_set_pos(body, 0, 40);
+  lv_obj_set_style_bg_opa(body, 0, 0);
+  lv_obj_set_style_border_width(body, 0, 0);
+  lv_obj_set_style_pad_all(body, 0, 0);
+  lv_obj_set_scrollbar_mode(body, LV_SCROLLBAR_MODE_OFF);
+
+  tileview_obj = lv_tileview_create(body);
   lv_obj_t *tv = tileview_obj;
   lv_obj_set_size(tv, LV_PCT(100), LV_PCT(100));
-  lv_obj_set_style_bg_opa(tv, 0, 0); // Transparent to show background
-
-  // Hide scrollbar globally for tileview
+  lv_obj_set_style_bg_opa(tv, 0, 0);
   lv_obj_set_scrollbar_mode(tv, LV_SCROLLBAR_MODE_OFF);
 
   const char *labels[] = {"Wi-Fi",   "BLE",   "IR",   "NFC",
@@ -321,7 +328,7 @@ void setup_cyber_menu(lv_obj_t *menu) {
                                        sub_cb,  nrf_cb,  gps_cb,  attacks_cb,
                                        core_cb, logs_cb, rfid_cb, sd_cb};
 
-  // Vector shapes (Scaled up for full screen 1-per-page)
+  // Shapes (scaled for display)
   static const lv_point_t wifi_shape[] = {
       {20, 120}, {60, 80}, {100, 120}, {140, 80}, {180, 120}};
   static const lv_point_t ble_shape[] = {
@@ -352,30 +359,27 @@ void setup_cyber_menu(lv_obj_t *menu) {
       gps_shape,  attacks_shape, core_shape, logs_shape, rfid_shape, sd_shape};
   uint16_t counts[] = {5, 5, 5, 5, 5, 4, 5, 4, 6, 6, 5, 6};
 
-  // Calculate center offset for the large icon
-  int icon_size = 100; // Fits 240px screen (40px top bar + 20px footer)
+  int icon_size = 110;
 
-  // Create arrows for manual navigation layered slightly over the center
-  lv_obj_t *left_arrow = lv_label_create(menu);
+  // Create arrows attached to body so they don't move with tiles
+  lv_obj_t *left_arrow = lv_label_create(body);
   lv_label_set_text(left_arrow, LV_SYMBOL_LEFT);
   lv_obj_set_style_text_color(left_arrow, lv_color_white(), 0);
   lv_obj_set_style_text_font(left_arrow, &lv_font_montserrat_28, 0);
-  lv_obj_align(left_arrow, LV_ALIGN_LEFT_MID, 5, 0);
-  lv_obj_set_size(left_arrow, 60, 80); // Massive touch area
+  lv_obj_align(left_arrow, LV_ALIGN_LEFT_MID, 5, -20);
+  lv_obj_set_size(left_arrow, 50, 80);
   lv_obj_set_style_text_align(left_arrow, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_style_bg_opa(left_arrow, LV_OPA_TRANSP, 0);
   lv_obj_add_flag(left_arrow, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_add_event_cb(left_arrow, arrow_event_cb, LV_EVENT_CLICKED,
                       (void *)LV_SYMBOL_LEFT);
 
-  lv_obj_t *right_arrow = lv_label_create(menu);
+  lv_obj_t *right_arrow = lv_label_create(body);
   lv_label_set_text(right_arrow, LV_SYMBOL_RIGHT);
   lv_obj_set_style_text_color(right_arrow, lv_color_white(), 0);
   lv_obj_set_style_text_font(right_arrow, &lv_font_montserrat_28, 0);
-  lv_obj_align(right_arrow, LV_ALIGN_RIGHT_MID, -5, 0);
-  lv_obj_set_size(right_arrow, 60, 80); // Massive touch area
+  lv_obj_align(right_arrow, LV_ALIGN_RIGHT_MID, -5, -20);
+  lv_obj_set_size(right_arrow, 50, 80);
   lv_obj_set_style_text_align(right_arrow, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_style_bg_opa(right_arrow, LV_OPA_TRANSP, 0);
   lv_obj_add_flag(right_arrow, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_add_event_cb(right_arrow, arrow_event_cb, LV_EVENT_CLICKED,
                       (void *)LV_SYMBOL_RIGHT);
@@ -384,22 +388,22 @@ void setup_cyber_menu(lv_obj_t *menu) {
     lv_obj_t *tile = lv_tileview_add_tile(tv, i, 0, LV_DIR_LEFT | LV_DIR_RIGHT);
     lv_obj_set_style_bg_opa(tile, 0, 0);
 
-    // Center the massive icon inside the tile
-    create_cyber_icon(tile, labels[i], shapes[i], counts[i], primary, secondary,
-                      accent, 0, 0, callbacks[i], 0);
+    // Primary/secondary theme colors
+    lv_color_t primary = lv_color_hex(willyConfig.priColor);
+    lv_color_t secondary = lv_color_hex(willyConfig.secColor);
+    lv_color_t accent = lv_color_hex(0x00FFFF);
 
-    // Target the newly created btn via child fetching and center it
-    lv_obj_t *btn = lv_obj_get_child(tile, 0);
+    lv_obj_t *btn =
+        create_cyber_icon(tile, labels[i], shapes[i], counts[i], primary,
+                          secondary, accent, 0, 0, callbacks[i], 0);
     lv_obj_set_size(btn, icon_size, icon_size);
-    lv_obj_align(btn, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(btn, LV_ALIGN_CENTER, 0,
+                 -10); // Reduced offset from -20 to -10
 
-    // Re-align the label to match the new large btn size
     lv_obj_t *lbl = lv_obj_get_child(btn, 0);
     lv_obj_align(lbl, LV_ALIGN_BOTTOM_MID, 0, -10);
-    lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
   }
 
-  // Ensure arrows are on top of the tileview and icons
   lv_obj_move_foreground(left_arrow);
   lv_obj_move_foreground(right_arrow);
 }

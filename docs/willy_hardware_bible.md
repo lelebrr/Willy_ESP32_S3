@@ -88,7 +88,7 @@
 | `33` | CC1101 GDO0 | CC1101 | GPIO | 🟢 Verde |
 | `34` | CC1101 GDO2 | CC1101 | GPIO | 🟤 Marrom |
 | `35` | NRF2 CSN | NRF24L01 #2 | SPI | 🟠 Laranja |
-| `36` | NRF2 CE | NRF24L01 #2 | GPIO | 🟤 Marrom |
+| `37` | NRF2 CE | NRF24L01 #2 | GPIO | 🟤 Marrom |
 | `38` | SD CS | Micro SD Card | SPI | 🟣 Roxo |
 | `39` | GPS RX (recebe do GPS TX) | GPS NEO-6M | UART1 | 🟢 Verde |
 | `40` | GPS TX (envia para GPS RX) | GPS NEO-6M | UART1 | 🟡 Amarelo |
@@ -397,7 +397,7 @@ O controlador de touch vem **embutido** na mesma placa do display ILI9341. Compa
 
 ```cpp
 #define TOUCH_CS 15
-#define TOUCH_IRQ 36  // Pino de interrupção do touch (T_IRQ)
+#define TOUCH_IRQ -1  // Polling mode (não usa interrupção)
 #define SPI_TOUCH_FREQUENCY 2500000 // 2.5MHz (touch é mais lento)
 ```
 
@@ -442,7 +442,7 @@ SD.begin(38, spi);
 | SCK | SPI Clock | `12` | 🟠 Laranja |
 | MOSI | SPI Data In | `11` | 🔵 Azul |
 | MISO | SPI Data Out | `13` | 🟢 Verde |
-| IRQ | **Interrupção do Touch** | `36` | ⚪ Branco |
+| IRQ | **Não conectado** (Polling Mode) | `-1` | ⚪ Branco |
 
 > [!CAUTION]
 > **Solde um capacitor de 10μF + 100nF** entre VCC e GND do módulo NRF, o mais perto possível dos pinos. Sem esse capacitor, o módulo vai resetar o ESP32 inteiro ao transmitir.
@@ -460,7 +460,7 @@ SD.begin(38, spi);
 | SCK | SPI Clock | `12` | 🟠 Laranja |
 | MOSI | SPI Data In | `11` | 🔵 Azul |
 | MISO | SPI Data Out | `13` | 🟢 Verde |
-| IRQ | **Interrupção do Touch** | `36` | ⚪ Branco |
+| IRQ | **Não conectado** (Polling Mode) | `-1` | ⚪ Branco |
 
 > [!WARNING]
 > **NUNCA** energize um módulo NRF PA+LNA sem a antena SMA conectada. A potência refletida destrói o estágio amplificador instantaneamente.
@@ -730,7 +730,7 @@ Siga esta ordem **exatamente** para evitar danos:
 - [ ] **9.** Adicione o Cartão SD (CS no GPIO 38)
 - [ ] **10.** Teste leitura de arquivo do SD → se falhar, verifique o chip buffer MISO
 - [ ] **11.** Conecte NRF24 #1 (CS=16, CE=21) no LDO dedicado, com capacitores
-- [ ] **12.** Conecte NRF24 #2 (CS=35, CE=36) no LDO dedicado, com capacitores
+- [ ] **12.** Conecte NRF24 #2 (CS=35, CE=37) no LDO dedicado, com capacitores
 - [ ] **13.** Conecte CC1101 (CS=18, GDO0=33, GDO2=34) no LDO dedicado
 - [ ] **14.** Conecte os 3 módulos I2C em paralelo (SDA=8, SCL=17): PN532, DS3231, PAJ7620
 - [ ] **15.** Conecte o GPS (TX→39, RX→40) na linha 5V

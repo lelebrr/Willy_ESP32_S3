@@ -308,7 +308,6 @@ void setLedBrightness(int value) {
 }
 
 #define WillyPurple 9830500 // Custom purple color for Willy
-// TODO: 3852441 -> 3849837
 void setLedColorConfig() {
   ledPreviewMode(true);
 

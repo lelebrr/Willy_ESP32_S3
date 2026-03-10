@@ -89,6 +89,13 @@ extern int prog_handler; // 0 - Flash, 1 - LittleFS, 2 - Download
 
 extern bool sdcardMounted; // inform if SD Cardis active or not
 
+// Funções do SD Card
+bool setupSdCard();
+bool sdCardPresent();
+String getSdCardInfo();
+void diagnoseSdCard();
+void recoverSdCardInteractive();
+
 extern bool wifiConnected; // inform if wifi is active or not
 extern bool isWebUIActive; // inform if WebUI is active or not
 
@@ -184,6 +191,11 @@ extern const int bufSize;
 extern bool
     returnToMenu; // variable to check and break loops to return to main menu
 
+extern String currentLoaderApp; // Currently running loader app (badusb, webui,
+                                // littlefs, etc.)
+extern bool
+    appRequiresClose; // Flag indicating if current app needs explicit close
+
 extern String cachedPassword;
 
 extern int currentScreenBrightness;
@@ -260,3 +272,7 @@ extern inline bool check(volatile bool &btn, bool resetButtonStatus = true) {
 extern gpio_num_t mic_bclk_pin; // used to configure Cardputer ADV Microphone
 
 extern SemaphoreHandle_t spiMutex;
+
+#ifdef HAS_TOUCH
+void updateTouchPoint();
+#endif
