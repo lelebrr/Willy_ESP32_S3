@@ -16,6 +16,7 @@ private:
   String password;
   bool isAuthenticated;
   String username;
+  static const int BATTERY_PIN = 4;
 
   // Device state
   struct DeviceState {
@@ -39,6 +40,7 @@ private:
   void serveFile(const String &path, const String &contentType);
   void handleNotFound();
   String formatUptime(unsigned long uptime);
+  int readBatteryLevel();
 
   // API methods
   void handleApiState();

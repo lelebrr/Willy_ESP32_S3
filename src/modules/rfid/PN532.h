@@ -6,6 +6,7 @@
  * @date 2024-08-19
  */
 
+#include "../core/advanced_logger.h"
 #include "RFIDInterface.h"
 #include <Adafruit_PN532.h>
 

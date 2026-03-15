@@ -115,7 +115,7 @@
   #define TFT_BL -1
 #endif
 #ifndef TOUCH_CS
-  #define TOUCH_CS -1
+  #define TOUCH_CS 15
 #endif
 #ifndef SDCARD_MOSI
   #define SDCARD_MOSI -1

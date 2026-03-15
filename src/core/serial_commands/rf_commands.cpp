@@ -141,17 +141,8 @@ uint32_t rfTxBufferCallback(cmd *c) {
     return false;
 
   char *txt = _readFileFromSerial();
-  String tmpfilepath = "/tmpramfile"; // TODO: Change to use char *txt directly
-  File f = PSRamFS.open(tmpfilepath, FILE_WRITE);
-  if (!f)
-    return false;
-
-  f.write((const uint8_t *)txt, strlen(txt));
-  f.close();
+  bool r = txSubData(txt);
   free(txt);
-
-  bool r = txSubFile(&PSRamFS, tmpfilepath);
-  PSRamFS.remove(tmpfilepath);
 
   return r;
 #else

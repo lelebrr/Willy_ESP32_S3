@@ -58,13 +58,7 @@ patch_file(f"{env_path}/LibSSH-ESP32/src/libssh_esp32_compat.c", [
      'static struct passwd p =\n  { (char *)LIBSSH_ESP32_COMPAT_USERNAME, /* password: */(char *)"", LIBSSH_ESP32_COMPAT_UID,\n    LIBSSH_ESP32_COMPAT_GID, /* comment: */(char *)"", /* gecos: */(char *)"",\n    (char *)LIBSSH_ESP32_COMPAT_HOMEDIR, /* shell: */(char *)"" };')
 ])
 
-# 5. Patch OneWire.cpp
-patch_file(f"{env_path}/OneWire/OneWire.cpp", [
-    ('#  undef noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)', '#  undef noInterrupts'),
-    ('#  undef interrupts() portEXIT_CRITICAL(&mux);}', '#  undef interrupts')
-])
-
-# 6. Patch pfs.c
+# 5. Patch pfs.c
 patch_file(f"{env_path}/ESP32-PSRamFS/src/pfs.c", [
     ('#warning "Will use PSRAM or heap"', '// #warning "Will use PSRAM or heap"'),
     ('#warning "No SPIRAM detected, will use heap"', '// #warning "No SPIRAM detected, will use heap"')

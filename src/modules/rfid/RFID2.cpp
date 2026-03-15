@@ -7,6 +7,7 @@
  */
 
 #include "RFID2.h"
+#include "core/advanced_logger.h"
 #include "core/display.h"
 #include "core/i2c_finder.h"
 #include "core/sd_functions.h"
@@ -27,7 +28,7 @@ RFID2::RFID2(bool use_i2c) : _use_i2c(use_i2c) {
   mfrc522.SetDriver(*_driver);
 }
 
-RFID2::~RFID2() { delete _driver; }
+RFID2::~RFID2() = default;
 
 bool RFID2::begin() {
   bool i2c_check = check_i2c_address(RFID2_I2C_ADDRESS);
@@ -36,7 +37,15 @@ bool RFID2::begin() {
 
   MFRC522::PCD_Version version = mfrc522.PCD_GetVersion();
 
-  return i2c_check || version != MFRC522::PCD_Version::Version_Unknown;
+  if (i2c_check || version != MFRC522::PCD_Version::Version_Unknown) {
+    AdvancedLogger::log(LogModule::RFID, LogLevel::INFO,
+                        "RFID2 initialized successfully");
+    return true;
+  } else {
+    AdvancedLogger::log(LogModule::RFID, LogLevel::ERROR,
+                        "RFID2 initialization failed");
+    return false;
+  }
 }
 
 bool RFID2::PICC_IsNewCardPresent() {
@@ -46,13 +55,13 @@ bool RFID2::PICC_IsNewCardPresent() {
   bool bl_result = (result == MFRC522::StatusCode::STATUS_OK ||
                     result == MFRC522::StatusCode::STATUS_COLLISION);
   if (bl_result) {
-    printableUID.atqa = "";
+    printableUID.atqa[0] = '\0';
+    char temp[10];
     for (byte i = 0; i < bufferSize; i++) {
-      printableUID.atqa += bufferATQA[i] < 0x10 ? " 0" : " ";
-      printableUID.atqa += String(bufferATQA[i], HEX);
+      sprintf(temp, "%s%02X", bufferATQA[i] < 0x10 ? " 0" : " ", bufferATQA[i]);
+      printableUID.atqa += String(temp);
     }
-    printableUID.atqa.trim();
-    printableUID.atqa.toUpperCase();
+    // trim and toUpperCase not needed since we format directly
   }
   return bl_result;
 }
@@ -590,7 +599,12 @@ int RFID2::write_data_blocks() {
 bool RFID2::write_mifare_classic_data_block(int block, String data) {
   data.replace(" ", "");
   byte size = data.length() / 2;
-  byte buffer[size];
+  if (size > 16 || size == 0) {
+    AdvancedLogger::log(LogModule::RFID, LogLevel::ERROR,
+                        "Invalid data size for MIFARE block");
+    return false;
+  }
+  byte buffer[16];
 
   for (size_t i = 0; i < data.length(); i += 2) {
     buffer[i / 2] = strtoul(data.substring(i, i + 2).c_str(), NULL, 16);

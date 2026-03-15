@@ -5,7 +5,6 @@
 #include <map>
 #include <vector>
 
-
 // CRC-64-ECMA constants
 const uint64_t CRC64_ECMA_POLY =
     0x42F0E1EBA9EA3693; // Polynomial for CRC-64-ECMA
@@ -19,7 +18,7 @@ const int range_limits[4][2] = {
 };
 const char *subghz_frequency_ranges[] = {"300-348 MHz", "387-464 MHz",
                                          "779-928 MHz", "All ranges"};
-const float subghz_frequency_list[] = {
+const float subghz_frequency_list[] PROGMEM = {
     /* 300 - 348 MHz Frequency Range */
     300.000f, 302.757f, 303.875f, 303.900f, 304.250f, 307.000f, 307.500f,
     307.800f, 309.000f, 310.000f, 312.000f, 312.100f, 312.200f, 313.000f,
@@ -47,17 +46,36 @@ void loadRecentRfCodes() {
   prefs.begin("rf_recent", true);
   recent_rfcodes_last_used = prefs.getInt("last", 0);
   for (int i = 0; i < 16; i++) {
-    String base = "r" + String(i) + "_";
-    recent_rfcodes[i].filepath = prefs.getString((base + "fp").c_str(), "");
+    char base[10];
+    sprintf(base, "r%d_", i);
+    char key_fp[8];
+    sprintf(key_fp, "%sfp", base);
+    recent_rfcodes[i].filepath = prefs.getString(key_fp, "");
     if (recent_rfcodes[i].filepath != "") {
-      recent_rfcodes[i].protocol = prefs.getString((base + "pr").c_str(), "");
-      recent_rfcodes[i].preset = prefs.getString((base + "ps").c_str(), "");
-      recent_rfcodes[i].data = prefs.getString((base + "dt").c_str(), "");
-      recent_rfcodes[i].frequency = prefs.getUInt((base + "fq").c_str(), 0);
-      recent_rfcodes[i].key = prefs.getULong64((base + "ky").c_str(), 0);
-      recent_rfcodes[i].te = prefs.getInt((base + "te").c_str(), 0);
-      recent_rfcodes[i].Bit = prefs.getInt((base + "bt").c_str(), 0);
-      recent_rfcodes[i].BitRAW = prefs.getInt((base + "br").c_str(), 0);
+      char key_pr[8];
+      sprintf(key_pr, "%spr", base);
+      recent_rfcodes[i].protocol = prefs.getString(key_pr, "");
+      char key_ps[8];
+      sprintf(key_ps, "%sps", base);
+      recent_rfcodes[i].preset = prefs.getString(key_ps, "");
+      char key_dt[8];
+      sprintf(key_dt, "%sdt", base);
+      recent_rfcodes[i].data = prefs.getString(key_dt, "");
+      char key_fq[8];
+      sprintf(key_fq, "%sfq", base);
+      recent_rfcodes[i].frequency = prefs.getUInt(key_fq, 0);
+      char key_ky[8];
+      sprintf(key_ky, "%sky", base);
+      recent_rfcodes[i].key = prefs.getULong64(key_ky, 0);
+      char key_te[8];
+      sprintf(key_te, "%ste", base);
+      recent_rfcodes[i].te = prefs.getInt(key_te, 0);
+      char key_bt[8];
+      sprintf(key_bt, "%sbt", base);
+      recent_rfcodes[i].Bit = prefs.getInt(key_bt, 0);
+      char key_br[8];
+      sprintf(key_br, "%sbr", base);
+      recent_rfcodes[i].BitRAW = prefs.getInt(key_br, 0);
     }
   }
   prefs.end();
@@ -69,17 +87,36 @@ void saveRecentRfCodes() {
   prefs.begin("rf_recent", false);
   prefs.putInt("last", recent_rfcodes_last_used);
   for (int i = 0; i < 16; i++) {
-    String base = "r" + String(i) + "_";
-    prefs.putString((base + "fp").c_str(), recent_rfcodes[i].filepath);
+    char base[10];
+    sprintf(base, "r%d_", i);
+    char key_fp[8];
+    sprintf(key_fp, "%sfp", base);
+    prefs.putString(key_fp, recent_rfcodes[i].filepath);
     if (recent_rfcodes[i].filepath != "") {
-      prefs.putString((base + "pr").c_str(), recent_rfcodes[i].protocol);
-      prefs.putString((base + "ps").c_str(), recent_rfcodes[i].preset);
-      prefs.putString((base + "dt").c_str(), recent_rfcodes[i].data);
-      prefs.putUInt((base + "fq").c_str(), recent_rfcodes[i].frequency);
-      prefs.putULong64((base + "ky").c_str(), recent_rfcodes[i].key);
-      prefs.putInt((base + "te").c_str(), recent_rfcodes[i].te);
-      prefs.putInt((base + "bt").c_str(), recent_rfcodes[i].Bit);
-      prefs.putInt((base + "br").c_str(), recent_rfcodes[i].BitRAW);
+      char key_pr[8];
+      sprintf(key_pr, "%spr", base);
+      prefs.putString(key_pr, recent_rfcodes[i].protocol);
+      char key_ps[8];
+      sprintf(key_ps, "%sps", base);
+      prefs.putString(key_ps, recent_rfcodes[i].preset);
+      char key_dt[8];
+      sprintf(key_dt, "%sdt", base);
+      prefs.putString(key_dt, recent_rfcodes[i].data);
+      char key_fq[8];
+      sprintf(key_fq, "%sfq", base);
+      prefs.putUInt(key_fq, recent_rfcodes[i].frequency);
+      char key_ky[8];
+      sprintf(key_ky, "%sky", base);
+      prefs.putULong64(key_ky, recent_rfcodes[i].key);
+      char key_te[8];
+      sprintf(key_te, "%ste", base);
+      prefs.putInt(key_te, recent_rfcodes[i].te);
+      char key_bt[8];
+      sprintf(key_bt, "%sbt", base);
+      prefs.putInt(key_bt, recent_rfcodes[i].Bit);
+      char key_br[8];
+      sprintf(key_br, "%sbr", base);
+      prefs.putInt(key_br, recent_rfcodes[i].BitRAW);
     }
   }
   prefs.end();
@@ -154,11 +191,22 @@ bool initRfModule(String mode, float frequency) {
         displayWarning("Wrong freq, set to 433.92", true);
       }
 
-      ELECHOUSE_cc1101.setRxBW(256);      // narrow band for better accuracy
+      // Otimizado: ajustar parâmetros baseado na frequência para melhor
+      // processamento
+      if (frequency >= 300 && frequency <= 500) {
+        ELECHOUSE_cc1101.setRxBW(162); // Otimizado para 300-500MHz
+        ELECHOUSE_cc1101.setDRate(
+            100); // Taxa de dados mais alta para bandas baixas
+      } else if (frequency >= 779 && frequency <= 928) {
+        ELECHOUSE_cc1101.setRxBW(325); // Banda mais larga para 779-928MHz
+        ELECHOUSE_cc1101.setDRate(50); // Taxa padrão
+      } else {
+        ELECHOUSE_cc1101.setRxBW(256); // Padrão
+        ELECHOUSE_cc1101.setDRate(50);
+      }
       ELECHOUSE_cc1101.setClb(1, 13, 15); // Calibration Offset
       ELECHOUSE_cc1101.setClb(2, 16, 19); // Calibration Offset
       ELECHOUSE_cc1101.setModulation(2);
-      ELECHOUSE_cc1101.setDRate(50);
       ELECHOUSE_cc1101.setPktFormat(3);
       setMHZ(frequency);
       Serial.println("cc1101 setMHZ(frequency);");
@@ -410,10 +458,10 @@ bool setMHZMenu() {
     for (int i = 0; i < arraySize; i++) {
       if (subghz_frequency_list[i] - willyConfigPins.rfFreq < 0.1)
         ind = i;
-      String tmp = String(subghz_frequency_list[i], 2) + "Mhz";
-      options.push_back({tmp.c_str(), [=]() {
-                           willyConfigPins.rfFreq = subghz_frequency_list[i];
-                         }});
+      char tmp[20];
+      sprintf(tmp, "%.2fMhz", subghz_frequency_list[i]);
+      options.push_back(
+          {tmp, [=]() { willyConfigPins.rfFreq = subghz_frequency_list[i]; }});
     }
     loopOptions(options, ind);
     options.clear();
@@ -425,10 +473,12 @@ bool setMHZMenu() {
 
 void rf_range_selection(float currentFrequency) {
   int option = 0;
+  char fixed_buf[50];
+  sprintf(fixed_buf, "Fixed [%.2f]", willyConfigPins.rfFreq);
   options = {
-      {String("Fixed [" + String(willyConfigPins.rfFreq) + "]").c_str(),
+      {fixed_buf,
        [=]() { willyConfigPins.setRfFreq(willyConfigPins.rfFreq, 2); }},
-      {String("Escolher Fixa").c_str(), [&]() { option = 1; }},
+      {"Escolher Fixa", [&]() { option = 1; }},
       {subghz_frequency_ranges[0],
        [=]() { willyConfigPins.setRfScanRange(0); }},
       {subghz_frequency_ranges[1],
@@ -448,9 +498,10 @@ void rf_range_selection(float currentFrequency) {
     int arraySize =
         sizeof(subghz_frequency_list) / sizeof(subghz_frequency_list[0]);
     for (int i = 0; i < arraySize; i++) {
-      String tmp = String(subghz_frequency_list[i], 2) + "Mhz";
+      char tmp[20];
+      sprintf(tmp, "%.2fMhz", subghz_frequency_list[i]);
       options.push_back(
-          {tmp.c_str(),
+          {tmp,
            [=]() { willyConfigPins.setRfFreq(subghz_frequency_list[i], 2); }});
       if (int(currentFrequency * 100) == int(subghz_frequency_list[i] * 100))
         ind = i;
@@ -459,11 +510,80 @@ void rf_range_selection(float currentFrequency) {
     options.clear();
   }
 
-  if (willyConfigPins.rfFxdFreq)
-    displayTextLine("Freq. de Scan definida para " +
-                    String(willyConfigPins.rfFreq));
-  else
-    displayTextLine(
-        "Faixa definida para " +
-        String(subghz_frequency_ranges[willyConfigPins.rfScanRange]));
+  char buf[100];
+  if (willyConfigPins.rfFxdFreq) {
+    sprintf(buf, "Freq. de Scan definida para %.2f", willyConfigPins.rfFreq);
+    displayTextLine(buf);
+  } else {
+    sprintf(buf, "Faixa definida para %s",
+            subghz_frequency_ranges[willyConfigPins.rfScanRange]);
+    displayTextLine(buf);
+  }
+}
+
+// ========== OTIMIZAÇÕES ADICIONADAS ==========
+
+// Função auxiliar para validação de frequência RF
+bool validateRfFrequency(float frequency) {
+  // Faixas permitidas: 300-348MHz, 387-464MHz, 779-928MHz
+  return ((frequency >= 300.0f && frequency <= 348.0f) ||
+          (frequency >= 387.0f && frequency <= 464.0f) ||
+          (frequency >= 779.0f && frequency <= 928.0f));
+}
+
+// Função auxiliar para configuração de parâmetros RF otimizados
+void configureRfParameters(float frequency) {
+  if (frequency >= 300.0f && frequency <= 500.0f) {
+    ELECHOUSE_cc1101.setRxBW(162); // Otimizado para 300-500MHz
+    ELECHOUSE_cc1101.setDRate(
+        100); // Taxa de dados mais alta para bandas baixas
+  } else if (frequency >= 779.0f && frequency <= 928.0f) {
+    ELECHOUSE_cc1101.setRxBW(325); // Banda mais larga para 779-928MHz
+    ELECHOUSE_cc1101.setDRate(50); // Taxa padrão
+  } else {
+    ELECHOUSE_cc1101.setRxBW(256); // Padrão
+    ELECHOUSE_cc1101.setDRate(50);
+  }
+}
+
+// Função auxiliar para configuração de modo RF
+bool configureRfMode(String mode) {
+  if (mode == "tx") {
+    ioExpander.turnPinOnOff(IO_EXP_CC_RX, LOW);
+    ioExpander.turnPinOnOff(IO_EXP_CC_TX, HIGH);
+    pinMode(willyConfigPins.CC1101_bus.io0, OUTPUT);
+    ELECHOUSE_cc1101.setPA(12);
+    ELECHOUSE_cc1101.SetTx();
+  } else if (mode == "rx") {
+    ioExpander.turnPinOnOff(IO_EXP_CC_RX, HIGH);
+    ioExpander.turnPinOnOff(IO_EXP_CC_TX, LOW);
+    pinMode(willyConfigPins.CC1101_bus.io0, INPUT);
+    ELECHOUSE_cc1101.SetRx();
+  } else {
+    Serial.println("Modo RF inválido");
+    return false;
+  }
+  return true;
+}
+
+// Função auxiliar para configuração de modo single-pin
+bool configureSinglePinMode(String mode) {
+  if (mode == "tx") {
+    gsetRfTxPin(false);
+    if (willyConfigPins.SDCARD_bus.checkConflict(willyConfigPins.rfTx))
+      sdcardSPI.end();
+    gpio_reset_pin((gpio_num_t)willyConfigPins.rfTx);
+    pinMode(willyConfigPins.rfTx, OUTPUT);
+    digitalWrite(willyConfigPins.rfTx, LOW);
+  } else if (mode == "rx") {
+    gsetRfRxPin(false);
+    if (willyConfigPins.SDCARD_bus.checkConflict(willyConfigPins.rfRx))
+      sdcardSPI.end();
+    gpio_reset_pin((gpio_num_t)willyConfigPins.rfRx);
+    pinMode(willyConfigPins.rfRx, INPUT);
+  } else {
+    Serial.println("Modo single-pin inválido");
+    return false;
+  }
+  return true;
 }

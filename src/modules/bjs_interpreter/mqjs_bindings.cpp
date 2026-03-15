@@ -24,6 +24,8 @@ extern "C" {
 #include <LittleFS.h>
 #include <SD.h>
 #include <WiFi.h>
+#include <driver/ledc.h>
+#include <esp32-hal-ledc.h>
 
 // Forward declarations
 extern int getBattery();
@@ -653,21 +655,46 @@ static JSValue func_compat_getSdkVersion(JSContext *ctx, JSValue *this_val,
   return JS_NewStringLen(ctx, ESP.getSdkVersion(), strlen(ESP.getSdkVersion()));
 }
 
-// gpio.ledcAttach(pin, freq, resolution) - stub
+// gpio.ledcAttach(pin, freq, resolution)
 static JSValue func_gpio_ledcAttach(JSContext *ctx, JSValue *this_val, int argc,
                                     JSValue *argv) {
-  return JS_UNDEFINED;
+  if (argc < 3)
+    return JS_UNDEFINED;
+  int pin;
+  JS_ToInt32(ctx, &pin, argv[0]);
+  int freq;
+  JS_ToInt32(ctx, &freq, argv[1]);
+  int resolution;
+  JS_ToInt32(ctx, &resolution, argv[2]);
+  int ch = pin % 16; // Simple channel mapping
+  ledcAttach(ch, freq, resolution);
+  ledcAttach(pin, freq, ch);
+  return JS_NewInt32(ctx, ch);
 }
 
-// gpio.ledcWrite(pin, value) - stub
+// gpio.ledcWrite(pin, value)
 static JSValue func_gpio_ledcWrite(JSContext *ctx, JSValue *this_val, int argc,
                                    JSValue *argv) {
+  if (argc < 2)
+    return JS_UNDEFINED;
+  int pin;
+  JS_ToInt32(ctx, &pin, argv[0]);
+  int value;
+  JS_ToInt32(ctx, &value, argv[1]);
+  int ch = pin % 16;
+  ledcWrite(ch, value);
   return JS_UNDEFINED;
 }
 
-// gpio.ledcDetach(pin) - stub
+// gpio.ledcDetach(pin)
 static JSValue func_gpio_ledcDetach(JSContext *ctx, JSValue *this_val, int argc,
                                     JSValue *argv) {
+  if (argc < 1)
+    return JS_UNDEFINED;
+  int pin;
+  JS_ToInt32(ctx, &pin, argv[0]);
+  int ch = pin % 16;
+  ledcDetach(pin);
   return JS_UNDEFINED;
 }
 

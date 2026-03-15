@@ -1,26 +1,46 @@
-#include "core/led_control.h"
 #include "core/main_menu.h"
+#include <Adafruit_NeoPixel.h>
 #include <Arduino.h>
+#include <HardwareSerial.h>
 #include <globals.h>
 
+#include "core/display.h"
 #include "core/headless_mode.h"
 #include "core/powerSave.h"
 #include "core/serial_commands/cli.h"
-#include "core/settings.h"
-#include "core/utils.h"
 #include "core/wifi/wifi_common.h"
+
+// Novos includes para arquitetura MVC e módulos
+#include "core/BenchmarkManager.h"
+#include "core/DynamicConfigManager.h"
+#include "core/SystemController.h"
+#include "core/SystemManager.h"
+#include "core/SystemModel.h"
+#include "core/SystemView.h"
+#include "core/advanced_logger.h"
 #include "current_year.h"
 #include "esp32-hal-psram.h"
 #include "esp_task_wdt.h"
 #include "esp_wifi.h"
+#include "modules/ml/MLModule.h"
+#include "modules/rf/RFModule.h"
 #include "modules/rf/rf_utils.h"
-#include "ui/cyber_menu.h"
-#include <functional>
-#include <string>
+#include "modules/rfid/RFIDModule.h"
+#include "modules/wifi/WiFiModule.h"
+#include <ESP32Time.h>
+#include <SPI.h>
+#include <freertos/FreeRTOS.h>
+#include <semphr.h>
+#include <task.h>
 #include <vector>
 
 #if !defined(LITE_VERSION) && !defined(DISABLE_INTERPRETER)
 #include "modules/bjs_interpreter/interpreter.h"
+#endif
+
+// LVGL includes
+#ifdef HAS_SCREEN
+#include <lvgl.h>
 #endif
 
 bool tftInitialized = false;
@@ -28,6 +48,9 @@ volatile bool lvgl_rendering_active = false;
 io_expander ioExpander;
 WillyConfig willyConfig;
 WillyConfigPins willyConfigPins;
+
+Adafruit_NeoPixel pixels =
+    Adafruit_NeoPixel(LED_COUNT, RGB_LED, NEO_GRB + NEO_KHZ800);
 
 SerialCli serialCli;
 WillyUSBSerial usbSerial(&Serial);
@@ -42,7 +65,7 @@ SPIClass sdcardSPI;
 #ifndef VSPI
 #define VSPI FSPI
 #endif
-SPIClass CC_NRF_SPI(VSPI);
+SPIClass CC_NRF_SPI(FSPI);
 #else
 SPIClass CC_NRF_SPI(HSPI);
 #endif
@@ -71,6 +94,7 @@ TouchPoint touchPoint;
 keyStroke KeyStroke;
 
 SemaphoreHandle_t spiMutex = NULL;
+SemaphoreHandle_t displayMutex = NULL;
 
 TaskHandle_t xHandle;
 void __attribute__((weak)) InputHandler() {
@@ -104,11 +128,7 @@ int8_t interpreter_state = -1;
 bool sdcardMounted = false;
 bool gpsConnected = false;
 
-// wifi globals
-// TODO put in a namespace
-bool wifiConnected = false;
-bool isWebUIActive = false;
-String wifiIP;
+// wifi globals moved to wifi_common.cpp
 
 bool BLEConnected = false;
 bool returnToMenu;
@@ -130,7 +150,7 @@ RTC_TimeTypeDef _time;
 RTC_DateTypeDef _date;
 bool clock_set = true;
 #else
-ESP32Time rtc;
+ESP32Time rtc(0);
 bool clock_set = false;
 #endif
 
@@ -138,8 +158,8 @@ std::vector<Option> options;
 // Protected global variables
 #if defined(HAS_SCREEN)
 tft_logger tft = tft_logger(); // Invoke custom library
-tft_sprite sprite = tft_sprite(&tft);
-tft_sprite draw = tft_sprite(&tft);
+tft_sprite sprite((tft_display *)&tft);
+tft_sprite draw((tft_display *)&tft);
 volatile int tftWidth = TFT_HEIGHT;
 volatile int tftHeight = TFT_WIDTH;
 #else
@@ -189,7 +209,12 @@ void _post_setup_gpio() {
   if (TFT_BL >= 0) {
     pinMode(TFT_BL, OUTPUT);
     digitalWrite(TFT_BL, HIGH);
+    Serial.printf("[DISPLAY] Backlight turned ON on pin %d\n", TFT_BL);
+  } else {
+    Serial.println("[DISPLAY] Backlight pin not configured (TFT_BL < 0)");
   }
+#else
+  Serial.println("[DISPLAY] Backlight not configured (TFT_BL not defined)");
 #endif
 }
 
@@ -231,10 +256,14 @@ void begin_tft() {
   Serial.println("[BOOT] Iniciando tft.init()...");
 
   tft.init();
+  Serial.println("[DEBUG] tft.init() executado");
   tft.setRotation(1); // Rotation 1 = landscape (320x240)
+  Serial.println("[DEBUG] tft.setRotation(1) executado");
   tft.invertDisplay(
       false); // ILI9341: set to false for normal colors (true inverts all)
+  Serial.println("[DEBUG] tft.invertDisplay(false) executado");
   tft.fillScreen(TFT_BLACK);
+  Serial.println("[DEBUG] tft.fillScreen(TFT_BLACK) executado");
 
   Serial.printf("[DISPLAY] TFT resolution after rotation: %dx%d\n", tft.width(),
                 tft.height());
@@ -242,9 +271,16 @@ void begin_tft() {
   tftWidth = tft.width();
   tftHeight = tft.height();
 
-  tftInitialized = true;
-  Serial.printf("[DISPLAY] TFT initialized! tftWidth=%d, tftHeight=%d\n",
-                tftWidth, tftHeight);
+  if (tftWidth > 0 && tftHeight > 0) {
+    tftInitialized = true;
+    Serial.printf(
+        "[DISPLAY] TFT initialized successfully! tftWidth=%d, tftHeight=%d\n",
+        tftWidth, tftHeight);
+  } else {
+    tftInitialized = false;
+    Serial.println("[ERROR] TFT initialization failed! Width or height is 0. "
+                   "Entering headless mode.");
+  }
 }
 
 /*********************************************************************
@@ -284,36 +320,25 @@ void setup_touch() {
 #endif
 
   if (needsCalibration) {
-    Serial.println("[TOUCH] Starting CALIBRATION - touch the crosshairs!");
+    Serial.println(
+        "[TOUCH] Using hardcoded calibration data from working demo");
     tft.fillScreen(TFT_BLACK);
 
-    // Attempt calibration but define a timeout or fallback if possible
-    // (TFT_eSPI's calibrateTouch is blocking, but we can verify results after)
-    Serial.println("[TOUCH] Calling tft.calibrateTouch()...");
-    // Use 5 points for better accuracy (default is 25, but 5 is minimum)
-    tft.calibrateTouch(calData, TFT_RED, TFT_BLACK, 5);
-    Serial.printf("[TOUCH] Calibration finished. Result: %d,%d,%d,%d,%d\n",
-                  calData[0], calData[1], calData[2], calData[3], calData[4]);
+    // Use hardcoded values from clean_demo that works
+    calData[0] = 280;
+    calData[1] = 3555;
+    calData[2] = 298;
+    calData[3] = 3505;
+    calData[4] = 7;
 
-    // Basic sanity check on calData: if all are 0 or 65535, it failed
-    if (calData[0] == 0 || calData[0] == 0xFFFF || calData[0] == calData[1]) {
-      Serial.println(
-          "[TOUCH] Calibration FAILED (invalid data). Using defaults.");
-      calData[0] = 280;
-      calData[1] = 3555;
-      calData[2] = 298;
-      calData[3] = 3505;
-      calData[4] = 7;
+    // Save to LittleFS (now guaranteed to be mounted)
+    File f = LittleFS.open("/touch_cal.dat", "w");
+    if (f) {
+      f.write((uint8_t *)calData, 10);
+      f.close();
+      Serial.println("[TOUCH] Hardcoded calibration SAVED to /touch_cal.dat");
     } else {
-      // Save to LittleFS (now guaranteed to be mounted)
-      File f = LittleFS.open("/touch_cal.dat", "w");
-      if (f) {
-        f.write((uint8_t *)calData, 10);
-        f.close();
-        Serial.println("[TOUCH] Calibration SAVED to /touch_cal.dat");
-      } else {
-        Serial.println("[TOUCH] WARNING: Could not save calibration!");
-      }
+      Serial.println("[TOUCH] WARNING: Could not save calibration!");
     }
     tft.fillScreen(TFT_BLACK);
   } else {
@@ -334,9 +359,27 @@ void setup_touch() {
     }
   }
 
+  // Verify calibration data sanity (after loading or using defaults)
+  if (calData[0] == 0 || calData[0] == 0xFFFF || calData[0] == calData[1]) {
+    Serial.println("[TOUCH] Calibration FAILED sanity check. Using defaults "
+                   "and forcing recalibration.");
+    LittleFS.remove("/touch_cal.dat");
+    calData[0] = 280;
+    calData[1] = 3555;
+    calData[2] = 298;
+    calData[3] = 3505;
+    calData[4] = 7;
+  }
+
   tft.setTouch(calData);
   Serial.printf("[TOUCH] CalData applied: %d,%d,%d,%d,%d\n", calData[0],
                 calData[1], calData[2], calData[3], calData[4]);
+
+  // Test touch functionality
+  uint16_t tx, ty;
+  uint8_t touchResult = tft.getTouch(&tx, &ty, 600);
+  Serial.printf("[TOUCH] Touch test result: %d, x=%d, y=%d\n", touchResult, tx,
+                ty);
 #endif
 }
 
@@ -496,7 +539,7 @@ void init_clock() {
  *********************************************************************/
 void init_led() {
 #ifdef HAS_RGB_LED
-  beginLed();
+  pixels.begin();
 #endif
 }
 
@@ -537,9 +580,44 @@ void setup() {
   Serial.begin(115200);
   delay(500);
   Serial.println("\n=== WILLY ESP S3 - BOOT CORRIGIDO ===");
+  Serial.println("[DEBUG] Serial initialized");
   spiMutex = xSemaphoreCreateMutex();
+  Serial.println("[DEBUG] spiMutex created");
+  displayMutex = xSemaphoreCreateMutex();
+  Serial.println("[DEBUG] displayMutex created");
 
   Serial.println("[BOOT] Initializing system...");
+
+  // Inicializar componentes MVC
+  Serial.println("[BOOT] Initializing MVC components...");
+  SystemModel::getInstance().loadConfig();
+  SystemView::getInstance().init();
+  SystemController::getInstance().init();
+
+  // Registrar módulos no SystemManager
+  Serial.println("[BOOT] Registering modules...");
+  auto &systemManager = SystemManager::getInstance();
+  auto modelPtr = std::make_shared<SystemModel>(SystemModel::getInstance());
+  auto viewPtr = std::make_shared<SystemView>(SystemView::getInstance());
+
+  systemManager.registerModule(std::make_unique<WiFiModule>(modelPtr, viewPtr));
+  systemManager.registerModule(std::make_unique<RFModule>(modelPtr, viewPtr));
+  systemManager.registerModule(std::make_unique<RFIDModule>(modelPtr, viewPtr));
+  systemManager.registerModule(std::make_unique<MLModule>(modelPtr, viewPtr));
+  systemManager.registerModule(std::make_unique<DynamicConfigManager>());
+  systemManager.registerModule(
+      std::make_unique<BenchmarkManager>(modelPtr, viewPtr));
+
+  // Inicializar todos os módulos
+  if (!systemManager.initAllModules()) {
+    Serial.println("[ERROR] Failed to initialize some modules!");
+  }
+
+  // Inicializar AdvancedLogger
+  Serial.println("[BOOT] Initializing Advanced Logger...");
+  if (!advancedLogger.begin()) {
+    Serial.println("[ERROR] Failed to initialize Advanced Logger!");
+  }
 
   // NENHUM tft.init() aqui (deixa para begin_tft())
   // NENHUM hack de backlight GPIO 21/3
@@ -565,9 +643,11 @@ void setup() {
 
   Serial.println("[BOOT] Initializing GPIOs...");
   setup_gpio();
+  Serial.println("[DEBUG] GPIOs initialized");
 
 #if defined(HAS_SCREEN)
   begin_tft();
+  Serial.println("[DEBUG] TFT initialized");
 #else
   tft.begin();
   tftInitialized =
@@ -576,18 +656,23 @@ void setup() {
 
   Serial.println("Starting begin_storage()...");
   begin_storage();
+  Serial.println("[DEBUG] Storage initialized");
 
 #if defined(HAS_SCREEN) && defined(HAS_TOUCH)
   // Touch calibration MUST happen after begin_storage() so LittleFS is mounted
   setup_touch();
+  Serial.println("[DEBUG] Touch initialized");
 #endif
 
   if (tftInitialized) {
     Serial.println("[BOOT] Iniciando LVGL + Cyber Menu...");
+    Serial.println("[DEBUG] Calling initLVGL()");
     initLVGL();
+    Serial.println("[DEBUG] LVGL initialized");
 
     // Show LVGL splash screen (orca animation)
     Serial.println("[BOOT] Showing splash screen...");
+    Serial.println("[DEBUG] Setting lvgl_rendering_active = true");
     lvgl_rendering_active = true;
     lv_obj_t *splash_scr = lv_scr_act();
     show_willy_splash(splash_scr);
@@ -618,6 +703,7 @@ void setup() {
     delay(200);
     lvgl_rendering_active = false;
     Serial.println("[BOOT] Splash complete. LVGL paused for TFT menu.");
+    Serial.println("[DEBUG] Splash complete");
 
   } else {
     Serial.println("[WARNING] MODO HEADLESS ATIVADO - Tela não encontrada");
@@ -625,9 +711,12 @@ void setup() {
   }
 
   init_clock();
+  Serial.println("[DEBUG] Clock initialized");
   init_led();
+  Serial.println("[DEBUG] LED initialized");
 
   options.reserve(20); // preallocate some options space to avoid fragmentation
+  Serial.println("[DEBUG] Options reserved");
 
   // Set WiFi country to avoid warnings and ensure max power
   const wifi_country_t country = {.cc = "US",
@@ -658,6 +747,8 @@ void setup() {
   );
   // #endif
 #if defined(HAS_SCREEN)
+  Serial.printf("[MAIN] Abrindo tema: fs=%d, path='%s'\n", willyConfig.theme.fs,
+                willyConfig.themePath.c_str());
   willyConfig.openThemeFile(willyConfig.themeFS(), willyConfig.themePath,
                             false);
   if (!willyConfig.instantBoot) {
@@ -683,6 +774,7 @@ void setup() {
       !startupApp.startApp(willyConfig.startupApp)) {
     willyConfig.setStartupApp("");
   }
+  Serial.println("[DEBUG] Setup complete");
 }
 
 /**********************************************************************
@@ -712,6 +804,7 @@ void loop() {
 #endif
   tft.fillScreen(willyConfig.bgColor);
 
+  Serial.println("[DEBUG] Calling mainMenu.begin()");
   mainMenu.begin();
   delay(1);
 }

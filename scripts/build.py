@@ -1,10 +1,21 @@
 from pathlib import Path
 import csv
+import logging
+import sys
+from datetime import datetime
 from SCons.Script import Import
 
 # Import PlatformIO's SCons environment
 Import("env")
 senv = env  # avoid shadowing with the action's 'env' parameter
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # Optional: keep your extra flag
 senv.Append(CXXFLAGS=["-Wno-conversion-null"])
@@ -48,13 +59,27 @@ def _merge_bins_callback(target, source, env):
     Merges bootloader, partitions, and app into a single binary.
     NOTE: This function signature must be (target, source, env) so SCons can call it.
     """
-    # Check files
-    missing = [p for p in [boot_bin, part_bin, app_bin] if not p.exists()]
-    if missing:
-        print("[merge_bin] Missing files, merge aborted:")
-        for p in missing:
-            print(f" - {p}")
-        return
+    try:
+        logger.info("Iniciando merge de binários...")
+
+        # Validate inputs
+        if not all([boot_bin, part_bin, app_bin]):
+            logger.error("Caminhos dos binários não definidos")
+            env.Exit(1)
+
+        # Check files
+        missing = [p for p in [boot_bin, part_bin, app_bin] if not p.exists()]
+        if missing:
+            logger.error("Arquivos necessários não encontrados, merge abortado:")
+            for p in missing:
+                logger.error(f" - {p}")
+            env.Exit(1)
+
+        logger.info(f"Arquivos encontrados: boot={boot_bin}, part={part_bin}, app={app_bin}")
+
+    except Exception as e:
+        logger.error(f"Erro na validação inicial: {e}")
+        env.Exit(1)
 
     # Quote paths for Windows safety
     def q(p): return f"\"{p}\""
@@ -67,67 +92,89 @@ def _merge_bins_callback(target, source, env):
     ota_size = None
     ota0_offset = None
     if part_csv.exists():
-        with open(part_csv, newline="") as f:
-            reader = csv.reader(f)
-            for row in reader:
-                if not row or row[0].startswith("#"):
-                    continue
-                cols = [c.strip() for c in row]
-                if len(cols) < 5:
-                    continue
-                name, ptype, subtype, offset, size = cols[:5]
-                subtype = subtype.lower()
-                if subtype in ("ota_0", "factory") and ota_size is None:
+        try:
+            logger.info(f"Lendo arquivo de partições: {part_csv}")
+            with open(part_csv, newline="", encoding="utf-8") as f:
+                reader = csv.reader(f)
+                for row_num, row in enumerate(reader, 1):
+                    if not row or row[0].startswith("#"):
+                        continue
+                    cols = [c.strip() for c in row]
+                    if len(cols) < 5:
+                        logger.warning(f"Linha {row_num} em {part_csv} tem menos de 5 colunas: {cols}")
+                        continue
                     try:
-                        ota_size = int(size, 0)
-                        ota0_offset = int(offset, 0)
-                    except ValueError:
-                        pass
+                        name, ptype, subtype, offset, size = cols[:5]
+                        subtype = subtype.lower()
+                        if subtype in ("ota_0", "factory") and ota_size is None:
+                            ota_size = int(size, 0)
+                            ota0_offset = int(offset, 0)
+                            logger.info(f"Partição OTA encontrada: tamanho={ota_size}, offset={ota0_offset}")
+                    except ValueError as e:
+                        logger.warning(f"Erro ao parsear linha {row_num} em {part_csv}: {e}")
+                        continue
+        except Exception as e:
+            logger.error(f"Erro ao ler arquivo de partições {part_csv}: {e}")
+            env.Exit(1)
+    else:
+        logger.warning(f"Arquivo de partições não encontrado: {part_csv}")
 
     # ---- Firmware size check against test partition ----
     if ota_size:
-        fw_size = app_bin.stat().st_size
-        percent = (fw_size / ota_size) * 100 if ota_size else 0
-        bar_len = 20
-        filled = int(bar_len * fw_size / ota_size)
-        bar = "=" * filled + " " * (bar_len - filled)
-        print(
-            f"WILLY: [{bar}] {percent:.1f}% (used 0x{fw_size:X} bytes of 0x{ota_size:X} of OTA partition)"
-        )
-        if fw_size > ota_size:
-            print("[merge_bin] Error: firmware.bin exceeds OTA partition size")
+        try:
+            fw_size = app_bin.stat().st_size
+            percent = (fw_size / ota_size) * 100 if ota_size else 0
+            bar_len = 20
+            filled = int(bar_len * fw_size / ota_size) if ota_size > 0 else 0
+            bar = "=" * filled + " " * (bar_len - filled)
+            logger.info(
+                f"WILLY: [{bar}] {percent:.1f}% (usado 0x{fw_size:X} bytes de 0x{ota_size:X} da partição OTA)"
+            )
+            if fw_size > ota_size:
+                logger.error("Erro: firmware.bin excede o tamanho da partição OTA")
+                env.Exit(1)
+        except OSError as e:
+            logger.error(f"Erro ao obter tamanho do arquivo {app_bin}: {e}")
             env.Exit(1)
 
-    cmd = " ".join([
-        q(python_exe), "-m", "platformio", "pkg", "exec", "-p", q("tool-esptoolpy"), "--", "esptool.py",
-        "--chip", chip_arg,
-        "merge-bin",
-        "--output", q(out_bin),
-        hex(boot_offset), q(boot_bin),
-        hex(PART_TABLE_OFFSET), q(part_bin),
-        hex(APP_OFFSET), q(app_bin),
-    ])
+    try:
+        cmd = " ".join([
+            q(python_exe), "-m", "platformio", "pkg", "exec", "-p", q("tool-esptoolpy"), "--", "esptool.py",
+            "--chip", chip_arg,
+            "merge-bin",
+            "--output", q(out_bin),
+            hex(boot_offset), q(boot_bin),
+            hex(PART_TABLE_OFFSET), q(part_bin),
+            hex(APP_OFFSET), q(app_bin),
+        ])
 
-    print("[merge_bin] Merging binaries:")
-    print(" ", cmd)
-    rc = env.Execute(cmd)
-    if rc != 0:
-        print(f"[merge_bin] Failed with exit code {rc}")
-        env.Exit(rc)
-    else:
+        logger.info("Executando merge de binários...")
+        logger.debug(f"Comando: {cmd}")
+        rc = env.Execute(cmd)
+        if rc != 0:
+            logger.error(f"Falha no merge com código de saída {rc}")
+            env.Exit(rc)
+
         try:
             size = out_bin.stat().st_size
-        except FileNotFoundError:
-            size = 0
-        print(f"[merge_bin] Success -> {out_bin} ({size} bytes)")
+        except OSError as e:
+            logger.error(f"Erro ao obter tamanho do arquivo final {out_bin}: {e}")
+            env.Exit(1)
+
+        logger.info(f"Merge bem-sucedido -> {out_bin} ({size} bytes)")
+
         if ota0_offset:
             if size < (ota0_offset + ota_size):
-                print("[Final bin] Valid bin to upload")
+                logger.info("Binário final válido para upload")
             else:
-                print(
-                    f"[Final bin] Error: bin size 0x{size:X} exceeds ota_0 offset 0x{(ota0_offset+ota_size):X}"
+                logger.error(
+                    f"Erro: tamanho do binário 0x{size:X} excede offset ota_0 0x{(ota0_offset+ota_size):X}"
                 )
                 env.Exit(1)
+
+    except Exception as e:
+        logger.error(f"Erro durante o merge: {e}")
+        env.Exit(1)
 
 # Automatically run after firmware.bin is generated
 senv.AddPostAction(str(app_bin), _merge_bins_callback)

@@ -50,7 +50,7 @@
 
 // Touch frequency - XPT2046 requires lower clock
 #ifndef SPI_TOUCH_FREQUENCY
-#define SPI_TOUCH_FREQUENCY 2500000
+#define SPI_TOUCH_FREQUENCY 1000000
 #endif
 
 // Use HSPI port for TFT (required on ESP32-S3 with multiple SPI devices)

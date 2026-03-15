@@ -61,12 +61,28 @@ static bool detectAnalogDevice(int pin, const char *name) {
   // - Connected (moving): range larger.
   // - Floating (if pullup fails): range large.
 
-  // We consider it NOT CONNECTED if it's pegged at the high rail (PULLUP).
-  bool detected = (avg < 3900 && avg > 100);
+  // Improved detection: check if avg is in joystick range (500-3500) and range
+  // is small
+  bool detected = (avg >= 500 && avg <= 3500 && range < 50);
 
-  Serial.printf(
-      "[GPIO] %s (pin %d): avg=%d, range=%d -> %s\n", name, pin, avg, range,
-      detected ? "DETECTED" : "NOT CONNECTED (sticking to high rail)");
+  Serial.printf("[GPIO] %s (pin %d): avg=%d, range=%d -> %s\n", name, pin, avg,
+                range,
+                detected ? "DETECTED (joystick connected)"
+                         : "NOT CONNECTED (check wiring or power)");
+
+  // Additional debug info
+  if (!detected) {
+    if (avg > 3900) {
+      Serial.printf("[GPIO]   -> Pin reading high (%d), likely disconnected or "
+                    "5V power issue\n",
+                    avg);
+    } else if (range >= 50) {
+      Serial.printf("[GPIO]   -> High variance (%d), pin may be floating\n",
+                    range);
+    } else {
+      Serial.printf("[GPIO]   -> Unexpected reading, check connections\n");
+    }
+  }
 
   return detected;
 }
@@ -279,22 +295,39 @@ void InputHandler(void) {
 #endif
 
   // ---- Joystick Analog Axes (only if detected at startup) ----
-  if (!joystickDetected)
+  if (!joystickDetected) {
+    // Log once per second if joystick not detected
+    static uint32_t last_log = 0;
+    if (millis() - last_log > 1000) {
+      Serial.println("[JOY] Joystick not detected, skipping analog reads");
+      last_log = millis();
+    }
     return; // Skip all analog reads if no joystick
+  }
 
 #ifdef JOY_X_PIN
   if (JOY_X_PIN >= 0) {
-    int x1 = analogRead(JOY_X_PIN);
-    delayMicroseconds(100);
-    int x2 = analogRead(JOY_X_PIN);
-    if (abs(x1 - x2) < 200) {
-      int x = (x1 + x2) / 2;
-      if (x < 1000) {
+    // Improved debounce: take 3 readings and use median
+    int readings[3];
+    for (int i = 0; i < 3; i++) {
+      readings[i] = analogRead(JOY_X_PIN);
+      delayMicroseconds(50);
+    }
+    // Simple median filter
+    int x = readings[1]; // Middle reading as approximation
+    // Check stability: max difference between readings
+    int max_diff =
+        max(abs(readings[0] - readings[1]), abs(readings[1] - readings[2]));
+    if (max_diff < 100) { // More lenient stability check
+      // Calibrated thresholds for KY-023
+      if (x < 1200) { // Left (was 1000, increased for stability)
         PrevPress = true;
         AnyKeyPress = true;
-      } else if (x > 3800) {
+        Serial.printf("[JOY] Left detected: X=%d\n", x);
+      } else if (x > 3600) { // Right (was 3800, decreased for stability)
         NextPress = true;
         AnyKeyPress = true;
+        Serial.printf("[JOY] Right detected: X=%d\n", x);
       }
     }
   }
@@ -302,19 +335,34 @@ void InputHandler(void) {
 
 #ifdef JOY_Y_PIN
   if (JOY_Y_PIN >= 0) {
-    int y1 = analogRead(JOY_Y_PIN);
-    delayMicroseconds(100);
-    int y2 = analogRead(JOY_Y_PIN);
-    if (abs(y1 - y2) < 200) {
-      int y = (y1 + y2) / 2;
-      if (y < 1000) {
+    // Improved debounce: take 3 readings and use median
+    int readings[3];
+    for (int i = 0; i < 3; i++) {
+      readings[i] = analogRead(JOY_Y_PIN);
+      delayMicroseconds(50);
+    }
+    // Simple median filter
+    int y = readings[1]; // Middle reading as approximation
+    // Check stability: max difference between readings
+    int max_diff =
+        max(abs(readings[0] - readings[1]), abs(readings[1] - readings[2]));
+    if (max_diff < 100) { // More lenient stability check
+      // Calibrated thresholds for KY-023
+      if (y < 1200) { // Up (was 1000, increased for stability)
         UpPress = true;
         AnyKeyPress = true;
-      } else if (y > 3800) {
+        Serial.printf("[JOY] Up detected: Y=%d\n", y);
+      } else if (y > 3600) { // Down (was 3800, decreased for stability)
         DownPress = true;
         AnyKeyPress = true;
+        Serial.printf("[JOY] Down detected: Y=%d\n", y);
       }
     }
   }
 #endif
 }
+
+// ===== Getter functions for joystick detection =====
+bool getJoystickDetected() { return joystickDetected; }
+
+bool getJoystickButtonDetected() { return joystickButtonDetected; }

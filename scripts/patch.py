@@ -1,20 +1,35 @@
 import hashlib
+import logging
 import requests # type: ignore
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     Import: Any = None
     env: Any = None
 
-
 import glob
 import gzip
 from os import makedirs, remove, rename
 from os.path import basename, dirname, exists, isfile, join
 
-try:
-    Import("env")  # type: ignore
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
+try:
+    env = Import("env")  # type: ignore
+except Exception:
+    env = None
+
+if env is None:
+    print("Warning: Could not import PlatformIO environment")
+    print("Warning: patch_onewire and prepare_www_files will be skipped.")
+else:
     FRAMEWORK_DIR = env.PioPlatform().get_package_dir("framework-arduinoespressif32-libs") # type: ignore
 
     if FRAMEWORK_DIR is not None:
@@ -33,11 +48,42 @@ try:
             if not isfile(original_file) and isfile(original_file + ".old"):
                 rename(original_file + ".old", original_file)
 
+            # Find objcopy from the toolchain
             objcopy = env.subst("$OBJCOPY")
-            env.Execute(
-                "%s --weaken-symbol=ieee80211_raw_frame_sanity_check %s %s"
-                % (objcopy, original_file, patched_file)
-            )
+            if not objcopy or not exists(objcopy):
+                # Try to find objcopy in the platform's toolchain
+                try:
+                    platform_dir = env.PioPlatform().get_package_dir("platform-espressif32")
+                    if platform_dir and exists(platform_dir):
+                        # Search for objcopy in toolchain directories (glob already imported)
+                        objcopy_paths = glob.glob(join(platform_dir, "toolchain-*", "bin", "objcopy.exe"))
+                        if objcopy_paths:
+                            # Prefer xtensa-esp-elf or riscv32-esp-elf toolchains
+                            for path in objcopy_paths:
+                                if "xtensa" in path or "riscv32" in path:
+                                    objcopy = path
+                                    break
+                            if not objcopy or not exists(objcopy):
+                                objcopy = objcopy_paths[0]
+                        else:
+                            # Fallback to hardcoded common location
+                            objcopy = r"C:\Users\leleb\.platformio\packages\toolchain-xtensa-esp-elf\xtensa-esp-elf\bin\objcopy.exe"
+                    else:
+                        objcopy = r"C:\Users\leleb\.platformio\packages\toolchain-xtensa-esp-elf\xtensa-esp-elf\bin\objcopy.exe"
+                except Exception:
+                    objcopy = r"C:\Users\leleb\.platformio\packages\toolchain-xtensa-esp-elf\xtensa-esp-elf\bin\objcopy.exe"
+
+            # Only execute if objcopy exists
+            if exists(objcopy):
+                try:
+                    env.Execute(
+                        "%s --weaken-symbol=ieee80211_raw_frame_sanity_check %s %s"
+                        % (objcopy, original_file, patched_file)
+                    )
+                except Exception as e:
+                    print(f"Warning: Failed to run objcopy: {e}")
+            else:
+                print(f"Warning: objcopy not found at {objcopy}. Skipping libnet80211 patch.")
 
             if isfile(patched_file):
                 if isfile("%s.old" % (original_file)):
@@ -55,8 +101,6 @@ try:
                 env.Execute(lambda *args, **kwargs: _touch(patchflag_path))
             else:
                 print("Patch: Failed to create patched file. Keeping original.")
-except Exception as e:
-    print(f"Warning: Patch script failed - {e}")
 
 
 def hash_file(file_path):
@@ -139,46 +183,49 @@ def minify_html(html):
 
 # gzip web files
 def prepare_www_files() -> None:
-    project_dir = env.get("PROJECT_DIR", "")  # type: ignore
-    if not project_dir:
-        print("Error: PROJECT_DIR not found in environment.")
+    try:
+        project_dir = env.get("PROJECT_DIR", "")  # type: ignore
+        if not project_dir:
+            logger.error("PROJECT_DIR não encontrado no ambiente.")
+            return
+
+        HEADER_FILE = join(str(project_dir), "include", "webFiles.h")
+        filetypes_to_gzip = ["html", "css", "js"]
+        data_src_dir = join(str(project_dir), "embedded_resources/web_interface")
+        checksum_file = join(data_src_dir, "checksum.sha256")
+        checksum = ""
+
+        if not exists(data_src_dir):
+            logger.error(f'Diretório fonte "{data_src_dir}" não existe!')
+            return
+
+        if exists(checksum_file):
+            checksum = load_checksum_file(checksum_file)
+
+        files_to_gzip = []
+        for extension in filetypes_to_gzip:
+            files_to_gzip.extend(glob.glob(join(data_src_dir, "*." + extension)))
+
+        if not files_to_gzip:
+            logger.warning("Nenhum arquivo encontrado para processar.")
+            return
+
+        files_checksum = hash_files(files_to_gzip)
+        if files_checksum == checksum:
+            logger.info("[GZIP & EMBED INTO HEADER] - Nada para processar.")
+            return
+
+        logger.info(f"[GZIP & EMBED INTO HEADER] - Processando {len(files_to_gzip)} arquivos.")
+
+        makedirs(dirname(HEADER_FILE), exist_ok=True)
+
+    except Exception as e:
+        logger.error(f"Erro na preparação de arquivos web: {e}")
         return
 
-    HEADER_FILE = join(str(project_dir), "include", "webFiles.h")
-    filetypes_to_gzip = ["html", "css", "js"]
-    data_src_dir = join(str(project_dir), "embedded_resources/web_interface")
-    checksum_file = join(data_src_dir, "checksum.sha256")
-    checksum = ""
-
-    if not exists(data_src_dir):
-        print(f'Error: Source directory "{data_src_dir}" does not exist!')
-        return
-
-    if exists(checksum_file):
-        checksum = load_checksum_file(checksum_file)
-
-    files_to_gzip = []
-    for extension in filetypes_to_gzip:
-        files_to_gzip.extend(glob.glob(join(data_src_dir, "*." + extension)))
-
-    files_checksum = hash_files(files_to_gzip)
-    if files_checksum == checksum:
-        print("[GZIP & EMBED INTO HEADER] - Nothing to process.")
-        return
-
-    print(f"[GZIP & EMBED INTO HEADER] - Processing {len(files_to_gzip)} files.")
-
-    makedirs(dirname(HEADER_FILE), exist_ok=True)
-
-    with open(HEADER_FILE, "w") as header:
-        header.write(
-            "#ifndef WEB_FILES_H\n#define WEB_FILES_H\n\n#include <Arduino.h>\n\n"
-        )
-        header.write(
-            "// THIS FILE IS AUTOGENERATED DO NOT MODIFY IT. MODIFY FILES IN /embedded_resources/web_interface\n\n"
-        )
-
-        for file in files_to_gzip:
+    def process_file(file):
+        """Processa um arquivo individual: minifica e comprime."""
+        try:
             gz_file = file + ".gz"
             with open(file, "rb") as src, gzip.open(gz_file, "wb") as dst:
                 ext = basename(file).rsplit(".", 1)[-1].lower()
@@ -189,41 +236,61 @@ def prepare_www_files() -> None:
                 elif ext == 'js':
                     minified = minify_js(src)
                 else:
-                    raise ValueError(f"Unsupported file type: {ext}")
-
-                # # Output minified file
-                # min_file = file + ".min"
-                # with open(min_file, "wb") as minf:
-                #     minf.write(minified)
+                    raise ValueError(f"Tipo de arquivo não suportado: {ext}")
 
                 dst.write(minified)
 
             with open(gz_file, "rb") as gz:
-                compressed_data: bytes = getattr(gz, "read")() # explicit type hinting
-                var_name = basename(file).replace(".", "_")
+                compressed_data = gz.read()
 
-                header.write(f"const uint8_t {var_name}[] PROGMEM = {{\n")
+            remove(gz_file)  # Limpa arquivo temporário gzip
 
-                # Write hex values, inserting a newline every 15 bytes
-                for i in range(0, len(compressed_data), 15):
-                    chunk = [compressed_data[j] for j in range(i, min(i + 15, len(compressed_data)))]
-                    hex_chunk = ", ".join(
-                        f"0x{byte:02X}" for byte in chunk
-                    )
-                    header.write(f"  {hex_chunk},\n")
+            var_name = basename(file).replace(".", "_")
+            return var_name, compressed_data
 
-                header.write("};\n\n")
-                header.write(
-                    f"const uint32_t {var_name}_size = {len(compressed_data)};\n\n"
+        except Exception as e:
+            logger.error(f"Erro ao processar {file}: {e}")
+            return None
+
+    # Processa arquivos em paralelo
+    processed_files = []
+    with ThreadPoolExecutor(max_workers=min(len(files_to_gzip), 4)) as executor:
+        future_to_file = {executor.submit(process_file, file): file for file in files_to_gzip}
+        for future in as_completed(future_to_file):
+            result = future.result()
+            if result:
+                processed_files.append(result)
+
+    # Escreve o header
+    with open(HEADER_FILE, "w") as header:
+        header.write(
+            "#ifndef WEB_FILES_H\n#define WEB_FILES_H\n\n#include <Arduino.h>\n\n"
+        )
+        header.write(
+            "// THIS FILE IS AUTOGENERATED DO NOT MODIFY IT. MODIFY FILES IN /embedded_resources/web_interface\n\n"
+        )
+
+        for var_name, compressed_data in processed_files:
+            header.write(f"const uint8_t {var_name}[] PROGMEM = {{\n")
+
+            # Write hex values, inserting a newline every 15 bytes
+            for i in range(0, len(compressed_data), 15):
+                chunk = compressed_data[i:i + 15]
+                hex_chunk = ", ".join(
+                    f"0x{byte:02X}" for byte in chunk
                 )
+                header.write(f"  {hex_chunk},\n")
 
-            remove(gz_file)  # Clean up temporary gzip file
+            header.write("};\n\n")
+            header.write(
+                f"const uint32_t {var_name}_size = {len(compressed_data)};\n\n"
+            )
 
         header.write("#endif // WEB_FILES_H\n")
 
     save_checksum_file(files_checksum, checksum_file)
 
-    print(f"[DONE] Gzipped files embedded into {HEADER_FILE}")
+    logger.info(f"Arquivos gzipped incorporados em {HEADER_FILE}")
 
 
 def patch_onewire() -> None:
@@ -257,12 +324,13 @@ def patch_onewire() -> None:
         print("[PATCH] OneWire.cpp already patched or not applicable.")
 
 
-try:
-    patch_onewire()
-except Exception as e:
-    print(f"Warning: patch_onewire failed: {e}")
+if env is not None:
+    try:
+        patch_onewire()
+    except Exception as e:
+        print(f"Warning: patch_onewire failed: {e}")
 
-try:
-    prepare_www_files()
-except Exception as e:
-    print(f"Warning: prepare_www_files failed: {e}")
+    try:
+        prepare_www_files()
+    except Exception as e:
+        print(f"Warning: prepare_www_files failed: {e}")

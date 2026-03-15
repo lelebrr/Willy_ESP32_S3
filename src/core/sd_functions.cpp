@@ -1,3 +1,4 @@
+#include <SPI.h>
 #include <algorithm>
 #include <globals.h>
 #include <stdio.h>
@@ -16,8 +17,10 @@
 #include "mykeyboard.h"
 #include "passwords.h"
 #include "scrollableTextArea.h"
+#include "sd_functions.h"
 #include <MD5Builder.h>
 #include <algorithm> // for std::sort
+#include <driver/gpio.h>
 #include <esp_rom_crc.h>
 
 // SPIClass sdcardSPI;
@@ -44,8 +47,11 @@ bool sdCardPresent() {
                 present ? "PRESENTE" : "AUSENTE");
   return present;
 #else
-  // Sem pino de detecção, assumimos presente se montado
-  return sdcardMounted;
+  // Sem pino de detecção, assumimos presente para tentar montar
+  Serial.printf(
+      "[SD] Sem pino de detecção CD, SDCARD_CD_PIN=%d, tentando montar\n",
+      SDCARD_CD_PIN);
+  return true;
 #endif
 }
 
@@ -77,6 +83,8 @@ bool tryRecoverSdCard() {
 
   // 3. Tenta montar novamente com frequência baixa
   Serial.println("[SD] Tentando montar com 1MHz...");
+  delay(100);
+  SPI.endTransaction(); // Ensure SPI is free
   if (SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs,
                willyConfigPins.SDCARD_bus.mosi == (gpio_num_t)TFT_MOSI
                    ? tft.getSPIinstance()
@@ -267,6 +275,7 @@ void recoverSdCardInteractive() {
 ** Description:   Start SD Card
 ***************************************************************************************/
 bool setupSdCard() {
+  Serial.println("[DEBUG] setupSdCard() iniciado");
 #ifndef USE_SD_MMC
   // Verifica se os pinos do SD estão configurados
   if (willyConfigPins.SDCARD_bus.sck < 0 ||
@@ -307,6 +316,7 @@ bool setupSdCard() {
     Serial.printf("[SD] CC1101 CS pin %d set to HIGH\n",
                   (int)willyConfigPins.CC1101_bus.cs);
   }
+  delay(100); // Delay to ensure CS pins are stable
   if (willyConfigPins.NRF24_bus.cs >= 0) {
     pinMode(willyConfigPins.NRF24_bus.cs, OUTPUT);
     digitalWrite(willyConfigPins.NRF24_bus.cs, HIGH);
@@ -315,6 +325,10 @@ bool setupSdCard() {
   }
 #if !defined(LITE_VERSION)
   if (willyConfigPins.W5500_bus.cs >= 0) {
+    // Corrigir pin inválido no ESP32-S3 (GPIO23 não existe)
+    if (willyConfigPins.W5500_bus.cs == 23) {
+      willyConfigPins.W5500_bus.cs = (gpio_num_t)33;
+    }
     pinMode(willyConfigPins.W5500_bus.cs, OUTPUT);
     digitalWrite(willyConfigPins.W5500_bus.cs, HIGH);
     Serial.printf("[SD] W5500 CS pin %d set to HIGH\n",
@@ -327,6 +341,14 @@ bool setupSdCard() {
   if (sdcardMounted) {
     Serial.println("[SD] SD já montado, retornando true");
     return true;
+  }
+
+  // Verifica se cartão está presente antes de tentar montar
+  if (!sdCardPresent()) {
+    Serial.println(
+        "[SD] Cartão SD não detectado fisicamente, pulando montagem");
+    sdcardMounted = false;
+    return false;
   }
 
   Serial.println("[SD] Tentando montar cartão SD...");
@@ -343,6 +365,7 @@ bool setupSdCard() {
     Serial.println("[SD] SD.begin SDMMC falhou");
     sdcardMounted = false;
     result = false;
+    SPI.endTransaction();
   } else {
     result = true;
   }
@@ -354,19 +377,43 @@ bool setupSdCard() {
         willyConfigPins.SDCARD_bus.mosi != GPIO_NUM_NC) {
 #if TFT_MOSI > 0
       Serial.println("[SD] Touch device: SD shares TFT SPI bus");
-      Serial.println("[SD] Tentando montar com SPI da TFT...");
-      if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance())) {
-        Serial.println("[SD] SD.begin (TFT SPI) falhou, tentando 4MHz...");
-        if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance(),
-                      4000000)) {
-          Serial.println("[SD] SD.begin (TFT SPI 4MHz) falhou");
-          result = false;
+      Serial.println("[SD] Tentando montar com SPI dedicado (mesmos pinos)...");
+      Serial.println(
+          "[SD] DIAGNÓSTICO: SPI compartilhado pode causar conflitos");
+      delay(100); // Delay to allow SPI bus to stabilize
+      // Use dedicated SPI instance for better control
+      sdcardSPI.begin((int8_t)willyConfigPins.SDCARD_bus.sck,
+                      (int8_t)willyConfigPins.SDCARD_bus.miso,
+                      (int8_t)willyConfigPins.SDCARD_bus.mosi,
+                      (int8_t)willyConfigPins.SDCARD_bus.cs);
+      delay(10);
+      SPI.endTransaction(); // Ensure SPI is free
+      if (!SD.begin(willyConfigPins.SDCARD_bus.cs, sdcardSPI)) {
+        Serial.println("[SD] SD.begin (sdcardSPI) falhou, tentando 4MHz...");
+        delay(100);
+        SPI.endTransaction();
+        if (!SD.begin(willyConfigPins.SDCARD_bus.cs, sdcardSPI, 4000000)) {
+          Serial.println(
+              "[SD] SD.begin (sdcardSPI 4MHz) falhou, tentando 1MHz...");
+          delay(100);
+          SPI.endTransaction();
+          if (!SD.begin(willyConfigPins.SDCARD_bus.cs, sdcardSPI, 1000000)) {
+            Serial.println("[SD] SD.begin (TFT SPI 1MHz) falhou");
+            Serial.println("[SD] DIAGNÓSTICO: Possível cartão não inserido ou "
+                           "wiring ruim");
+            SPI.endTransaction();
+            result = false;
+          } else {
+            Serial.println("[SD] SD montado com sucesso a 1MHz via sdcardSPI");
+            result = true;
+          }
         } else {
-          Serial.println("[SD] SD montado com sucesso a 4MHz via TFT SPI");
+          Serial.println("[SD] SD montado com sucesso a 4MHz via sdcardSPI");
           result = true;
         }
       } else {
-        Serial.println("[SD] SD montado com sucesso via TFT SPI (freq padrão)");
+        Serial.println(
+            "[SD] SD montado com sucesso via sdcardSPI (freq padrão)");
         result = true;
       }
 #else
@@ -378,10 +425,13 @@ bool setupSdCard() {
       Serial.println("[SD] SD em barramento próprio, usando SPI padrão");
       if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs)) {
         Serial.println("[SD] SD.begin padrão falhou, tentando 4MHz...");
+        SPI.endTransaction();
         if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, SPI, 4000000)) {
           Serial.println("[SD] SD.begin 4MHz falhou, tentando 1MHz...");
+          SPI.endTransaction();
           if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, SPI, 1000000)) {
             Serial.println("[SD] SD.begin 1MHz falhou");
+            SPI.endTransaction();
             result = false;
           } else {
             Serial.println("[SD] SD montado com sucesso a 1MHz");
@@ -400,23 +450,50 @@ bool setupSdCard() {
   // SDCard in the same Bus as TFT, in this case we call the SPI TFT Instance
   else if (willyConfigPins.SDCARD_bus.mosi == (gpio_num_t)TFT_MOSI &&
            willyConfigPins.SDCARD_bus.mosi != GPIO_NUM_NC) {
-    Serial.println(
-        "[SD] SDCard no mesmo barramento que TFT, usando instância TFT SPI");
+    Serial.println("[SD] SDCard no mesmo barramento que TFT, tentando SPI "
+                   "dedicado primeiro");
 #if TFT_MOSI > 0 // condition for Headless and 8bit displays (no SPI bus)
-    if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance())) {
-      Serial.println("[SD] SD.begin (TFT SPI) falhou, tentando 4MHz...");
-      if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance(),
-                    4000000)) {
-        Serial.println("[SD] SD.begin (TFT SPI 4MHz) falhou");
-        result = false;
+    // CORREÇÃO TEMPORÁRIA: Tentar SPI dedicado para evitar anomalia de MISO
+    Serial.println("[SD] Tentando SPI dedicado para SD...");
+    sdcardSPI.begin((int8_t)willyConfigPins.SDCARD_bus.sck,
+                    (int8_t)willyConfigPins.SDCARD_bus.miso,
+                    (int8_t)willyConfigPins.SDCARD_bus.mosi,
+                    (int8_t)willyConfigPins.SDCARD_bus.cs);
+    delay(10);
+    if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, sdcardSPI)) {
+      Serial.println("[SD] SPI dedicado falhou, tentando TFT SPI...");
+      if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance())) {
+        Serial.println("[SD] SD.begin (TFT SPI) falhou, tentando 4MHz...");
         Serial.println(
-            "[SD] SDCard no mesmo barramento que TFT, mas falhou ao montar");
+            "[SD] DIAGNÓSTICO: Frequência padrão muito alta, tentando reduzir");
+        delay(100);
+        SPI.endTransaction();
+        if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance(),
+                      4000000)) {
+          Serial.println(
+              "[SD] SD.begin (TFT SPI 4MHz) falhou, tentando 1MHz...");
+          delay(100);
+          SPI.endTransaction();
+          if (!SD.begin(willyConfigPins.SDCARD_bus.cs, tft.getSPIinstance(),
+                        1000000)) {
+            Serial.println("[SD] SD.begin (TFT SPI 1MHz) falhou");
+            result = false;
+            Serial.println("[SD] SDCard no mesmo barramento que TFT, mas "
+                           "falhou ao montar");
+          } else {
+            Serial.println("[SD] SD montado com sucesso a 1MHz via TFT SPI");
+            result = true;
+          }
+        } else {
+          Serial.println("[SD] SD montado com sucesso a 4MHz via TFT SPI");
+          result = true;
+        }
       } else {
-        Serial.println("[SD] SD montado com sucesso a 4MHz via TFT SPI");
+        Serial.println("[SD] SD montado com sucesso via TFT SPI");
         result = true;
       }
     } else {
-      Serial.println("[SD] SD montado com sucesso via TFT SPI");
+      Serial.println("[SD] SD montado com sucesso via SPI dedicado!");
       result = true;
     }
 #else
@@ -442,10 +519,14 @@ bool setupSdCard() {
     Serial.println("[SD] SPI iniciado, tentando SD.begin...");
     if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, sdcardSPI)) {
       Serial.println("[SD] SD.begin (sdcardSPI) falhou, tentando 4MHz...");
+      delay(100);
+      SPI.endTransaction();
       if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, sdcardSPI,
                     4000000)) {
         Serial.println(
             "[SD] SD.begin (sdcardSPI 4MHz) falhou, tentando 1MHz...");
+        delay(100);
+        SPI.endTransaction();
         if (!SD.begin((int8_t)willyConfigPins.SDCARD_bus.cs, sdcardSPI,
                       1000000)) {
           Serial.println("[SD] SD.begin (sdcardSPI 1MHz) falhou - cartão não "
@@ -883,6 +964,7 @@ String readSmallFile(fs::FS &fs, String filepath) {
     fileContent = String(buffer);
     free(buffer);
   } else {
+    Serial.println("[SD] Falha ao alocar buffer para leitura de arquivo");
     // Fallback to slow readString() if malloc failed
     fileContent = file.readString();
   }
@@ -1402,7 +1484,8 @@ String loopSD(fs::FS &fs, bool filePicker, String allowed_ext,
                                        key_input(fs, filepath, hid_usb);
                                        delete hid_usb;
                                        hid_usb = nullptr;
-                                       // TODO: reinit serial port
+                                       Serial.begin(
+                                           115200); // Reinit serial port
                                      }});
             options.push_back(Option{"USB HID Digitar", [&]() {
                                        String t = readSmallFile(fs, filepath);

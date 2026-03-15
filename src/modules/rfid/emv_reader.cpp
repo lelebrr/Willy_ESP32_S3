@@ -32,6 +32,7 @@ void EMVReader::setup() {
   if (_cancelled)
     return;
   display_emv(card);
+  card.free_resources();
 
   free(card.pan);
   free(card.validfrom);
@@ -41,9 +42,26 @@ void EMVReader::setup() {
 
 void EMVReader::parse_pan(std::vector<uint8_t> *afl_content, EMVCard *card) {
   auto pos = find(afl_content->begin(), afl_content->end(), 0x5A);
+  if (pos == afl_content->end()) {
+    Serial.println("[EMVReader] PAN tag não encontrada");
+    return;
+  }
   uint8_t len = *(pos + 1);
+  if (len == 0 || len > 20) { // Validação básica
+    Serial.println("[EMVReader] Tamanho PAN inválido");
+    return;
+  }
   uint8_t pan_begin = (uint8_t)distance(afl_content->begin(), pos) + 2;
+  if (pan_begin + len > afl_content->size()) {
+    Serial.println("[EMVReader] Dados PAN insuficientes");
+    return;
+  }
   card->pan = (uint8_t *)malloc(len);
+  if (!card->pan) {
+    Serial.println("[EMVReader] Falha ao alocar memória para PAN");
+    return;
+  }
+  Serial.printf("[EMVReader] Alocado PAN de tamanho %d\n", len);
   memcpy(card->pan, &afl_content->data()[pan_begin], len);
   card->pan_len = len;
 }

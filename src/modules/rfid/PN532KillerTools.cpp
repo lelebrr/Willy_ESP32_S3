@@ -116,7 +116,7 @@ void PN532KillerTools::playDeviceDetectedSound() {
 #elif defined(HAS_NS4168_SPKR)
   // Try to play a detection sound file, fallback to startup sound if not
   // available
-  if (SD.exists("/device_detected.wav")) {
+  if (sdcardMounted && SD.exists("/device_detected.wav")) {
     playAudioFile(&SD, "/device_detected.wav");
   } else if (LittleFS.exists("/device_detected.wav")) {
     playAudioFile(&LittleFS, "/device_detected.wav");
@@ -126,7 +126,7 @@ void PN532KillerTools::playDeviceDetectedSound() {
       playAudioFile(
           willyConfig.themeFS(),
           willyConfig.getThemeItemImg(willyConfig.theme.paths.boot_sound));
-    } else if (SD.exists("/boot.wav")) {
+    } else if (sdcardMounted && SD.exists("/boot.wav")) {
       playAudioFile(&SD, "/boot.wav");
     } else if (LittleFS.exists("/boot.wav")) {
       playAudioFile(&LittleFS, "/boot.wav");
@@ -148,7 +148,7 @@ void PN532KillerTools::playUidFoundSound() {
   _tone(12000, 300);
 #elif defined(HAS_NS4168_SPKR)
   // Try to play a UID found sound file, fallback to tone simulation
-  if (SD.exists("/uid_found.wav")) {
+  if (sdcardMounted && SD.exists("/uid_found.wav")) {
     playAudioFile(&SD, "/uid_found.wav");
   } else if (LittleFS.exists("/uid_found.wav")) {
     playAudioFile(&LittleFS, "/uid_found.wav");

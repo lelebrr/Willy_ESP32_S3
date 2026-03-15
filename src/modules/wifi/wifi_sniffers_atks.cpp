@@ -13,7 +13,6 @@
 #include <globals.h>
 #include <vector>
 
-
 static bool attack_running = false;
 
 // Deauth frame default
@@ -393,9 +392,10 @@ void pingScan() {
   for (int i = 1; i < 255 && attack_running; i++) {
     IPAddress host(gateway[0], gateway[1], gateway[2], i);
 
-    // Ping simplificado (ICMP)
-    // if (WiFi.ping(host, 1) > 0) { // Not supported in all ESP32 cores
-    if (true) { // Placeholder or use alternative ping
+    // Ping alternativo usando TCP connect na porta 80
+    WiFiClient client;
+    if (client.connect(host, 80, 1000)) { // Timeout de 1 segundo
+      client.stop();
       alive_hosts.push_back(host.toString());
     }
 

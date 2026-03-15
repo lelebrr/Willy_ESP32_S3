@@ -422,8 +422,7 @@ void WillyWebServer::setBatteryLevel(int level) {
 void WillyWebServer::updateDeviceState() {
   deviceState.uptime = millis();
   deviceState.wifiSignal = WiFi.RSSI();
-  deviceState.batteryLevel =
-      85; // Placeholder - implement actual battery reading
+  deviceState.batteryLevel = readBatteryLevel();
 }
 
 void WillyWebServer::addLog(const String &message) {
@@ -463,3 +462,14 @@ int WillyWebServer::getBatteryLevel() { return deviceState.batteryLevel; }
 unsigned long WillyWebServer::getUptime() { return deviceState.uptime; }
 
 std::vector<String> WillyWebServer::getLogs() { return deviceState.logs; }
+
+int WillyWebServer::readBatteryLevel() {
+  // Read ADC value from battery pin
+  int adcValue = analogRead(BATTERY_PIN);
+  // Convert to voltage (assuming 3.3V reference and voltage divider)
+  float voltage = (adcValue / 4095.0) * 3.3 * 2; // Assuming voltage divider 1:1
+  // Convert to percentage (assuming 3.7V full, 3.0V empty)
+  int percentage = map(voltage * 100, 300, 370, 0, 100);
+  percentage = constrain(percentage, 0, 100);
+  return percentage;
+}

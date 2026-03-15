@@ -1,26 +1,42 @@
 Import("env")
+import logging
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # This script separates C and C++ flags to avoid warnings like:
 # "cc1.exe: warning: command-line option '-Wno-volatile' is valid for C++/ObjC++ but not for C"
-print("\n[FIX] Separating and refining compiler flags for a clean build...")
+logger.info("Separando e refinando flags do compilador para build limpo...")
 
 def fix_flags():
-    # Flags to separate
-    cpp_only = [
-        "-Wno-volatile",
-        "-Wno-deprecated-enum-enum-conversion"
-    ]
-    c_only = [
-        "-Wno-discarded-qualifiers"
-    ]
+    try:
+        logger.info("Aplicando correções de flags do compilador...")
 
-    # Common flags to suppress library noise and 3rd party issues
-    # Added -Wno-stringop-overflow for helix-aac and other libraries
-    common_suppression = [
-        "-Wno-deprecated-declarations",
-        "-Wno-cpp",
-        "-Wno-stringop-overflow"
-    ]
+        # Flags to separate
+        cpp_only = [
+            "-Wno-volatile",
+            "-Wno-deprecated-enum-enum-conversion"
+        ]
+        c_only = [
+            "-Wno-discarded-qualifiers"
+        ]
+
+        # Common flags to suppress library noise and 3rd party issues
+        # Added -Wno-stringop-overflow for helix-aac and other libraries
+        common_suppression = [
+            "-Wno-deprecated-declarations",
+            "-Wno-cpp",
+            "-Wno-stringop-overflow"
+        ]
+
+    except Exception as e:
+        logger.error(f"Erro na configuração inicial de flags: {e}")
+        return
 
     # Helper to remove flag from an environment variable list or string
     def remove_flag(env_var, flag):

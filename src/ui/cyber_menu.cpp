@@ -1,5 +1,8 @@
 #include "cyber_menu.h"
 #include "../core/config.h"
+
+// Forward declaration for battery function
+extern int getBattery();
 #include "../core/display.h"
 #include "../core/main_menu.h"
 #include "../core/utils.h"
@@ -294,9 +297,12 @@ static void update_bar_timer_cb(lv_timer_t *timer) {
     lv_label_set_text(data->time_label, "--:--");
   }
 
-  // Battery level handling - if Willy battery API is available
-  // For now we leave it as visual placeholder, or implement basic reading
-  // later.
+  // Update Battery
+  if (!lv_obj_is_valid(data->battery_label))
+    return;
+
+  int battery_level = getBattery();
+  lv_label_set_text_fmt(data->battery_label, "%d%%", battery_level);
 }
 
 void setup_cyber_menu(lv_obj_t *menu) {

@@ -52,10 +52,15 @@
 - [BadUSB](#-badusb)
 - [GPS](#-gps)
 
-### 📖 Guias Avançados
+### 🏗️ Arquitetura e Otimizações
 
+- [Diagramas de Arquitetura](architecture_diagrams.md)
+- [📊 Otimizações Completas](otimizacoes_completas.md)
 - [📖 Bíblia do Hardware (Guia Mestre de Fiação)](willy_hardware_bible.md)
 - [Pinout Mestre ESP32-S3](pinout_master_s3_n8r2.md)
+
+### 📖 Guias Avançados
+
 - [Configuração](settings_guide.md)
 - [Estrutura do Cartão SD](sd_card_structure.md)
 - [Desenvolvimento](#-desenvolvimento)

@@ -2,7 +2,7 @@
 #define LIB_HAL_TFTESPI_H
 #include <pins_arduino.h>
 #ifdef USE_TFT_ESPI
-#include <TFT_eSPI.h>
+#include "../../TFT_eSPI/TFT_eSPI.h"
 
 #include "tft_defines.h"
 class tft_display : public TFT_eSPI {
@@ -56,7 +56,6 @@ public:
   using TFT_eSPI::setTextFont;
   using TFT_eSPI::setTextSize;
   using TFT_eSPI::setTextWrap;
-  using TFT_eSPI::sleep;
   using TFT_eSPI::textWidth;
   using TFT_eSPI::width;
   using TFT_eSPI::write;

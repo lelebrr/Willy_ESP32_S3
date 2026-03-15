@@ -1,6 +1,7 @@
 #ifndef __DISPLAY_LOGER
 #define __DISPLAY_LOGER
 
+#include <Arduino.h>
 #include <stdint.h>
 
 #ifdef HAS_SCREEN
@@ -15,7 +16,7 @@
 #define WILLY_TFT_DRIVER SerialDisplayClass
 #endif
 
-enum tftFuncs : uint8_t {
+enum tftFuncs {
   FILLSCREEN,
   DRAWRECT,
   FILLRECT,
@@ -85,17 +86,21 @@ private:
 
 public:
   tft_logger(int16_t w = TFT_WIDTH, int16_t h = TFT_HEIGHT);
-  virtual ~tft_logger();
+  ~tft_logger();
   void setLogging(bool _log = true);
 
+  using WILLY_TFT_DRIVER::endWrite;
   using WILLY_TFT_DRIVER::getCursorX;
   using WILLY_TFT_DRIVER::getCursorY;
   using WILLY_TFT_DRIVER::printf;
+  using WILLY_TFT_DRIVER::pushColors;
+  using WILLY_TFT_DRIVER::setAddrWindow;
   using WILLY_TFT_DRIVER::setCursor;
   using WILLY_TFT_DRIVER::setTextColor;
   using WILLY_TFT_DRIVER::setTextFont;
   using WILLY_TFT_DRIVER::setTextSize;
   using WILLY_TFT_DRIVER::setTextWrap;
+  using WILLY_TFT_DRIVER::startWrite;
 
   bool inline getLogging(void) { return logging; };
   void inline setSleepMode(bool mode) { isSleeping = mode; }
@@ -103,16 +108,16 @@ public:
   void getBinLog(uint8_t *outBuffer, size_t &outSize);
   bool removeLogEntriesInsideRect(int rx, int ry, int rw, int rh);
   void removeOverlappedImages(int x, int y, int center, int ms);
-  void fillScreen(int32_t color);
+  void fillScreen(uint32_t color);
   void startAsyncSerial();
   void stopAsyncSerial();
   void getTftInfo();
   void imageToBin(uint8_t fs, String file, int x, int y, bool center, int Ms);
 
   // Drawing methods (overriding base class)
-  void drawLine(int32_t x, int32_t y, int32_t x1, int32_t y1, int32_t color);
-  void drawRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t color);
-  void fillRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t color);
+  void drawLine(int32_t x, int32_t y, int32_t x1, int32_t y1, uint32_t color);
+  void drawRect(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t color);
+  void fillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint32_t color);
   void drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r,
                      int32_t color);
   void fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r,

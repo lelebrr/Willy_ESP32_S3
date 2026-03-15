@@ -34,14 +34,16 @@ PN532::PN532(CONNECTION_TYPE connection_type) {
 }
 
 bool PN532::begin() {
-  Serial.println("[PN532] begin() called");
-  Serial.printf("[PN532] Connection type: %s\n",
-                _connection_type == CONNECTION_TYPE::I2C       ? "I2C"
-                : _connection_type == CONNECTION_TYPE::I2C_SPI ? "I2C_SPI"
-                                                               : "SPI");
-  Serial.printf("[PN532] I2C bus: SDA=%d, SCL=%d\n",
-                (int)willyConfigPins.i2c_bus.sda,
-                (int)willyConfigPins.i2c_bus.scl);
+  AdvancedLogger::log(LogModule::RFID, LogLevel::INFO, "PN532 begin() called");
+  String connType = _connection_type == CONNECTION_TYPE::I2C       ? "I2C"
+                    : _connection_type == CONNECTION_TYPE::I2C_SPI ? "I2C_SPI"
+                                                                   : "SPI";
+  AdvancedLogger::log(LogModule::RFID, LogLevel::DEBUG,
+                      "PN532 Connection type: " + connType);
+  AdvancedLogger::log(
+      LogModule::RFID, LogLevel::DEBUG,
+      "PN532 I2C bus: SDA=" + String(willyConfigPins.i2c_bus.sda) +
+          ", SCL=" + String(willyConfigPins.i2c_bus.scl));
 
 #ifdef M5STICK
   if (_connection_type == CONNECTION_TYPE::I2C_SPI) {
@@ -130,6 +132,11 @@ int PN532::clone() {
     return TAG_NOT_PRESENT;
   if (!nfc.readDetectedPassiveTargetID())
     return FAILURE;
+
+  // Check if target supports UID writable (MIFARE Classic)
+  if (nfc.targetUid.sak != 0x08 && nfc.targetUid.sak != 0x18 &&
+      nfc.targetUid.sak != 0x88 && nfc.targetUid.sak != 0x28)
+    return NOT_IMPLEMENTED;
 
   if (nfc.targetUid.sak != uid.sak)
     return TAG_NOT_MATCH;

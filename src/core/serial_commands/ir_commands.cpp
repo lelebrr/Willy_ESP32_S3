@@ -145,20 +145,8 @@ uint32_t irTxBufferCallback(cmd *c) {
   if (!txt)
     return false;
 
-  // Write buffer to temporary file for compatibility with txIrFile
-  String tmpfilepath = "/tmpramfile";
-  File f = PSRamFS.open(tmpfilepath, FILE_WRITE);
-  if (!f) {
-    free(txt);
-    return false;
-  }
-
-  f.write((const uint8_t *)txt, strlen(txt));
-  f.close();
+  bool r = txIrData(txt);
   free(txt);
-
-  bool r = txIrFile(&PSRamFS, tmpfilepath);
-  PSRamFS.remove(tmpfilepath);
 
   return r;
 #else

@@ -1,19 +1,19 @@
-var dialog = require('dialog');
-var wifi = require('wifi');
-var display = require('display');
-var keyboard = require('keyboard');
-var storage = require('storage');
+const dialog = require('dialog');
+const wifi = require('wifi');
+const display = require('display');
+const keyboard = require('keyboard');
+const storage = require('storage');
 
-var tftWidth = display.width();
-var tftHeight = display.height();
+const tftWidth = display.width();
+const tftHeight = display.height();
 
-var ledPins = [2, 4, 5, 12, 14, 16, 17, 18];
-var ledStates = [false, false, false, false, false, false, false, false];
-var ledBrightness = [255, 255, 255, 255, 255, 255, 255, 255];
-var ledPatterns = [];
-var currentPattern = null;
-var isRunning = false;
-var patternIndex = 0;
+const ledPins = [2, 4, 5, 12, 14, 16, 17, 18];
+let ledStates = [false, false, false, false, false, false, false, false];
+let ledBrightness = [255, 255, 255, 255, 255, 255, 255, 255];
+let ledPatterns = [];
+let currentPattern = null;
+let isRunning = false;
+let patternIndex = 0;
 
 function drawLEDController(title) {
     display.fill(0);
@@ -39,11 +39,11 @@ function drawLEDStates() {
     display.setTextSize(1);
     display.setTextAlign('left', 'top');
 
-    var y = 40;
-    for (var i = 0; i < ledPins.length; i++) {
-        var pin = ledPins[i];
-        var state = ledStates[i] ? 'ON' : 'OFF';
-        var brightness = ledBrightness[i];
+    let y = 40;
+    for (let i = 0; i < ledPins.length; i++) {
+        const pin = ledPins[i];
+        const state = ledStates[i] ? 'ON' : 'OFF';
+        const brightness = ledBrightness[i];
 
         display.drawText('LED ' + pin + ': ' + state, 10, y);
         display.drawText('Brightness: ' + brightness, 10, y + 10);
@@ -197,27 +197,12 @@ function main() {
         }
 
         if (keyboard.getSelPress()) {
-            var choices = ['Toggle LED 0', 'Toggle LED 1', 'Toggle LED 2', 'Toggle LED 3', 'Toggle LED 4', 'Toggle LED 5', 'Toggle LED 6', 'Toggle LED 7', 'All LEDs On', 'All LEDs Off', 'Create Pattern', 'Select Pattern', 'Add Step', 'Run Pattern', 'Stop Pattern', 'Quit'];
-            var choice = dialog.choice(choices);
+            const choices = ['Toggle LED 0', 'Toggle LED 1', 'Toggle LED 2', 'Toggle LED 3', 'Toggle LED 4', 'Toggle LED 5', 'Toggle LED 6', 'Toggle LED 7', 'All LEDs On', 'All LEDs Off', 'Create Pattern', 'Select Pattern', 'Add Step', 'Run Pattern', 'Stop Pattern', 'Quit'];
+            const choice = dialog.choice(choices);
+            const choiceIndex = choices.indexOf(choice);
 
-            if (choice === 'Quit') {
-                running = false;
-            } else if (choice === 'Toggle LED 0') {
-                toggleLED(0);
-            } else if (choice === 'Toggle LED 1') {
-                toggleLED(1);
-            } else if (choice === 'Toggle LED 2') {
-                toggleLED(2);
-            } else if (choice === 'Toggle LED 3') {
-                toggleLED(3);
-            } else if (choice === 'Toggle LED 4') {
-                toggleLED(4);
-            } else if (choice === 'Toggle LED 5') {
-                toggleLED(5);
-            } else if (choice === 'Toggle LED 6') {
-                toggleLED(6);
-            } else if (choice === 'Toggle LED 7') {
-                toggleLED(7);
+            if (choiceIndex >= 0 && choiceIndex <= 7) {
+                toggleLED(choiceIndex);
             } else if (choice === 'All LEDs On') {
                 allLEDsOn();
             } else if (choice === 'All LEDs Off') {
@@ -225,9 +210,9 @@ function main() {
             } else if (choice === 'Create Pattern') {
                 createPattern();
             } else if (choice === 'Select Pattern') {
-                var patternIndex = parseInt(prompt('Enter pattern index:'));
-                if (!isNaN(patternIndex) && patternIndex >= 0 && patternIndex < ledPatterns.length) {
-                    currentPattern = ledPatterns[patternIndex];
+                const patternIdx = parseInt(prompt('Enter pattern index:'));
+                if (!isNaN(patternIdx) && patternIdx >= 0 && patternIdx < ledPatterns.length) {
+                    currentPattern = ledPatterns[patternIdx];
                 }
             } else if (choice === 'Add Step') {
                 addPatternStep();
@@ -235,6 +220,8 @@ function main() {
                 runPattern();
             } else if (choice === 'Stop Pattern') {
                 stopPattern();
+            } else if (choice === 'Quit') {
+                running = false;
             }
         }
 

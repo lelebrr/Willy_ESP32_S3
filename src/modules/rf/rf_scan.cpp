@@ -1,25 +1,61 @@
 #include "rf_scan.h"
+#include "core/SecurityUtils.h"
+#include "core/advanced_logger.h"
 #include "core/led_control.h"
 #include "core/sd_functions.h"
 #include "core/type_convertion.h"
+#include "record.h"
 #include "rf_send.h"
+#include "rf_utils.h"
 #include <globals.h>
 #include <sstream>
+
+// Constantes otimizadas para rf_scan
+static const char *TAG_RF_SCAN = "RFScan";
+constexpr uint32_t SCAN_TIMEOUT_MS = 30000;     // 30 segundos timeout
+constexpr uint32_t MAX_SIGNALS_PER_SCAN = 1000; // Limite de sinais por scan
+constexpr uint32_t RSSI_UPDATE_INTERVAL_MS =
+    100; // Atualização RSSI a cada 100ms
 
 RFScan::RFScan() { setup(); }
 
 RFScan::~RFScan() { deinitRfModule(); }
 
 void RFScan::setup() {
+  ADVANCED_LOGGER.log(LogLevel::INFO, TAG_RF_SCAN,
+                      "Iniciando configuração do scan RF");
+
+  // Validação de segurança: verificar acesso ao hardware RF
+  if (!SecurityUtils::validateHardwareAccess("RF_SCAN")) {
+    ADVANCED_LOGGER.log(LogLevel::ERROR, TAG_RF_SCAN,
+                        "Acesso negado ao hardware RF para scan");
+    displayError("Acesso RF negado");
+    return;
+  }
+
+  // Validação de frequência
+  if (!validateRfFrequency(willyConfigPins.rfFreq)) {
+    ADVANCED_LOGGER.log(LogLevel::WARNING, TAG_RF_SCAN,
+                        "Frequência RF inválida, usando padrão");
+    willyConfigPins.rfFreq = 433.92f;
+  }
+
   if (!initRfModule("rx", willyConfigPins.rfFreq)) {
+    ADVANCED_LOGGER.log(LogLevel::ERROR, TAG_RF_SCAN,
+                        "Falha na inicialização do módulo RF");
+    displayError("Falha RF init");
     return;
   }
 
   RCSwitch_Enable_Receive(rcswitch);
 
+  // Validações de configuração com limites seguros
   if (willyConfigPins.rfScanRange < 0 || willyConfigPins.rfScanRange > 3) {
+    ADVANCED_LOGGER.log(LogLevel::WARNING, TAG_RF_SCAN,
+                        "Range de scan inválido, definindo padrão");
     willyConfigPins.setRfScanRange(3);
   }
+
   if (willyConfigPins.rfModule != CC1101_SPI_MODULE) {
     willyConfigPins.setRfFxdFreq(1);
   }
@@ -29,11 +65,18 @@ void RFScan::setup() {
   if (willyConfigPins.rfFxdFreq)
     frequency = willyConfigPins.rfFreq;
 
-  // Clear cache for RAW signal
+  // Clear cache for RAW signal com validação
   rcswitch.resetAvailable();
   returnToMenu = false;
   restartScan = false;
 
+  // Inicializar variáveis de controle otimizadas
+  scan_start_time = millis();
+  signals = 0;
+  last_rssi_update = 0;
+
+  ADVANCED_LOGGER.log(LogLevel::INFO, TAG_RF_SCAN,
+                      "Configuração do scan RF concluída");
   return loop();
 }
 
@@ -52,21 +95,11 @@ void RFScan::loop() {
 
     if (willyConfigPins.rfFxdFreq)
       frequency = willyConfigPins.rfFreq;
-    if (frequency <= 0)
-      init_freqs();
-
-    while (frequency <= 0) { // FastScan
-      if (check(EscPress) || returnToMenu)
-        return;
-      if (check(NextPress)) {
-        select_menu_option();
-        if (returnToMenu)
-          return;
-        return setup();
-      }
-
-      if (fast_scan())
+    if (frequency <= 0) {
+      frequency = rf_freq_scan();
+      if (frequency > 0) {
         return setup(); // frequency found, reset
+      }
     }
 
     if (rcswitch.available() && !ReadRAW) {
@@ -88,54 +121,6 @@ void RFScan::RCSwitch_Enable_Receive(RCSwitch rcswitch) {
   } else {
     rcswitch.enableReceive(willyConfigPins.rfRx);
   }
-}
-
-void RFScan::init_freqs() {
-  for (int i = 0; i < _MAX_TRIES; i++) {
-    _freqs[i].freq = 433.92;
-    _freqs[i].rssi = -75;
-  }
-  _try = 0;
-}
-
-bool RFScan::fast_scan() {
-
-  if (idx < range_limits[willyConfigPins.rfScanRange][0] ||
-      idx > range_limits[willyConfigPins.rfScanRange][1]) {
-    idx = range_limits[willyConfigPins.rfScanRange][0];
-  }
-  float checkFrequency = subghz_frequency_list[idx];
-  setMHZ(checkFrequency);
-  tft.drawPixel(0, 0, 0); // To make sure CC1101 shared with TFT works properly
-  vTaskDelay(5 / portTICK_PERIOD_MS);
-  rssi = ELECHOUSE_cc1101.getRssi();
-  if (rssi > rssiThreshold) {
-    _freqs[_try].freq = checkFrequency;
-    _freqs[_try].rssi = rssi;
-    _try++;
-    if (_try >= _MAX_TRIES) {
-      int max_index = 0;
-      for (int i = 1; i < _MAX_TRIES; ++i) {
-        if (_freqs[i].rssi > _freqs[max_index].rssi) {
-          max_index = i;
-        }
-      }
-
-      willyConfigPins.setRfFreq(_freqs[max_index].freq,
-                                2); // change to fixed frequency
-      frequency = _freqs[max_index].freq;
-      setMHZ(frequency);
-      Serial.println("Frequencia Enc.: " + String(frequency));
-      rcswitch.resetAvailable();
-      // When changing to fixed frequency, need to restart the module to reset
-      // the registers so we get good signal reception at this frequency
-      deinitRfModule();
-
-      return true;
-    }
-  }
-  ++idx;
-  return false;
 }
 
 void RFScan::read_rcswitch() {

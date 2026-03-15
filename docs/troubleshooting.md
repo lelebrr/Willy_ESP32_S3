@@ -2,7 +2,7 @@
 
 Este guia ajuda a resolver os problemas mais comuns encontrados ao montar ou operar o dispositivo Willy.
 
-## 🛠️ Problemas de Hardware
+## 🔧 Problemas de Hardware
 
 ### 1. Tela Branca (White Screen)
 
@@ -47,6 +47,81 @@ Este guia ajuda a resolver os problemas mais comuns encontrados ao montar ou ope
 - **Causa**: Willy não está no modo Access Point ou IP incorreto.
 - **Solução**: Verifique se a rede WiFi "Willy-AP" aparece no seu celular. Acesse `http://192.168.4.1` no navegador.
 
+### 8. Alto Consumo de CPU/Memória
+
+- **Causa**: Múltiplos módulos ativos simultaneamente ou benchmark em execução.
+- **Solução**: Use `benchmark status` para verificar uso. Desative módulos não utilizados. Reinicie o dispositivo se necessário.
+
+### 9. Problemas no Barramento SPI
+
+- **Causa**: Conflito entre dispositivos SPI ou velocidade muito alta.
+- **Solução**: Verifique se apenas um dispositivo SPI tem CS ativo por vez. Use `hardware test` para diagnosticar. Ajuste frequência SPI se necessário.
+
+### 10. Módulos Não Detectados Automaticamente
+
+- **Causa**: Detecção de hardware falhou ou pinagem incorreta.
+- **Solução**: Execute `hardware detect` para forçar detecção. Verifique conexões físicas e perfil de hardware ativo.
+
+### 11. Plugins Não Carregam
+
+- **Causa**: Arquivo JSON malformado ou dependências faltando.
+- **Solução**: Valide JSON do plugin. Verifique logs em `/WILLY_LOGS/plugins.log`. Use `plugin status` para diagnóstico.
+
+### 12. Configurações Dinâmicas Não Persistem
+
+- **Causa**: Falha ao salvar no SD card ou permissões incorretas.
+- **Solução**: Execute `config save` manualmente. Verifique espaço no SD card. Formate SD se corrompido.
+
+---
+
+---
+
+## ❓ Perguntas Frequentes (FAQ)
+
+### 📊 Performance e Otimizações
+
+**P: O dispositivo está lento após as otimizações?**
+R: Não, as otimizações melhoraram a performance. Se notar lentidão, execute `benchmark run` para diagnosticar gargalos.
+
+**P: Como verificar se as otimizações estão ativas?**
+R: Use `config list` para ver configurações ativas. As otimizações são aplicadas automaticamente na compilação.
+
+**P: O consumo de energia aumentou?**
+R: Não, as otimizações incluem modos sleep automáticos. Total pico máximo: 942mA (dentro dos limites).
+
+### 🔧 Hardware e Configuração
+
+**P: Posso usar pinos diferentes dos otimizados?**
+R: Sim, mas as configurações otimizadas oferecem melhor performance. Use `hardware set` para alterar perfis.
+
+**P: Como adicionar novos módulos?**
+R: Implemente a interface `IModule` e registre no `SystemManager`. Consulte `docs/architecture_diagrams.md`.
+
+**P: O SPI compartilhado é confiável?**
+R: Sim, testado extensivamente. Usa chip select dedicado para cada dispositivo, evitando conflitos.
+
+### 💻 Desenvolvimento e Plugins
+
+**P: Como criar um plugin personalizado?**
+R: Use o template em `sd_files/plugins/example_plugin.json`. Implemente callbacks necessários e coloque na pasta plugins.
+
+**P: Posso modificar o firmware sem perder otimizações?**
+R: Sim, mas mantenha as configurações de build em `platformio.ini`. As otimizações são aplicadas automaticamente.
+
+**P: Como contribuir com melhorias?**
+R: Abra uma issue no GitHub descrevendo a proposta. Siga as melhores práticas documentadas.
+
+### 🔒 Segurança e Uso
+
+**P: As otimizações afetam a segurança?**
+R: Não, melhoram-na com validações adicionais e leak detection. Todas as funcionalidades de segurança permanecem intactas.
+
+**P: Posso reverter para versão anterior?**
+R: Sim, checkout de commit anterior no Git. Mas as otimizações são recomendadas para melhor estabilidade.
+
+**P: Como reportar bugs relacionados às otimizações?**
+R: Use `benchmark save` para gerar relatório, anexe logs de `/WILLY_LOGS/` e abra issue detalhada.
+
 ---
 
 ## 🆘 Suporte Adicional
@@ -55,4 +130,5 @@ Se o seu problema não estiver listado aqui:
 
 1. Verifique os logs no Serial Monitor (Baudrate 115200).
 2. Consulte os arquivos de log no SD na pasta `/WILLY_LOGS/`.
-3. Abra uma issue no repositório oficial do GitHub.
+3. Execute `system info` para diagnóstico completo.
+4. Abra uma issue no repositório oficial do GitHub com relatório de benchmark.

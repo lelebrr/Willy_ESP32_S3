@@ -32,13 +32,12 @@ uint32_t badusbFileCallback(cmd *c) {
 #ifdef USB_as_HID
   ducky_startKb(hid_usb, false);
   key_input(*fs, filepath, hid_usb);
+  hid_usb->end();
   delete hid_usb;
   hid_usb = nullptr;
 
-  // TODO: need to reinit serial when finished
-  // Kb.end();
-  // USB.~ESPUSB(); // Explicit call to destructor
-  // serialDevice->begin(115200);
+  // Reinit serial after USB HID usage
+  Serial.begin(115200);
 
   return true;
 #else

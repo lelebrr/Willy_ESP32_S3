@@ -3,6 +3,16 @@ import os
 import subprocess
 import hashlib
 import shutil
+import logging
+from datetime import datetime
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 PIOENV = env.subst("$PIOENV")
 MQJS_PATH = os.path.join(".pio/libdeps", PIOENV, "mquickjs")
@@ -122,49 +132,55 @@ def get_build_flag_value(flag_name):
     return defines.get(flag_name)
 
 def generate_headers():
-    if not os.path.exists(MQJS_PATH):
-        return
+    try:
+        logger.info("Iniciando geração de headers MQJS...")
 
-    if get_build_flag_value("LITE_VERSION") is not None or get_build_flag_value("DISABLE_INTERPRETER") is not None:
-        return
+        if not os.path.exists(MQJS_PATH):
+            logger.warning(f"Caminho MQJS não encontrado: {MQJS_PATH}")
+            return
 
-    if not _gen_enabled():
-        print("Skipped MQJS headers build.")
-        return
+        if get_build_flag_value("LITE_VERSION") is not None or get_build_flag_value("DISABLE_INTERPRETER") is not None:
+            logger.info("Headers MQJS desabilitados por flags de build")
+            return
 
-    os.makedirs(BUILD_DIR, exist_ok=True)
+        if not _gen_enabled():
+            logger.info("Geração de headers MQJS pulada.")
+            return
 
-    if not needs_rebuild():
+        os.makedirs(BUILD_DIR, exist_ok=True)
+
+        if not needs_rebuild():
+            logger.info("Headers MQJS já estão atualizados.")
+            return
+
+    except Exception as e:
+        logger.error(f"Erro na validação inicial: {e}")
         return
 
     try:
         host_cc = _resolve_host_cc()
         if not shutil.which(host_cc):
             if os.path.exists(os.path.join(BJS_INTERPRETER_PATH, "mqjs_stdlib.h")):
-                print("Host compiler not found; skipping mqjs_stdlib header generation.")
-                print("Set MQJS_HOST_CC or mqjs_host_cc to a GCC-compatible compiler, or use Docker.")
-                print("\nOn Windows:\n- install MSYS2 https://www.msys2.org/ at default path")
-                print("- open C:\\msys64\\ucrt64.exe")
-                print("- run on UCRT64 terminal: pacman -S --needed mingw-w64-i686-toolchain")
-                print("- add C:\\msys64\\mingw32\\bin to PATH, cmd: setx PATH \"%PATH%;C:\\msys64\\mingw32\\bin\\\"")
-                print("- close and open VSCode again")
-                print("\nOn Mac:\n- run on terminal: xcode-select --install")
-                print("\nOn Linux:\n- run on terminal: sudo apt-get install -y --no-install-recommends gcc-multilib libc6-dev-i386\n\n")
+                logger.warning("Compilador host não encontrado; pulando geração de headers mqjs_stdlib.")
+                logger.info("Configure MQJS_HOST_CC ou mqjs_host_cc para um compilador compatível com GCC, ou use Docker.")
+                logger.info("Instruções de instalação disponíveis no log de debug.")
                 return
-            raise RuntimeError("Host compiler not found and mqjs_stdlib.h is missing.")
+            raise RuntimeError("Compilador host não encontrado e mqjs_stdlib.h está faltando.")
 
         # Build the generator as a native host executable. The output headers are
         # still forced to 32-bit target format via the generator's `-m32` flag.
+        logger.info(f"Compilando gerador com {host_cc}...")
         gcc_result = subprocess.run(
             [host_cc, *CFLAGS, "-o", GEN, *SRC],
             capture_output=True,
             text=True,
         )
         if gcc_result.returncode != 0:
+            logger.error(f"Compilação falhou com código {gcc_result.returncode}")
             if gcc_result.stdout:
-                print("gcc stdout:\n" + gcc_result.stdout)
+                logger.error(f"gcc stdout: {gcc_result.stdout}")
             if gcc_result.stderr:
-                print("gcc stderr:\n" + gcc_result.stderr)
+                logger.error(f"gcc stderr: {gcc_result.stderr}")
             raise subprocess.CalledProcessError(
                 gcc_result.returncode,
                 gcc_result.args,
@@ -172,7 +188,7 @@ def generate_headers():
                 stderr=gcc_result.stderr,
             )
 
-        print("gen_mqjs_headers.py Generating QuickJS headers for 32-bit targets")
+        logger.info("Gerando headers QuickJS para alvos 32-bit...")
 
         with open(os.path.join(BJS_INTERPRETER_PATH, "mqjs_stdlib.h"), "w") as f:
             result = subprocess.run([GEN, "-m32"], capture_output=True, text=True, check=True)
@@ -182,12 +198,11 @@ def generate_headers():
             f.write(result.stdout)
 
     except Exception as e:
-        print("\nError generating MicroQuickJS headers (gen_mqjs_headers.py).")
-        print("This error occurs because the mqjs_stdlib.c file was modified.")
-        print("If you want to make changes to this file, you need to install build-essential tools and ensure that gcc is available.")
-        print("Alternatively, you can build using Docker by running:")
-        print("  docker compose run platformio_build\n")
-        pass
+        logger.error(f"Erro ao gerar headers MicroQuickJS: {e}")
+        logger.info("Este erro ocorre porque o arquivo mqjs_stdlib.c foi modificado.")
+        logger.info("Para fazer alterações neste arquivo, instale ferramentas build-essential e certifique-se de que gcc está disponível.")
+        logger.info("Alternativamente, construa usando Docker: docker compose run platformio_build")
+        # Não relançar a exceção para não quebrar o build
 
     write_build_stamp()
 

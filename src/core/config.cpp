@@ -833,13 +833,24 @@ void WillyConfig::validateMifareKeysItems() {
 }
 
 void WillyConfig::addDisabledMenu(String value) {
-  // TODO: check if duplicate
+  // Check if duplicate
+  for (const String &menu : disabledMenus) {
+    if (menu == value) {
+      return; // Already exists, do not add
+    }
+  }
   disabledMenus.push_back(value);
   saveFile();
 }
 
 void WillyConfig::addQrCodeEntry(const String &menuName,
                                  const String &content) {
+  // Check if duplicate menuName
+  for (const auto &qr : qrCodes) {
+    if (qr.menuName == menuName) {
+      return; // Already exists, do not add
+    }
+  }
   qrCodes.push_back({menuName, content});
   saveFile();
 }

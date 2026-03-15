@@ -451,14 +451,18 @@ void tft_logger::removeOverlappedImages(int x, int y, int center, int ms) {
   }
 }
 
-void tft_logger::fillScreen(int32_t color) {
+void tft_logger::fillScreen(uint32_t color) {
   if (logging) {
     clearLog();
     checkAndLog(FILLSCREEN, color);
   }
   if (isSleeping)
     return;
-  WILLY_TFT_DRIVER::fillScreen(color);
+  extern SemaphoreHandle_t spiMutex;
+  if (spiMutex && xSemaphoreTake(spiMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+    WILLY_TFT_DRIVER::fillScreen(color);
+    xSemaphoreGive(spiMutex);
+  }
 }
 
 void tft_logger::imageToBin(uint8_t fs, String file, int x, int y, bool center,
@@ -519,7 +523,7 @@ void tft_logger::imageToBin(uint8_t fs, String file, int x, int y, bool center,
 }
 
 void tft_logger::drawLine(int32_t x, int32_t y, int32_t x1, int32_t y1,
-                          int32_t color) {
+                          uint32_t color) {
   if (logging)
     checkAndLog(DRAWLINE, x, y, x1, y1, color);
   if (isSleeping)
@@ -529,7 +533,7 @@ void tft_logger::drawLine(int32_t x, int32_t y, int32_t x1, int32_t y1,
 }
 
 void tft_logger::drawRect(int32_t x, int32_t y, int32_t w, int32_t h,
-                          int32_t color) {
+                          uint32_t color) {
   if (logging)
     checkAndLog(DRAWRECT, x, y, w, h, color);
   if (isSleeping)
@@ -539,7 +543,7 @@ void tft_logger::drawRect(int32_t x, int32_t y, int32_t w, int32_t h,
 }
 
 void tft_logger::fillRect(int32_t x, int32_t y, int32_t w, int32_t h,
-                          int32_t color) {
+                          uint32_t color) {
   if (logging) {
     if (w > 4 && h > 4)
       removeLogEntriesInsideRect(x, y, w, h);
@@ -714,7 +718,7 @@ int16_t tft_logger::drawString(const String &string, int32_t x, int32_t y,
   int16_t r;
   if (isSleeping)
     return string.length();
-  r = WILLY_TFT_DRIVER::drawString(string, x, y, font);
+  r = WILLY_TFT_DRIVER::drawString(string.c_str(), x, y, font);
   restoreLogger();
   return r;
 }

@@ -713,8 +713,16 @@ void setRFFreqMenu() {
     return;
   if (freq_str.length() > 1) {
     result = freq_str.toFloat(); // returns 0 if not valid
-    if (result >= 280 &&
-        result <= 928) { // TODO: check valid freq according to current module?
+    // Check valid freq according to current module
+    bool valid = false;
+    int module = willyConfigPins.rfModule;
+    if (module == CC1101_SPI_MODULE && result >= 300 && result <= 928)
+      valid = true;
+    else if (module == M5_RF_MODULE && result >= 2400 && result <= 2525)
+      valid = true;
+    else if (result >= 280 && result <= 928)
+      valid = true; // fallback
+    if (valid) {
       willyConfigPins.setRfFreq(result);
       return;
     }

@@ -31,4 +31,10 @@ struct RfCodes selectRecentRfMenu();
 bool setMHZMenu();
 void rf_range_selection(float currentFrequency = 0.0);
 
+// ========== FUNÇÕES DE OTIMIZAÇÃO ==========
+bool validateRfFrequency(float frequency);
+void configureRfParameters(float frequency);
+bool configureRfMode(String mode);
+bool configureSinglePinMode(String mode);
+
 #endif

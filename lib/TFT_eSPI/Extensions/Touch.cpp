@@ -10,6 +10,9 @@
 
 // See license in root directory.
 
+#include "TFT_eSPI.h"
+#include <stdint.h>
+
 // Define a default pressure threshold
 #ifndef Z_THRESHOLD
 #define Z_THRESHOLD 350 // Touch pressure threshold for validating touches

@@ -456,7 +456,9 @@ String IrRead::loop_headless(int max_loops) {
 
   if (results.overflow)
     displayWarning("buffer overflow, dados truncados", true);
-  // TODO: check results.repeat
+
+  if (results.repeat)
+    Serial.println("# repeat signal detected");
 
   String r = "Filetype: IR signals file\n";
   r += "Version: 1\n";
@@ -539,5 +541,12 @@ bool IrRead::write_file(String filename, FS *fs) {
 }
 
 void IrRead::quickLoop() {
-  // Stub
+  while (true) {
+    if (check(EscPress)) {
+      returnToMenu = true;
+      break;
+    }
+    read_signal();
+    delay(10); // small delay to prevent overwhelming
+  }
 }

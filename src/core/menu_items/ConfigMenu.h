@@ -5,27 +5,32 @@
 
 class ConfigMenu : public MenuItemInterface {
 public:
-    ConfigMenu() : MenuItemInterface("Configuração") {}
+  ConfigMenu() : MenuItemInterface("Configuração") {}
 
-    void optionsMenu(void);
-    void drawIcon(float scale);
-    bool hasTheme() { return willyConfig.theme.config; }
-    String themePath() { return willyConfig.theme.paths.config; }
+  void optionsMenu(void);
+  void drawIcon(float scale);
+  bool hasTheme() { return willyConfig.theme.config; }
+  String themePath() { return willyConfig.theme.paths.config; }
 
 private:
-    // Submenus
-    void displayUIMenu(void);
-    void ledMenu(void);
-    void audioMenu(void);
-    void systemMenu(void);
-    void advancedMenu(void);
-    void powerMenu(void);
-    void devMenu(void);
-    void joystickMenu(void);
+  // Submenus
+  void displayUIMenu(void);
+  void ledMenu(void);
+  void audioMenu(void);
+  void systemMenu(void);
+  void advancedMenu(void);
+  void powerMenu(void);
+  void devMenu(void);
+  void joystickMenu(void);
 
-    // Helper methods for complex operations
-    void switchToUSBSerial(void);
-    void switchToUARTSerial(void);
+  // Joystick functions
+  void testJoystick(void);
+  void calibrateJoystick(void);
+  void showJoystickStatus(void);
+
+  // Helper methods for complex operations
+  void switchToUSBSerial(void);
+  void switchToUARTSerial(void);
 };
 
 #endif

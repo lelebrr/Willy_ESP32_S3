@@ -41,25 +41,34 @@ TagOMatic::~TagOMatic() {
 }
 
 void TagOMatic::set_rfid_module() {
+  Serial.println("[TagOMatic] Configurando módulo RFID");
   switch (willyConfigPins.rfidModule) {
   case PN532_I2C_MODULE:
     _rfid = new PN532(PN532::CONNECTION_TYPE::I2C);
+    Serial.println("[TagOMatic] Criado PN532 I2C");
     break;
 #ifdef M5STICK
   case PN532_I2C_SPI_MODULE:
     _rfid = new PN532(PN532::CONNECTION_TYPE::I2C_SPI);
+    Serial.println("[TagOMatic] Criado PN532 I2C_SPI");
     break;
 #endif
   case PN532_SPI_MODULE:
     _rfid = new PN532(PN532::CONNECTION_TYPE::SPI);
+    Serial.println("[TagOMatic] Criado PN532 SPI");
     break;
   case RC522_SPI_MODULE:
     _rfid = new RFID2(false);
+    Serial.println("[TagOMatic] Criado RFID2 SPI");
     break;
   case M5_RFID2_MODULE:
   default:
     _rfid = new RFID2();
+    Serial.println("[TagOMatic] Criado RFID2 padrão");
     break;
+  }
+  if (!_rfid) {
+    Serial.println("[TagOMatic] Falha ao criar objeto RFID");
   }
 }
 
@@ -167,8 +176,8 @@ void TagOMatic::set_state(RFID_State state) {
     padprintln("");
     break;
   case CLONE_MODE:
-    padprintln("Novo UID: " + _rfid->printableUID.uid);
-    padprintln("SAK: " + _rfid->printableUID.sak);
+    padprintln("Novo UID: " + String(_rfid->printableUID.uid));
+    padprintln("SAK: " + String(_rfid->printableUID.sak));
     padprintln("");
     break;
   case WRITE_MODE:
@@ -234,9 +243,9 @@ void TagOMatic::display_banner() {
 }
 
 void TagOMatic::dump_card_details() {
-  padprintln("Tipo Disp.: " + _rfid->printableUID.picc_type);
+  padprintln("Tipo Disp.: " + String(_rfid->printableUID.picc_type));
   if (_rfid->printableUID.picc_type != "FeliCa") {
-    padprintln("UID: " + _rfid->printableUID.uid);
+    padprintln("UID: " + String(_rfid->printableUID.uid));
     padprintln("ATQA: " + _rfid->printableUID.atqa);
     padprintln("SAK: " + _rfid->printableUID.sak);
   } else {
@@ -291,18 +300,27 @@ void TagOMatic::dump_scan_results() {
 }
 
 void TagOMatic::read_card() {
-  if (millis() - _lastReadTime < 2000)
+  // Otimizado: reduzir delay para detecção mais rápida (de 2000ms para 500ms)
+  if (millis() - _lastReadTime < 500)
     return;
 
-  if (_rfid->read() != RFIDInterface::SUCCESS) {
-    if (willyConfigPins.rfidModule !=
-        M5_RFID2_MODULE) { // Read felica if module is PN532
-      if (_rfid->read(1) != RFIDInterface::SUCCESS)
-        return;
-    } else {
-      return;
+  // Otimizado: tentar múltiplas leituras para maior precisão
+  int attempts = 0;
+  bool success = false;
+  while (attempts < 3 && !success) {
+    if (_rfid->read() == RFIDInterface::SUCCESS) {
+      success = true;
+    } else if (willyConfigPins.rfidModule != M5_RFID2_MODULE) {
+      if (_rfid->read(1) == RFIDInterface::SUCCESS)
+        success = true;
     }
+    attempts++;
+    if (!success)
+      vTaskDelay(10 / portTICK_PERIOD_MS); // Pequeno delay entre tentativas
   }
+
+  if (!success)
+    return;
 
   // Serial.print("Tag read status: ");
   // Serial.println(_rfid->statusMessage(_rfid->pageReadStatus));
@@ -312,7 +330,7 @@ void TagOMatic::read_card() {
 
   _read_uid = true;
   _lastReadTime = millis();
-  delayWithReturn(500);
+  delayWithReturn(200); // Reduzido para resposta mais rápida
 }
 
 void TagOMatic::scan_cards() {
@@ -353,7 +371,13 @@ void TagOMatic::clone_card() {
     return;
     break;
   case RFIDInterface::NOT_IMPLEMENTED:
-    displayError("Not implemented for this module.");
+    // Try to write data instead of cloning UID
+    result = _rfid->write();
+    if (result == RFIDInterface::SUCCESS) {
+      displaySuccess("Data written successfully (UID clone not supported).");
+    } else {
+      displayError("Failed to write data.");
+    }
     break;
   case RFIDInterface::TAG_NOT_MATCH:
     displayError("Tag types do not match.");
@@ -389,9 +413,10 @@ void TagOMatic::write_custom_uid() {
   for (size_t i = 0; i < custom_uid.length(); i += 2) {
     _rfid->uid.uidByte[i / 2] =
         strtoul(custom_uid.substring(i, i + 2).c_str(), NULL, 16);
-    _rfid->printableUID.uid += custom_uid.substring(i, i + 2) + " ";
+    String temp = custom_uid.substring(i, i + 2) + " ";
+    _rfid->printableUID.uid += temp;
   }
-  _rfid->printableUID.uid.trim();
+  // trim removed
 
   delayWithReturn(200);
   set_state(CLONE_MODE);

@@ -105,9 +105,36 @@ void createSoundCommands(SimpleCLI *cli) {
   webradioCmd.addPosArg("url");
 }
 
-// Placeholder webradio implementation
+// WebRadio implementation
 uint32_t webradioCallback(cmd *c) {
-  serialDevice->println("WebRadio: Not yet implemented");
-  serialDevice->println("Requires ESP8266Audio library integration");
-  return false;
+  Command cmd(c);
+
+  Argument urlArg = cmd.getArgument("url");
+  String url = urlArg.getValue();
+  url.trim();
+
+  if (url == "") {
+    serialDevice->println("Usage: webradio <url>");
+    serialDevice->println(
+        "Example: webradio http://stream.example.com/radio.mp3");
+    return false;
+  }
+
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    serialDevice->println("ERROR: URL must start with http:// or https://");
+    return false;
+  }
+
+  serialDevice->print("Starting WebRadio from: ");
+  serialDevice->println(url);
+
+  bool result = playAudioUrl(url, PLAYBACK_ASYNC);
+  if (result) {
+    serialDevice->println("WebRadio started successfully");
+    serialDevice->println("Use 'stop' command to stop playback");
+  } else {
+    serialDevice->println("ERROR: Failed to start WebRadio");
+  }
+
+  return result;
 }

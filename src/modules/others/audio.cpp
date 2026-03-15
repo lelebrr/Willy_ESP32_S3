@@ -4,9 +4,11 @@
 #if defined(HAS_NS4168_SPKR)
 #ifndef DISABLE_AUDIO
 #include "AudioFileSourceFunction.h"
+#include "AudioFileSourceHTTP.h"
 #include "AudioGeneratorAAC.h"
 #include "AudioGeneratorFLAC.h"
 #include "AudioGeneratorMIDI.h"
+#include "AudioGeneratorMP3.h"
 #include "AudioGeneratorWAV.h"
 #include "AudioOutputI2SNoDAC.h"
 #include <ESP8266Audio.h>
@@ -403,6 +405,7 @@ AudioPlaybackInfo getAudioPlaybackInfo() {
   if (g_audioPlayer->lock(pdMS_TO_TICKS(100))) {
     info.state = g_audioPlayer->state;
     info.currentFile = g_audioPlayer->currentFile;
+    info.duration = getAudioDuration(g_audioPlayer->currentFile);
     info.volume = willyConfig.soundVolume;
     info.isAsyncMode = (g_audioPlayer->mode == PLAYBACK_ASYNC);
 
@@ -588,6 +591,96 @@ bool playAudioFile(FS *fs, String filepath, PlaybackMode mode) {
   return startAsyncPlayback(generator, source, audioout, filepath);
 }
 
+bool playAudioUrl(String url, PlaybackMode mode) {
+  if (!willyConfig.soundEnabled)
+    return false;
+
+  url.trim();
+  if (url == "" || !url.startsWith("http")) {
+    Serial.println("ERROR: Invalid URL for audio streaming");
+    return false;
+  }
+
+  // Stop any current playback
+  if (isAudioPlaying()) {
+    stopAudioPlayback();
+  }
+
+  _setup_codec_speaker(true);
+
+  AudioFileSource *source = new AudioFileSourceHTTP(url.c_str());
+  if (!source) {
+    Serial.println("ERROR: Failed to create HTTP audio source");
+    _setup_codec_speaker(false);
+    return false;
+  }
+
+  AudioOutputI2S *audioout = createConfiguredAudioOutput();
+  if (!audioout) {
+    delete source;
+    _setup_codec_speaker(false);
+    return false;
+  }
+
+  // For web radio, assume MP3 format (most common)
+  AudioGenerator *generator = new AudioGeneratorMP3();
+  if (!generator) {
+    Serial.println("ERROR: Failed to create MP3 generator");
+    delete source;
+    delete audioout;
+    _setup_codec_speaker(false);
+    return false;
+  }
+
+  // Wrap source with ID3 tag handler for MP3
+  AudioFileSource *id3source = new AudioFileSourceID3(source);
+  if (!id3source) {
+    Serial.println("ERROR: Failed to create ID3 source");
+    delete generator;
+    delete source;
+    delete audioout;
+    _setup_codec_speaker(false);
+    return false;
+  }
+
+  if (!generator->begin(id3source, audioout)) {
+    Serial.println("ERROR: Failed to begin audio streaming");
+    delete generator;
+    delete id3source;
+    delete source;
+    delete audioout;
+    _setup_codec_speaker(false);
+    return false;
+  }
+
+  // === BLOCKING MODE ===
+  if (mode == PLAYBACK_BLOCKING) {
+    Serial.println("Start web radio (blocking)");
+
+    while (generator->isRunning()) {
+      if (!generator->loop() || check(AnyKeyPress)) {
+        generator->stop();
+      }
+    }
+
+    audioout->stop();
+    id3source->close();
+    Serial.println("Stop web radio");
+
+    delete generator;
+    delete id3source;
+    delete source;
+    delete audioout;
+
+    _setup_codec_speaker(false);
+    return true;
+  }
+
+  // === ASYNC MODE ===
+  Serial.println("Start web radio (async)");
+  return startAsyncPlayback(generator, id3source, audioout, url);
+}
+
 bool playAudioRTTTLString(String song, PlaybackMode mode) {
   if (!willyConfig.soundEnabled)
     return false;
@@ -711,6 +804,58 @@ bool tts(String text, PlaybackMode mode) {
 
   _setup_codec_speaker(false);
   return true;
+}
+
+/**
+ * @brief Calculate the total duration of an audio file in milliseconds
+ * @param filepath Path to the audio file
+ * @return Duration in ms, or 0 if unknown or error
+ */
+unsigned long getAudioDuration(String filepath) {
+  if (!isAudioFile(filepath))
+    return 0;
+
+  File file = SPIFFS.open(filepath, "r");
+  if (!file)
+    return 0;
+
+  if (filepath.endsWith(".wav")) {
+    // WAV header parsing
+    // Skip RIFF header (4 bytes "RIFF", 4 bytes size)
+    file.seek(8);
+    // Skip "WAVE" and "fmt " (8 bytes)
+    file.seek(16);
+    // Sample rate at offset 24 (4 bytes, little endian)
+    uint32_t sampleRate = 0;
+    file.read((uint8_t *)&sampleRate, 4);
+    // Channels at offset 22 (2 bytes)
+    uint16_t channels = 0;
+    file.seek(22);
+    file.read((uint8_t *)&channels, 2);
+    // Bits per sample at offset 34 (2 bytes)
+    uint16_t bitsPerSample = 0;
+    file.seek(34);
+    file.read((uint8_t *)&bitsPerSample, 2);
+    // Data size at offset 40 (4 bytes)
+    uint32_t dataSize = 0;
+    file.seek(40);
+    file.read((uint8_t *)&dataSize, 4);
+
+    file.close();
+
+    if (sampleRate == 0 || channels == 0 || bitsPerSample == 0)
+      return 0;
+
+    // Duration = dataSize / (sampleRate * channels * bitsPerSample / 8) * 1000
+    float bytesPerSecond = sampleRate * channels * (bitsPerSample / 8.0f);
+    if (bytesPerSecond == 0)
+      return 0;
+    return (unsigned long)((dataSize / bytesPerSecond) * 1000);
+  }
+
+  // For other formats, return 0 for now (could implement MP3 ID3 tags, etc.)
+  file.close();
+  return 0;
 }
 
 bool isAudioFile(String filepath) {
