@@ -4,18 +4,28 @@
 #include "utils.h"
 #include <globals.h>
 
-
 MainMenu::MainMenu() {
   _menuItems = {
       &wifiMenu,     &bleMenu,
 #if !defined(LITE_VERSION)
       &ethernetMenu,
 #endif
-      &rfMenu,       &rfidMenu,  &irMenu,
-#if defined(FM_SI4713) && !defined(LITE_VERSION)
+#if !defined(NO_RF_MODULE)
+      &rfMenu,
+#endif
+#if !defined(NO_RFID_MODULE)
+      &rfidMenu,
+#endif
+#if !defined(NO_IR_MODULE)
+      &irMenu,
+#endif
+#if defined(FM_SI4713) && !defined(LITE_VERSION) && !defined(NO_FM_MODULE)
       &fmMenu,
 #endif
-      &fileMenu,     &gpsMenu,   &nrf24Menu,
+      &fileMenu,     &gpsMenu,
+#if !defined(NO_NRF24_MODULE)
+      &nrf24Menu,
+#endif
 #if !defined(LITE_VERSION)
 #if !defined(DISABLE_INTERPRETER)
       &scriptsMenu,

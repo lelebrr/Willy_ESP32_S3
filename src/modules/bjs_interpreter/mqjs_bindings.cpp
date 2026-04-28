@@ -943,7 +943,7 @@ void js_willy_init(JSContext *ctx) {
                     JS_NewCFunctionParams(ctx, FUNC_DEVICE_SDK, JS_UNDEFINED));
   JS_SetPropertyStr(ctx, device, "getWillyVersion",
                     JS_NewString(ctx, WILLY_VERSION));
-  JS_SetPropertyStr(ctx, device, "getBruceVersion",
+  JS_SetPropertyStr(ctx, device, "getWillyVersion",
                     JS_NewString(ctx, WILLY_VERSION));
   JS_SetPropertyStr(ctx, global_obj, "device", device);
 

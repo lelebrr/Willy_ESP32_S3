@@ -154,6 +154,16 @@ public:
    */
   void handleAppLifecycle();
 
+  /**
+   * @brief Atualiza o estado global do sistema
+   *
+   * Atualiza informações de estado baseadas em sensores, módulos ativos
+   * e outras fontes de dados do sistema.
+   *
+   * @note Chamado periodicamente pelo runMainLoop()
+   */
+  void updateSystemState();
+
 private:
   /**
    * @brief Construtor privado - padrão Singleton

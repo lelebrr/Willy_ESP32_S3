@@ -11,17 +11,17 @@
  */
 enum class PinMode {
   PIN_INPUT,
-  OUTPUT,
-  INPUT_PULLUP,
-  INPUT_PULLDOWN,
-  OUTPUT_OPEN_DRAIN,
-  ANALOG_INPUT
+  PIN_OUTPUT,
+  PIN_INPUT_PULLUP,
+  PIN_INPUT_PULLDOWN,
+  PIN_OUTPUT_OPEN_DRAIN,
+  PIN_ANALOG_INPUT
 };
 
 /**
  * @brief Estados digitais dos pinos
  */
-enum class PinState { LOW = 0, HIGH = 1 };
+enum class PinState { PIN_LOW = 0, PIN_HIGH = 1 };
 
 /**
  * @brief Configuração de pino
@@ -33,7 +33,7 @@ struct PinConfig {
   String description;
   std::function<void()> on_change_callback;
 
-  PinConfig(int pin = -1, PinMode m = PinMode::INPUT, bool inv = false,
+  PinConfig(int pin = -1, PinMode m = PinMode::PIN_INPUT, bool inv = false,
             const String &desc = "", std::function<void()> cb = nullptr)
       : pin_number(pin), mode(m), inverted(inv), description(desc),
         on_change_callback(cb) {}

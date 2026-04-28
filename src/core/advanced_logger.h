@@ -47,7 +47,7 @@ enum LogModule {
   NRF24 = 11,
   LORA = 12,
   FM_MODULE = 13,
-  ETH = 14,
+  ETHERNET_MODULE = 14,
   OTHER = 15
 };
 
@@ -138,6 +138,9 @@ public:
   // Estatísticas
   size_t getLogFileSize() const;
   uint32_t getLogCount() const;
+  uint32_t getDroppedLogCount() const;
+  bool isRateLimited() const;
+  void resetRateLimit();
   String getCurrentLogFile() const;
 
   // Compatibilidade com WillyLogger
@@ -172,6 +175,9 @@ private:
   uint32_t _startTime;
   uint32_t _lastRotationCheck;
   uint32_t _logCount;
+  uint32_t _rateLimitWindowStart = 0;
+  uint32_t _rateLimitCounter = 0;
+  uint32_t _droppedLogCount = 0;
   bool _initialized;
 
   // Strings constantes
@@ -179,19 +185,34 @@ private:
   static const char *MODULE_STRINGS[];
 };
 
-// Instância global para compatibilidade
-extern AdvancedLogger advancedLogger;
-
 // Macros de logging convenientes (compatíveis com WillyLogger)
-#define LOG_TRACE(comp, msg, ...) advancedLogger.trace(comp, msg, ##__VA_ARGS__)
-#define LOG_DEBUG(comp, msg, ...) advancedLogger.debug(comp, msg, ##__VA_ARGS__)
-#define LOG_INFO(comp, msg, ...) advancedLogger.info(comp, msg, ##__VA_ARGS__)
+#ifndef LOG_TRACE
+#define LOG_TRACE(comp, msg, ...)                                              \
+  AdvancedLogger::getInstance().trace(comp, msg, ##__VA_ARGS__)
+#endif
+#ifndef LOG_DEBUG
+#define LOG_DEBUG(comp, msg, ...)                                              \
+  AdvancedLogger::getInstance().debug(comp, msg, ##__VA_ARGS__)
+#endif
+#ifndef LOG_INFO
+#define LOG_INFO(comp, msg, ...)                                               \
+  AdvancedLogger::getInstance().info(comp, msg, ##__VA_ARGS__)
+#endif
+#ifndef LOG_NOTICE
 #define LOG_NOTICE(comp, msg, ...)                                             \
-  advancedLogger.notice(comp, msg, ##__VA_ARGS__)
+  AdvancedLogger::getInstance().notice(comp, msg, ##__VA_ARGS__)
+#endif
+#ifndef LOG_WARNING
 #define LOG_WARNING(comp, msg, ...)                                            \
-  advancedLogger.warning(comp, msg, ##__VA_ARGS__)
-#define LOG_ERROR(comp, msg, ...) advancedLogger.error(comp, msg, ##__VA_ARGS__)
+  AdvancedLogger::getInstance().warning(comp, msg, ##__VA_ARGS__)
+#endif
+#ifndef LOG_ERROR
+#define LOG_ERROR(comp, msg, ...)                                              \
+  AdvancedLogger::getInstance().error(comp, msg, ##__VA_ARGS__)
+#endif
+#ifndef LOG_CRITICAL
 #define LOG_CRITICAL(comp, msg, ...)                                           \
-  advancedLogger.critical(comp, msg, ##__VA_ARGS__)
+  AdvancedLogger::getInstance().critical(comp, msg, ##__VA_ARGS__)
+#endif
 
 #endif // ADVANCED_LOGGER_H

@@ -5,7 +5,6 @@
 #include "rf_utils.h"
 #include <esp_log.h>
 
-
 static const char *TAG = "RFModule";
 
 RFModule::RFModule(std::shared_ptr<SystemModel> model,
@@ -97,6 +96,17 @@ void RFModule::process() {
     }
     last_health_check = now;
   }
+}
+
+int RFModule::getPriority() const {
+  return 80; // Prioridade alta
+}
+
+bool RFModule::executeCommand(const String &command, JsonDocument &result) {
+  (void)command;
+  (void)result;
+  // Implementação básica - pode ser expandida depois
+  return false;
 }
 
 bool RFModule::transmitRF() {

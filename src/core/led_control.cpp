@@ -11,6 +11,9 @@
 #include <driver/rmt_tx.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+using fl::FastLED;
+using fl::fill_solid;
+using fl::WS2812B;
 
 CRGB leds[LED_COUNT];
 

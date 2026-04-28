@@ -28,6 +28,11 @@ function reboot() {
     confirm("Reboot Willy?") && fetch('/api/reboot', { method: 'POST' });
 }
 
+function clearLogs() {
+    fetch('/api/logs/clear', { method: 'POST' })
+        .then(() => updateLogs());
+}
+
 setInterval(updateStatus, 3000);
 setInterval(updateLogs, 5000);
 updateStatus();

@@ -3,19 +3,17 @@
 #include <globals.h>
 
 uint32_t reloadConfigCallback(cmd *c) {
+  (void)c; // Unused parameter
   AdvancedLogger &logger = AdvancedLogger::getInstance();
   logger.info(LogModule::SYSTEM, "Reloading dynamic configuration");
 
-  bool success = DynamicConfigManager::getInstance().reloadConfigCommand();
-  if (success) {
-    logger.info(LogModule::SYSTEM, "Configuration reloaded successfully");
-  } else {
-    logger.error(LogModule::SYSTEM, "Failed to reload configuration");
-  }
-  return success;
+  DynamicConfigManager::getInstance().reloadConfigCommand();
+  logger.info(LogModule::SYSTEM, "Configuration reloaded");
+  return 1;
 }
 
 uint32_t showConfigStatusCallback(cmd *c) {
+  (void)c; // Unused parameter
   auto &dcm = DynamicConfigManager::getInstance();
 
   serialDevice->println("=== Status da Configuração Dinâmica ===");
@@ -29,8 +27,7 @@ uint32_t showConfigStatusCallback(cmd *c) {
   } else {
     serialDevice->println("Nenhuma configuração dinâmica carregada");
   }
-
-  return true;
+  return 1;
 }
 
 uint32_t loadConfigFileCallback(cmd *c) {
@@ -42,17 +39,17 @@ uint32_t loadConfigFileCallback(cmd *c) {
   if (filename.length() == 0) {
     serialDevice->println("Uso: load_config <filename>");
     serialDevice->println("Exemplo: load_config /config/system_config.json");
-    return false;
+    return 0;
   }
 
   auto &dcm = DynamicConfigManager::getInstance();
   if (dcm.loadConfigFromFile(filename)) {
     serialDevice->printf("Configuração carregada de: %s\n", filename.c_str());
-    return true;
+    return 1;
   } else {
     serialDevice->printf("Falha ao carregar configuração de: %s\n",
                          filename.c_str());
-    return false;
+    return 0;
   }
 }
 

@@ -2,6 +2,7 @@
 #include "core/sd_functions.h"
 #include "helpers.h"
 #include "modules/badusb_ble/ducky_typer.h"
+#include <SPIFFS.h>
 
 uint32_t badusbFileCallback(cmd *c) {
 #ifndef LITE_VERSION
@@ -59,7 +60,7 @@ uint32_t badusbBufferCallback(cmd *c) {
 
   // Write buffer to temporary file for compatibility with key_input
   String tmpfilepath = "/tmpramfile";
-  File f = PSRamFS.open(tmpfilepath, FILE_WRITE);
+  File f = ((FS&)SPIFFS).open(tmpfilepath, FILE_WRITE);
   if (!f) {
     free(txt);
     return false;
@@ -71,14 +72,14 @@ uint32_t badusbBufferCallback(cmd *c) {
 
 #ifdef USB_as_HID
   ducky_startKb(hid_usb, false);
-  key_input(PSRamFS, tmpfilepath, hid_usb);
+  key_input((FS&)SPIFFS, tmpfilepath, hid_usb);
   delete hid_usb;
   hid_usb = nullptr;
 
-  PSRamFS.remove(tmpfilepath);
+  ((FS&)SPIFFS).remove(tmpfilepath);
   return true;
 #else
-  PSRamFS.remove(tmpfilepath);
+  ((FS&)SPIFFS).remove(tmpfilepath);
   return false;
 #endif
 #else

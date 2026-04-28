@@ -199,15 +199,7 @@ private:
 // Instância global externa
 extern WillyLogger willyLogger;
 
-// Macros de logging convenientes
-#define LOG_TRACE(comp, msg, ...) willyLogger.trace(comp, msg, ##__VA_ARGS__)
-#define LOG_DEBUG(comp, msg, ...) willyLogger.debug(comp, msg, ##__VA_ARGS__)
-#define LOG_INFO(comp, msg, ...) willyLogger.info(comp, msg, ##__VA_ARGS__)
-#define LOG_NOTICE(comp, msg, ...) willyLogger.notice(comp, msg, ##__VA_ARGS__)
-#define LOG_WARNING(comp, msg, ...)                                            \
-  willyLogger.warning(comp, msg, ##__VA_ARGS__)
-#define LOG_ERROR(comp, msg, ...) willyLogger.error(comp, msg, ##__VA_ARGS__)
-#define LOG_CRITICAL(comp, msg, ...)                                           \
-  willyLogger.critical(comp, msg, ##__VA_ARGS__)
+// Macros de logging convenientes removidas para evitar conflitos com
+// advanced_logger.h Use as macros do advanced_logger.h que são compatíveis
 
 #endif // WILLY_LOGGER_H

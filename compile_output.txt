@@ -1,0 +1,126 @@
+Processing willy_debug (board: ESP32-S3-DevKitC-1-N8R2; platform: espressif32; framework: arduino)
+--------------------------------------------------------------------------------
+Library Manager: Installing git+https://github.com/bellard/mquickjs.git
+git version 2.53.0.windows.2
+Cloning into 'C:\Users\leleb\.platformio\.cache\tmp\pkg-installing-jh88vnu5'...
+Library Manager: mquickjs@0.0.0+20260317100238.sha.ee50431 has been installed!
+Library Manager: Installing bitbank2/AnimatedGIF
+Downloading 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: AnimatedGIF@2.2.0 has been installed!
+Library Manager: Installing https://github.com/bitbank2/AnimatedGIF/archive/refs/heads/master.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: AnimatedGIF@2.2.0 has been installed!
+Library Manager: Installing h2zero/NimBLE-Arduino @ ^2.3.7
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: NimBLE-Arduino@2.3.9 has been installed!
+Library Manager: Installing nrf24/RF24 @ 1.5.0
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: RF24@1.5.0 has been installed!
+Library Manager: Installing tinyu-zhao/FFT @ ^0.0.1
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70%
+Library Manager: FFT@0.0.1 has been installed!
+Library Manager: Installing https://github.com/bmorcelli/rc-switch/archive/refs/heads/master.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: rc-switch@2.6.4 has been installed!
+Library Manager: Installing https://github.com/bmorcelli/IRremoteESP8266/archive/refs/heads/master.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: IRremoteESP8266@2.8.6 has been installed!
+Library Manager: Installing https://github.com/rennancockles/SimpleCLI/archive/refs/heads/master.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: SimpleCLI@1.1.4 has been installed!
+Library Manager: Installing adafruit/Adafruit NeoPixel @ ^1.11.0
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: Adafruit NeoPixel@1.15.4 has been installed!
+Library Manager: Installing https://github.com/rennancockles/Arduino_MFRC522v2/archive/refs/heads/master.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: RFID_MFRC522v2@2.0.6 has been installed!
+Library Manager: Installing https://github.com/bmorcelli/ESP-ChameleonUltra/archive/refs/heads/main.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: ESP Chameleon Ultra@0.0.2 has been installed!
+Library Manager: Resolving dependencies...
+Library Manager: Installing h2zero/NimBLE-Arduino
+Library Manager: Installing https://github.com/whywilson/ESP-PN532-UART/archive/refs/heads/main.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: ESP PN532 UART@0.0.2 has been installed!
+Library Manager: Installing https://github.com/whywilson/ESP-PN532Killer/archive/refs/heads/master.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: ESP PN532Killer@0.0.7 has been installed!
+Library Manager: Resolving dependencies...
+Library Manager: Installing whywilson/ESP-PN532-UART
+Library Manager: Installing https://github.com/whywilson/ESP-PN532BLE/archive/refs/heads/master.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80%
+Library Manager: ESP PN32BLE@0.0.2 has been installed!
+Library Manager: Resolving dependencies...
+Library Manager: Installing h2zero/NimBLE-Arduino
+Library Manager: Installing ESP32Async/ESPAsyncWebServer
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: ESPAsyncWebServer@3.10.1 has been installed!
+Library Manager: Resolving dependencies...
+Library Manager: Installing ESP32Async/AsyncTCP @ ^3.4.10
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: AsyncTCP@3.4.10 has been installed!
+Library Manager: Installing Bodmer/JPEGDecoder
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: JPEGDecoder@2.0.0 has been installed!
+Library Manager: Installing earlephilhower/ESP8266SAM @ ^1.1.0
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: ESP8266SAM@1.1.0 has been installed!
+Library Manager: Installing git+https://github.com/emericklaw/Adafruit-BusIO_Bruce @ 1.17.2-bruce.1
+git version 2.53.0.windows.2
+Cloning into 'C:\Users\leleb\.platformio\.cache\tmp\pkg-installing-_5vkuc5d'...
+Library Manager: Adafruit BusIO@1.17.2-bruce.1+sha.27230c1 has been installed!
+Library Manager: Installing git+https://github.com/emericklaw/Adafruit-PN532_Bruce @ 1.3.3-bruce.1
+git version 2.53.0.windows.2
+Cloning into 'C:\Users\leleb\.platformio\.cache\tmp\pkg-installing-eo8wp2us'...
+Library Manager: Adafruit PN532@1.3.3-bruce.1+sha.e91d695 has been installed!
+Library Manager: Resolving dependencies...
+Library Manager: Installing https://github.com/bmorcelli/SmartRC-CC1101-Driver-Lib/archive/refs/heads/master.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: SmartRC-CC1101-Driver-Lib@2.5.7 has been installed!
+Library Manager: Installing git+https://github.com/ewpa/LibSSH-ESP32.git
+git version 2.53.0.windows.2
+Cloning into 'C:\Users\leleb\.platformio\.cache\tmp\pkg-installing-wf_ztl84'...
+Library Manager: LibSSH-ESP32@5.8.0+sha.1dead2f has been installed!
+Library Manager: Installing https://github.com/sayacom/WireGuard-ESP32-Arduino/archive/refs/heads/feature/esp-netif.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: WireGuard-ESP32@0.1.5 has been installed!
+Library Manager: Installing https://github.com/huckor/BER-TLV/archive/refs/heads/master.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: BER-TLV@0.0.0+20260317100313 has been installed!
+Library Manager: Installing https://github.com/bmorcelli/ESP-Amiibolink/archive/refs/heads/main.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: ESP Amiibolink@0.0.2 has been installed!
+Library Manager: Resolving dependencies...
+Library Manager: Installing h2zero/NimBLE-Arduino
+Library Manager: Installing jgromes/RadioLib @ ^7.4.0
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: RadioLib@7.6.0 has been installed!
+Library Manager: Installing paulstoffregen/OneWire @ ^2.3.8
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: OneWire@2.3.8 has been installed!
+Library Manager: Installing https://github.com/lewisxhe/XPowersLib/archive/refs/heads/master.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: XPowersLib@0.3.4 has been installed!
+Library Manager: Installing fastled/FastLED @ ^3.10.3
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: FastLED@3.10.3 has been installed!
+Library Manager: Installing https://github.com/bmorcelli/ESP32-PsRamFS/archive/refs/heads/patch-1.zip
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: ESP32-PSRamFS@1.0.6 has been installed!
+Library Manager: Installing lvgl/lvgl @ 8.3.11
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: lvgl@8.3.11 has been installed!
+Library Manager: Installing mikalhart/TinyGPSPlus @ ^1.1.0
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Library Manager: TinyGPSPlus@1.1.0 has been installed!
+Verbose mode can be enabled via `-v, --verbose` option
+
+*** missing SConscript file 'scripts\\patch.py'
+File "C:\Users\leleb\AppData\Roaming\uv\tools\platformio\Lib\site-packages\platformio\builder\main.py", line 167, in <module>
+========================= [FAILED] Took 54.59 seconds =========================
+
+Environment    Status    Duration
+-------------  --------  ------------
+willy_debug    FAILED    00:00:54.594
+==================== 1 failed, 0 succeeded in 00:00:54.594 ====================

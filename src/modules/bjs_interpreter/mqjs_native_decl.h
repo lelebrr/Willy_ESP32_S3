@@ -218,7 +218,7 @@ JSValue native_wifiMACAddress(JSContext *ctx, JSValue *this_val, int argc, JSVal
 JSValue native_ipAddress(JSContext *ctx, JSValue *this_val, int argc, JSValue *argv);
 
 /* Additional functions needed by quickjs itself if not defined */
-JSValue js_function_bound(JSContext *ctx, JSValue *this_val, int argc, JSValue *argv);
+JSValue js_function_bound(JSContext *ctx, JSValue *this_val, int argc, JSValue *argv, JSValue params);
 
 #ifdef __cplusplus
 }

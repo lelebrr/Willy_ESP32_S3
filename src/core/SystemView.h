@@ -50,6 +50,8 @@ public:
 
 private:
   SystemView() = default;
+
+public:
   ~SystemView() = default;
 
   bool initialized_ = false;

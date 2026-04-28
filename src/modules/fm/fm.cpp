@@ -2,6 +2,8 @@
 #include "fm.h"
 #include "core/utils.h"
 
+#ifdef HAS_ADAFRUIT_SI4713
+
 bool auto_scan = false;
 bool is_running = false;
 uint16_t fm_station = 10230; // Default set to 102.30 MHz
@@ -316,16 +318,16 @@ bool fm_setup(bool traffic_alert, bool silent) {
     radio.setProperty(SI4713_PROP_TX_RDS_PS_MISC, 0x1008);
   }
 
-  delay(1000);
   return true;
 }
 
 void fm_stop() {
-  if (is_running) {
-    // Stop radio
-    radio.setTXpower(0); // dBuV
-    radio.reset();
-    is_running = false;
-  }
+  // Stop radio
+  radio.setTXpower(0); // dBuV
+  radio.reset();
+  is_running = false;
 }
-#endif
+
+#endif // HAS_ADAFRUIT_SI4713
+
+#endif // LITE_VERSION

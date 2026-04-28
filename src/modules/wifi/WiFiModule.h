@@ -5,6 +5,7 @@
 #include "core/SecurityUtils.h"
 #include "core/SystemModel.h"
 #include "core/SystemView.h"
+#include <ArduinoJson.h>
 #include <memory>
 
 /**
@@ -131,6 +132,28 @@ public:
    * @see IModule::isActive()
    */
   bool isActive() const override { return active_; }
+
+  /**
+   * @brief Retorna a prioridade de processamento do módulo
+   *
+   * @return int valor da prioridade (maior = mais prioritário)
+   *
+   * @see IModule::getPriority()
+   */
+  int getPriority() const override { return 100; }
+
+  /**
+   * @brief Executa um comando genérico no módulo
+   *
+   * @param command Nome do comando a executar
+   * @param result Documento JSON com resultado da operação
+   * @return true se comando executado com sucesso
+   */
+  bool executeCommand(const String &command, JsonDocument &result) override {
+    (void)command;
+    (void)result;
+    return false;
+  }
 
   // ========== Funcionalidades WiFi Específicas ==========
 
@@ -272,13 +295,6 @@ private:
   bool initialized_;
 
   /**
-   * @brief Gerenciador de ataques adaptativos
-   *
-   * Implementa algoritmos que aprendem com respostas do alvo.
-   */
-  AdaptiveAttackManager *adaptiveManager_;
-
-  /**
    * @brief Cache otimizado para resultados de scanning
    *
    * Armazena resultados recentes para reduzir escaneamentos desnecessários.
@@ -290,6 +306,8 @@ private:
     std::vector<uint8_t> channels;
     uint32_t lastScanTime;
     uint32_t cacheValidityMs;
+
+    ScanCache() : lastScanTime(0), cacheValidityMs(30000) {}
   } scanCache_;
 
   /**
@@ -302,6 +320,10 @@ private:
     uint32_t minIntervalMs;
     uint32_t actionCount;
     uint32_t maxActionsPerMinute;
+
+    AttackLimiter()
+        : lastActionTime(0), minIntervalMs(1000), actionCount(0),
+          maxActionsPerMinute(60) {}
 
     bool allowAction() {
       uint32_t now = millis();
@@ -358,8 +380,7 @@ private:
   /**
    * @brief Logging otimizado com níveis de severidade
    */
-  void logWiFiEvent(const String &event, const String &details = "",
-                    LogLevel level = LogLevel::INFO);
+  void logWiFiEvent(const String &event, const String &details = "");
 };
 
 #endif // __WIFI_MODULE_H__

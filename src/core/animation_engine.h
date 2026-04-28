@@ -6,7 +6,6 @@
 #include <TFT_eSPI.h>
 #include <vector>
 
-
 // Configurações de otimização para ESP32-S3
 #define ANIMATION_FRAME_RATE 30
 #define MAX_MATRIX_DROPS 50
@@ -48,6 +47,11 @@ public:
   void enableEffect(bool scanlines, bool glows, bool matrixRain,
                     bool borderGlow, bool glitch);
 
+  // Efeitos específicos
+  void triggerGlitchEffect(uint16_t duration);
+  void addGlowEffect(int16_t x, int16_t y, uint16_t width, uint16_t height,
+                     uint16_t color);
+
   // Renderização
   void update();
   void render();
@@ -58,6 +62,11 @@ public:
   class MatrixRainEffect;
   class BorderGlowEffect;
   class GlitchEffect;
+
+  // Novos efeitos "Quantum Flow"
+  class QuantumFlowEffect;
+  class NeonPulseEffect;
+  class CircuitFlowEffect;
 
 private:
   AnimationEngine() = default;
@@ -233,6 +242,94 @@ private:
   void applyRGBShift();
   void applyPixelCorruption();
   void applyLineDistortion();
+};
+
+/**
+ * @brief Efeito "Quantum Flow" - Partículas quânticas com movimento caótico
+ */
+class AnimationEngine::QuantumFlowEffect {
+public:
+  QuantumFlowEffect(TFT_eSPI *tft) : tft_(tft) {}
+  ~QuantumFlowEffect() = default;
+
+  void init();
+  void update();
+  void render();
+
+  void setIntensity(uint8_t intensity);
+
+private:
+  static constexpr int MAX_QUANTUM_PARTICLES = 50;
+
+  struct QuantumParticle {
+    float x, y;
+    float vx, vy;
+    float life, maxLife;
+    uint16_t color;
+    uint8_t size;
+  };
+
+  TFT_eSPI *tft_;
+  std::vector<QuantumParticle> particles_;
+  float phase_ = 0;
+  uint8_t intensity_ = 255;
+};
+
+/**
+ * @brief Efeito "Neon Pulse" - Pulso neon pulsante concêntrico
+ */
+class AnimationEngine::NeonPulseEffect {
+public:
+  NeonPulseEffect(TFT_eSPI *tft) : tft_(tft) {}
+  ~NeonPulseEffect() = default;
+
+  void init();
+  void update();
+  void render();
+
+  void setPulseSpeed(uint8_t speed);
+
+private:
+  TFT_eSPI *tft_;
+  float pulsePhase_ = 0;
+  float pulseSpeed_ = 1.0f;
+  int16_t centerX_ = 0;
+  int16_t centerY_ = 0;
+};
+
+/**
+ * @brief Efeito "Circuit Flow" - Fluxo de circuito digital
+ */
+class AnimationEngine::CircuitFlowEffect {
+public:
+  CircuitFlowEffect(TFT_eSPI *tft) : tft_(tft) {}
+  ~CircuitFlowEffect() = default;
+
+  void init();
+  void update();
+  void render();
+
+  void setFlowSpeed(uint8_t speed);
+
+private:
+  static constexpr int MAX_CIRCUIT_NODES = 12;
+
+  struct CircuitNode {
+    int16_t x, y;
+    bool active;
+    uint16_t phase;
+  };
+
+  struct CircuitConnection {
+    int from;
+    int to;
+  };
+
+  TFT_eSPI *tft_;
+  std::vector<CircuitNode> nodes_;
+  std::vector<CircuitConnection> connections_;
+  uint16_t flowPhase_ = 0;
+  uint8_t flowSpeed_ = 1;
 };
 
 #endif // ANIMATION_ENGINE_H

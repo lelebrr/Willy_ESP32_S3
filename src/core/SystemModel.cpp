@@ -101,6 +101,7 @@ SystemModel::SystemConfig SystemModel::getDefaultConfig() {
   defaults.bgColor = 0x0000; // TFT_BLACK
   defaults.themePath = "";
   defaults.themeFS = false;
+  LOG_INFO(SYSTEM, "Configuração padrão retornada");
   return defaults;
 }
 
@@ -118,12 +119,8 @@ bool SystemModel::validateConfigValues(const SystemConfig &config) const {
   }
 
   // Validar cor de fundo (0-0xFFFF para TFT)
-  if (config.bgColor > 0xFFFF) {
-    AdvancedLogger::getInstance().warning(
-        LogModule::SYSTEM, "Cor de fundo inválida: 0x%04X", config.bgColor);
-    return false;
-  }
-
+  // config.bgColor é uint16_t, sempre <= 0xFFFF
+  
   // Validar caminho do tema (não vazio se especificado)
   if (!config.themePath.isEmpty() && config.themePath.length() > 256) {
     AdvancedLogger::getInstance().warning(
@@ -143,36 +140,36 @@ void SystemModel::updateConfigFromJson(const JsonDocument &jsonConfig) {
   JsonObjectConst obj = jsonConfig.as<JsonObjectConst>();
 
   // Atualiza apenas campos presentes no JSON
-  if (obj.containsKey("bright") && obj["bright"].is<int>()) {
+  if (obj["bright"].is<int>()) {
     config_.bright = obj["bright"];
     Serial.printf("[SystemModel] Brilho atualizado: %d\n", config_.bright);
   }
-  if (obj.containsKey("wifiAtStartup") && obj["wifiAtStartup"].is<bool>()) {
+  if (obj["wifiAtStartup"].is<bool>()) {
     config_.wifiAtStartup = obj["wifiAtStartup"];
     Serial.printf("[SystemModel] WiFi no startup atualizado: %s\n",
                   config_.wifiAtStartup ? "true" : "false");
   }
-  if (obj.containsKey("startupApp") && obj["startupApp"].is<String>()) {
-    config_.startupApp = obj["startupApp"].as<String>();
+  if (obj["startupApp"].is<String>()) {
+    config_.startupApp = (String)obj["startupApp"];
     Serial.printf("[SystemModel] App de startup atualizado: %s\n",
                   config_.startupApp.c_str());
   }
-  if (obj.containsKey("instantBoot") && obj["instantBoot"].is<bool>()) {
+  if (obj["instantBoot"].is<bool>()) {
     config_.instantBoot = obj["instantBoot"];
     Serial.printf("[SystemModel] Boot instantâneo atualizado: %s\n",
                   config_.instantBoot ? "true" : "false");
   }
-  if (obj.containsKey("bgColor") && obj["bgColor"].is<int>()) {
+  if (obj["bgColor"].is<int>()) {
     config_.bgColor = obj["bgColor"];
     Serial.printf("[SystemModel] Cor de fundo atualizada: 0x%04X\n",
                   config_.bgColor);
   }
-  if (obj.containsKey("themePath") && obj["themePath"].is<String>()) {
-    config_.themePath = obj["themePath"].as<String>();
+  if (obj["themePath"].is<String>()) {
+    config_.themePath = (String)obj["themePath"];
     Serial.printf("[SystemModel] Caminho do tema atualizado: %s\n",
                   config_.themePath.c_str());
   }
-  if (obj.containsKey("themeFS") && obj["themeFS"].is<bool>()) {
+  if (obj["themeFS"].is<bool>()) {
     config_.themeFS = obj["themeFS"];
     Serial.printf("[SystemModel] FS do tema atualizado: %s\n",
                   config_.themeFS ? "SD" : "LittleFS");

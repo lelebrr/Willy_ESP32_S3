@@ -47,8 +47,13 @@ public:
   void process() override;
   void deinit() override;
   String getName() const override { return "DynamicConfigManager"; }
-  int getPriority() const { return 10; } // Alta prioridade
+  int getPriority() const override { return 10; } // Alta prioridade
   bool isActive() const override { return true; }
+  bool executeCommand(const String &command, JsonDocument &result) override {
+    (void)command;
+    (void)result;
+    return false;
+  }
 
   /**
    * @brief Carrega configuração do arquivo JSON
@@ -104,7 +109,7 @@ public:
    */
   void reloadConfigCommand();
 
-private:
+public:
   DynamicConfigManager() = default;
   ~DynamicConfigManager() = default;
 

@@ -167,11 +167,13 @@ public:
   ~MLModule() override = default;
 
   // Implementação da interface IModule
-  void setup();
-  void loop();
-  void handleCommand(const std::string &command,
-                     const std::vector<std::string> &args);
-  String getName() const { return "ML"; }
+  bool init() override;
+  void deinit() override;
+  void process() override;
+  String getName() const override { return "ML"; }
+  bool isActive() const override { return true; }
+  int getPriority() const override { return 50; }
+  bool executeCommand(const String &command, JsonDocument &result) override;
   String getDescription() const;
   void getCapabilities(std::vector<std::string> &caps) const;
 
@@ -310,6 +312,10 @@ public:
 private:
   std::shared_ptr<SystemModel> _model;
   std::shared_ptr<SystemView> _view;
+
+  // Estado do módulo
+  bool _initialized;
+  bool _active;
 
   // Mutex para thread-safety (FreeRTOS)
   mutable SemaphoreHandle_t _mlMutex;

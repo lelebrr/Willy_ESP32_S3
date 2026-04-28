@@ -58,12 +58,16 @@ public:
   void loadConfig();
   void resetToDefaults();
   bool validateConfig() const;
+  SystemConfig getDefaultConfig();
+  bool validateConfigValues(const SystemConfig &config) const;
 
   // Atualização dinâmica (para DynamicConfigManager)
   void updateConfigFromJson(const JsonDocument &jsonConfig);
 
 private:
   SystemModel() = default;
+
+public:
   ~SystemModel() = default;
 
   GlobalState globalState_;

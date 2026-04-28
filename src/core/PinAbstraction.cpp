@@ -14,7 +14,8 @@ bool PinAbstraction::configurePin(const PinConfig &config) {
   }
 
   // Verificar se o pino está disponível no hardware
-  if (!HardwareDetector::getInstance().isPinAvailable(config.pin_number)) {
+  auto available = HardwareDetector::getInstance().getAvailablePins();
+  if (available.find("GPIO" + String(config.pin_number)) == available.end()) {
     AdvancedLogger::getInstance().error(
         LogModule::SYSTEM, "Pino GPIO%d não disponível no hardware",
         config.pin_number);
@@ -24,22 +25,22 @@ bool PinAbstraction::configurePin(const PinConfig &config) {
   // Configurar modo do pino
   uint8_t arduino_mode;
   switch (config.mode) {
-  case PinMode::INPUT:
+  case PinMode::PIN_INPUT:
     arduino_mode = INPUT;
     break;
-  case PinMode::OUTPUT:
+  case PinMode::PIN_OUTPUT:
     arduino_mode = OUTPUT;
     break;
-  case PinMode::INPUT_PULLUP:
+  case PinMode::PIN_INPUT_PULLUP:
     arduino_mode = INPUT_PULLUP;
     break;
-  case PinMode::INPUT_PULLDOWN:
+  case PinMode::PIN_INPUT_PULLDOWN:
     arduino_mode = INPUT_PULLDOWN;
     break;
-  case PinMode::OUTPUT_OPEN_DRAIN:
+  case PinMode::PIN_OUTPUT_OPEN_DRAIN:
     arduino_mode = OUTPUT_OPEN_DRAIN;
     break;
-  case PinMode::ANALOG_INPUT:
+  case PinMode::PIN_ANALOG_INPUT:
     arduino_mode = INPUT; // Analog input usa INPUT
     break;
   default:
@@ -73,7 +74,7 @@ bool PinAbstraction::configurePins(const std::vector<PinConfig> &configs) {
 
 void PinAbstraction::digitalWrite(int pin, PinState state, bool inverted) {
   PinState actual_state =
-      inverted ? (state == PinState::HIGH ? PinState::LOW : PinState::HIGH)
+      inverted ? (state == PinState::PIN_HIGH ? PinState::PIN_LOW : PinState::PIN_HIGH)
                : state;
   ::digitalWrite(pin, static_cast<uint8_t>(actual_state));
 
@@ -87,7 +88,7 @@ void PinAbstraction::digitalWrite(int pin, PinState state, bool inverted) {
 PinState PinAbstraction::digitalRead(int pin, bool inverted) {
   int value = ::digitalRead(pin);
   PinState state = static_cast<PinState>(value);
-  return inverted ? (state == PinState::HIGH ? PinState::LOW : PinState::HIGH)
+  return inverted ? (state == PinState::PIN_HIGH ? PinState::PIN_LOW : PinState::PIN_HIGH)
                   : state;
 }
 

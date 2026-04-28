@@ -24,6 +24,8 @@
 #include "../m5stack-cplus2/pins_arduino.h"
 #elif ESP32S3DEVKITC1
 #include "../ESP32-S3-WROOM-1-N8R2/pins_arduino.h"
+#elif ESP32S3DEVKITC1_N16R8
+#include "../ESP32-S3-WROOM-1-N16R8/pins_arduino.h"
 #elif SMOOCHIEE_BOARD
 #include "../smoochiee-board/pins_arduino.h"
 #elif XK404

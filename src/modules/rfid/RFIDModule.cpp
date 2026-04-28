@@ -46,6 +46,28 @@ void RFIDModule::process() {
   // Por enquanto, sem processamento específico no loop
 }
 
+int RFIDModule::getPriority() const {
+  return 90; // Prioridade mais alta
+}
+
+bool RFIDModule::executeCommand(const String &command, JsonDocument &result) {
+  (void)command;
+  (void)result;
+  // Implementação básica - pode ser expandida depois
+  return false;
+}
+
+int RFIDModule::getPriority() const {
+  return 90; // Prioridade mais alta
+}
+
+bool RFIDModule::executeCommand(const String &command, JsonDocument &result) {
+  (void)command;
+  (void)result;
+  // Implementação básica - pode ser expandida depois
+  return false;
+}
+
 bool RFIDModule::readRFID() {
   auto benchmark = BenchmarkManager::getInstance();
   uint32_t start = 0;

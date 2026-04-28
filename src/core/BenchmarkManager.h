@@ -13,6 +13,10 @@
 #include <map>
 #include <memory>
 
+// Forward declarations to reduce compile-time dependencies
+class SystemModel;
+class SystemView;
+
 /**
  * @brief Gerenciador de Benchmarking e Profiling para Willy Firmware
  *
@@ -117,6 +121,13 @@ public:
   void deinit() override;
   void process() override;
   String getName() const override { return "BenchmarkManager"; }
+  bool isActive() const override { return true; }
+  int getPriority() const override { return 5; }
+  bool executeCommand(const String &command, JsonDocument &result) override {
+    (void)command;
+    (void)result;
+    return false;
+  }
 
   /**
    * @brief Executa benchmark específico

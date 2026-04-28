@@ -2,6 +2,7 @@
 #define __IMODULE_H__
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
 /**
  * @brief Interface base para todos os módulos do sistema Willy Firmware
@@ -48,7 +49,7 @@ public:
    *
    * @return true se a inicialização foi bem-sucedida
    * @return false se ocorreu erro durante inicialização
-   *
+
    * @note Deve ser chamado apenas uma vez durante o ciclo de vida do módulo
    * @note Em caso de falha, o módulo não será registrado no SystemManager
    *
@@ -124,6 +125,33 @@ public:
    * @see SystemManager::processAllModules()
    */
   virtual bool isActive() const = 0;
+
+  /**
+   * @brief Retorna a prioridade de processamento do módulo
+   *
+   * Define a ordem de processamento dos módulos no sistema. Módulos com
+   * prioridade mais alta são processados primeiro.
+   *
+   * @return int valor da prioridade (maior = mais prioritário)
+   *
+   * @note Valores típicos: 0 = baixa, 100 = alta
+   * @note Usado para ordenação no SystemManager
+   */
+  virtual int getPriority() const = 0;
+
+  /**
+   * @brief Executa um comando genérico no módulo
+   *
+   * Permite executar operações específicas do módulo através de uma interface
+   * genérica, evitando necessidade de cast para tipos específicos.
+   *
+   * @param command Nome do comando a executar
+   * @param result Documento JSON com resultado da operação
+   * @return true se comando executado com sucesso
+   *
+   * @note Implementação deve validar comando e parâmetros
+   */
+  virtual bool executeCommand(const String &command, JsonDocument &result) = 0;
 };
 
 #endif // __IMODULE_H__

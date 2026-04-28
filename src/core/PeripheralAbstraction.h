@@ -3,34 +3,34 @@
 
 #include "PinAbstraction.h"
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <map>
 #include <memory>
 #include <vector>
-
 
 /**
  * @brief Tipos de periféricos suportados
  */
 enum class PeripheralType {
-  DISPLAY,
-  SDCARD,
-  ETHERNET,
-  USB,
-  CAMERA,
-  RFID,
-  IR,
-  NRF24,
-  LORA,
-  GPS,
-  BLUETOOTH,
-  WIFI,
-  SERIAL,
-  I2C,
-  SPI,
-  ADC,
-  DAC,
-  PWM,
-  TOUCH
+  PERIPH_DISPLAY,
+  PERIPH_SDCARD,
+  PERIPH_ETHERNET,
+  PERIPH_USB,
+  PERIPH_CAMERA,
+  PERIPH_RFID,
+  PERIPH_IR,
+  PERIPH_NRF24,
+  PERIPH_LORA,
+  PERIPH_GPS,
+  PERIPH_BLUETOOTH,
+  PERIPH_WIFI,
+  PERIPH_SERIAL,
+  PERIPH_I2C,
+  PERIPH_SPI,
+  PERIPH_ADC,
+  PERIPH_DAC,
+  PERIPH_PWM,
+  PERIPH_TOUCH
 };
 
 /**
@@ -41,7 +41,7 @@ enum class PeripheralStatus {
   INITIALIZING,
   READY,
   ERROR,
-  DISABLED
+  PERIPH_DISABLED
 };
 
 /**
@@ -53,7 +53,7 @@ struct PeripheralConfig {
   bool enabled;
   JsonDocument config;
 
-  PeripheralConfig(PeripheralType t = PeripheralType::DISPLAY,
+  PeripheralConfig(PeripheralType t = PeripheralType::PERIPH_DISPLAY,
                    const String &n = "", bool e = true)
       : type(t), name(n), enabled(e) {}
 };
@@ -74,7 +74,7 @@ public:
   virtual bool isAvailable() const = 0;
 
   virtual String getInfo() const = 0;
-  virtual JsonDocument getStatus() const = 0;
+  virtual JsonDocument getStatusJson() const = 0;
 };
 
 /**
@@ -178,10 +178,12 @@ private:
   static std::map<String, std::vector<PinConfig>> peripheral_pins_;
 
   // Singleton pattern
-  PeripheralAbstraction() = delete;
-  ~PeripheralAbstraction() = delete;
   PeripheralAbstraction(const PeripheralAbstraction &) = delete;
   PeripheralAbstraction &operator=(const PeripheralAbstraction &) = delete;
+
+private:
+  PeripheralAbstraction() = default;
+  ~PeripheralAbstraction() = default;
 };
 
 #endif // __PERIPHERAL_ABSTRACTION_H__

@@ -1074,7 +1074,7 @@ int gsetIrTxPin(bool set) {
   if (set) {
     options.clear();
     std::vector<std::pair<const char *, int>> pins;
-    pins = IR_TX_PINS;
+    pins = {IR_TX_PINS};
     int idx = 100;
     int j = 0;
     for (auto pin : pins) {
@@ -1138,7 +1138,7 @@ int gsetIrRxPin(bool set) {
   if (set) {
     options.clear();
     std::vector<std::pair<const char *, int>> pins;
-    pins = IR_RX_PINS;
+    pins = {IR_RX_PINS};
     int idx = -1;
     int j = 0;
     for (auto pin : pins) {
@@ -1175,7 +1175,7 @@ int gsetRfTxPin(bool set) {
   if (set) {
     options.clear();
     std::vector<std::pair<const char *, int>> pins;
-    pins = RF_TX_PINS;
+    pins = {RF_TX_PINS};
     int idx = -1;
     int j = 0;
     for (auto pin : pins) {
@@ -1213,7 +1213,7 @@ int gsetRfRxPin(bool set) {
   if (set) {
     options.clear();
     std::vector<std::pair<const char *, int>> pins;
-    pins = RF_RX_PINS;
+    pins = {RF_RX_PINS};
     int idx = -1;
     int j = 0;
     for (auto pin : pins) {

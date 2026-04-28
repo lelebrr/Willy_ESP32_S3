@@ -1,26 +1,27 @@
 #include "advanced_logger.h"
 #include "compression_utils.h"
-#include "globals.h"
 #include "sd_functions.h"
 #include <ESP32Time.h>
 #include <cstdarg>
 #include <ctime>
+#include <globals.h>
+
+
+// Declaração externa do RTC (definido em main.cpp)
+extern ESP32Time rtc;
 
 // Strings constantes
 const char *AdvancedLogger::LEVEL_STRINGS[] = {"DEBUG", "INFO", "WARNING",
                                                "ERROR", "CRITICAL"};
 const char *AdvancedLogger::MODULE_STRINGS[] = {
-    "SYSTEM",  "WIFI",  "RFID", "RF",    "BLE",  "IR", "GPS", "SDCARD",
-    "DISPLAY", "POWER", "WEB",  "NRF24", "LORA", "FM", "ETH", "OTHER"};
+    "SYSTEM",  "WIFI",  "RFID", "RF",    "BLE",  "IR", "GPS",      "SDCARD",
+    "DISPLAY", "POWER", "WEB",  "NRF24", "LORA", "FM", "ETHERNET", "OTHER"};
 
 // Instância singleton
 AdvancedLogger &AdvancedLogger::getInstance() {
   static AdvancedLogger instance;
   return instance;
 }
-
-// Instância global para compatibilidade
-AdvancedLogger advancedLogger;
 
 AdvancedLogger::AdvancedLogger()
     : _mutex(nullptr), _startTime(0), _lastRotationCheck(0), _logCount(0),
@@ -62,7 +63,7 @@ bool AdvancedLogger::begin() {
   // Criar arquivo de log inicial
   if (_config.logToSD) {
     _currentLogFile = generateLogFilename();
-    _logFile = SD.open(_currentLogFile, FILE_APPEND);
+    _logFile = SD.open(_currentLogFile, FILE_WRITE);
     if (!_logFile) {
       Serial.println("[AdvancedLogger] Erro ao criar arquivo de log");
       _config.logToSD = false;
@@ -106,19 +107,19 @@ void AdvancedLogger::setConfig(const LogConfig &config) {
 
 LogConfig AdvancedLogger::getConfig() const { return _config; }
 
-LogError AdvancedLogger::log(LogLevel level, LogModule module,
-                             const char *format, ...) {
+void AdvancedLogger::log(LogLevel level, LogModule module, const char *format,
+                         ...) {
   // Validações básicas
   if (!_initialized) {
-    return LogError::INVALID_FORMAT;
+    return;
   }
 
   if (!_config.enabled) {
-    return LogError::SUCCESS; // Silenciosamente ignorado
+    return; // Silenciosamente ignorado
   }
 
   if (level < _config.minLevel || !_config.moduleFilters[module]) {
-    return LogError::SUCCESS; // Filtrado
+    return; // Filtrado
   }
 
   // Rate limiting
@@ -130,12 +131,12 @@ LogError AdvancedLogger::log(LogLevel level, LogModule module,
 
   if (_rateLimitCounter >= MAX_LOGS_PER_SECOND) {
     _droppedLogCount++;
-    return LogError::RATE_LIMITED;
+    return;
   }
 
   // Validação de entrada
   if (!format || strlen(format) > MAX_LOG_MESSAGE_SIZE - 50) {
-    return LogError::INVALID_FORMAT;
+    return;
   }
 
   va_list args;
@@ -145,44 +146,40 @@ LogError AdvancedLogger::log(LogLevel level, LogModule module,
   va_end(args);
 
   if (result < 0 || static_cast<size_t>(result) >= sizeof(buffer)) {
-    return LogError::BUFFER_OVERFLOW;
+    return;
   }
 
-  LogError err = log(level, module, String(buffer));
-  if (err == LogError::SUCCESS) {
-    _rateLimitCounter++;
-  }
-  return err;
+  log(level, module, String(buffer));
+  _rateLimitCounter++;
 }
 
-LogError AdvancedLogger::log(LogLevel level, LogModule module,
-                             const String &message) {
+void AdvancedLogger::log(LogLevel level, LogModule module,
+                         const String &message) {
   JsonDocument emptyDoc;
-  return log(level, module, message, emptyDoc);
+  log(level, module, message, emptyDoc);
 }
 
-LogError AdvancedLogger::log(LogLevel level, LogModule module,
-                             const String &message,
-                             const JsonDocument &extraData) {
+void AdvancedLogger::log(LogLevel level, LogModule module,
+                         const String &message, const JsonDocument &extraData) {
   if (!_initialized) {
-    return LogError::INVALID_FORMAT;
+    return;
   }
 
   if (!_config.enabled) {
-    return LogError::SUCCESS;
+    return;
   }
 
   if (level < _config.minLevel || !_config.moduleFilters[module]) {
-    return LogError::SUCCESS;
+    return;
   }
 
   // Validação de tamanho da mensagem
   if (message.length() >= MAX_LOG_MESSAGE_SIZE) {
-    return LogError::BUFFER_OVERFLOW;
+    return;
   }
 
   if (xSemaphoreTake(_mutex, portMAX_DELAY) != pdTRUE) {
-    return LogError::MUTEX_TIMEOUT;
+    return;
   }
 
   LogEntry entry;
@@ -192,10 +189,12 @@ LogError AdvancedLogger::log(LogLevel level, LogModule module,
   }
   entry.level = level;
   entry.module = module;
-  entry.message = message;
+  strncpy(entry.message, message.c_str(), MAX_LOG_MESSAGE_SIZE - 1);
+  entry.message[MAX_LOG_MESSAGE_SIZE - 1] = '\0';
+  entry.messageLength = strlen(entry.message);
   entry.extraData = extraData;
   entry.heapFree = ESP.getFreeHeap();
-  entry.errorCode = 0; // Pode ser expandido
+  entry.errorCode = LogError::SUCCESS; // Pode ser expandido
 
   String formattedEntry = formatLogEntry(entry);
 
@@ -271,8 +270,11 @@ void AdvancedLogger::enableModule(LogModule module, bool enable) {
 }
 
 bool AdvancedLogger::isModuleEnabled(LogModule module) const {
-  auto it = _config.moduleFilters.find(module);
-  return it != _config.moduleFilters.end() ? it->second : true;
+  // std::array não tem find(), usar acesso direto com verificação de bounds
+  if (module >= 0 && module < MAX_MODULE_FILTERS) {
+    return _config.moduleFilters[static_cast<size_t>(module)];
+  }
+  return true; // Padrão: habilitado para módulos desconhecidos
 }
 
 void AdvancedLogger::rotateLogFile() {
@@ -350,7 +352,7 @@ void AdvancedLogger::handleSerialCommand(const String &command,
     Serial.printf("[AdvancedLogger] Arquivo atual: %s\n",
                   _currentLogFile.c_str());
     Serial.printf("[AdvancedLogger] Tamanho: %d bytes\n", getLogFileSize());
-    Serial.printf("[AdvancedLogger] Contagem: %d\n", _logCount);
+    Serial.printf("[AdvancedLogger] Contagem: %lu\n", _logCount);
   }
 }
 
@@ -421,7 +423,7 @@ String AdvancedLogger::formatLogEntry(const LogEntry &entry) {
       doc["extra"] = entry.extraData;
     }
     doc["heap_free"] = entry.heapFree;
-    doc["error_code"] = entry.errorCode;
+    doc["error_code"] = static_cast<uint8_t>(entry.errorCode);
 
     String output;
     serializeJson(doc, output);
@@ -429,8 +431,9 @@ String AdvancedLogger::formatLogEntry(const LogEntry &entry) {
   } else {
     // Formato CSV simples
     return String(entry.timestamp) + "," + LEVEL_STRINGS[entry.level] + "," +
-           MODULE_STRINGS[entry.module] + "," + entry.message + "," +
-           String(entry.heapFree) + "," + String(entry.errorCode);
+           MODULE_STRINGS[entry.module] + "," + String(entry.message) + "," +
+           String(entry.heapFree) + "," +
+           String(static_cast<uint8_t>(entry.errorCode));
   }
 }
 
@@ -496,7 +499,7 @@ bool AdvancedLogger::compressFile(const String &inputFile,
                                   const String &outputFile) {
   // Compressão básica: apenas renomear arquivo (placeholder)
   // TODO: Implementar compressão LZ4 quando biblioteca estiver disponível
-  if (SD.rename(inputFile.c_str(), outputFile.c_str())) {
+  if (SD.rename(inputFile, outputFile)) {
     info(SYSTEM, "Arquivo 'comprimido' (renomeado): %s -> %s",
          inputFile.c_str(), outputFile.c_str());
     return true;
@@ -509,83 +512,7 @@ bool AdvancedLogger::compressFile(const String &inputFile,
 
 bool AdvancedLogger::decompressFile(const String &inputFile,
                                     const String &outputFile) {
-  File input = SD.open(inputFile, FILE_READ);
-  if (!input) {
-    error(SYSTEM, "Erro ao abrir arquivo comprimido: %s", inputFile.c_str());
-    return false;
-  }
-
-  File output = SD.open(outputFile, FILE_WRITE);
-  if (!output) {
-    input.close();
-    error(SYSTEM, "Erro ao criar arquivo descomprimido: %s",
-          outputFile.c_str());
-    return false;
-  }
-
-  // Usar LZ4 frame decompression
-  LZ4F_decompressionContext_t ctx;
-  LZ4F_errorCode_t err = LZ4F_createDecompressionContext(&ctx, LZ4F_VERSION);
-  if (LZ4F_isError(err)) {
-    input.close();
-    output.close();
-    error(SYSTEM, "Erro ao criar contexto de descompressão LZ4: %s",
-          LZ4F_getErrorName(err));
-    return false;
-  }
-
-  // Buffer para descompressão
-  const size_t bufferSize = 4096;
-  uint8_t *inBuffer = (uint8_t *)malloc(bufferSize);
-  uint8_t *outBuffer =
-      (uint8_t *)malloc(bufferSize * 2); // Buffer maior para saída
-
-  if (!inBuffer || !outBuffer) {
-    free(inBuffer);
-    free(outBuffer);
-    LZ4F_freeDecompressionContext(ctx);
-    input.close();
-    output.close();
-    error(SYSTEM, "Erro de alocação de memória para descompressão");
-    return false;
-  }
-
-  size_t inPos = 0;
-  size_t outPos = 0;
-  LZ4F_frameInfo_t frameInfo;
-
-  // Descomprimir
-  size_t result;
-  while ((result = LZ4F_decompress(ctx, outBuffer, &outPos, inBuffer + inPos,
-                                   &inPos, &frameInfo)) > 0) {
-    if (LZ4F_isError(result)) {
-      free(inBuffer);
-      free(outBuffer);
-      LZ4F_freeDecompressionContext(ctx);
-      input.close();
-      output.close();
-      error(SYSTEM, "Erro na descompressão LZ4: %s", LZ4F_getErrorName(result));
-      return false;
-    }
-
-    output.write(outBuffer, outPos);
-    outPos = 0;
-
-    // Ler mais dados se necessário
-    if (inPos == 0) {
-      inPos = input.read(inBuffer, bufferSize);
-      if (inPos == 0)
-        break;
-    }
-  }
-
-  free(inBuffer);
-  free(outBuffer);
-  LZ4F_freeDecompressionContext(ctx);
-  input.close();
-  output.close();
-
-  info(SYSTEM, "Arquivo descomprimido: %s -> %s", inputFile.c_str(),
-       outputFile.c_str());
-  return true;
+  // LZ4 não disponível - implementação placeholder
+  error(SYSTEM, "Descompressão LZ4 não disponível (biblioteca não incluída)");
+  return false;
 }

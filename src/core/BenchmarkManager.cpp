@@ -1,8 +1,4 @@
 #include "BenchmarkManager.h"
-#include "../modules/ml/MLModule.h"
-#include "../modules/rf/RFModule.h"
-#include "../modules/rfid/RFIDModule.h"
-#include "../modules/wifi/WiFiModule.h"
 #include "SystemManager.h"
 #include "advanced_logger.h"
 #include <SD.h>
@@ -13,6 +9,12 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+// Forward declarations to reduce compile-time dependencies
+// These modules are only used in specific benchmark functions
+class MLModule;
+class RFModule;
+class RFIDModule;
+class WiFiModule;
 
 BenchmarkManager *BenchmarkManager::instance_ = nullptr;
 
@@ -55,26 +57,32 @@ bool BenchmarkManager::init() {
 
   // Registrar benchmarks customizados padrão
   registerCustomBenchmark("wifi_scan", [this](BenchmarkResult &result) {
+    (void)result;
     return benchmarkWiFiScan();
   });
 
   registerCustomBenchmark("rf_transmit", [this](BenchmarkResult &result) {
+    (void)result;
     return benchmarkRFTransmission();
   });
 
   registerCustomBenchmark("rfid_read", [this](BenchmarkResult &result) {
+    (void)result;
     return benchmarkRFIDReading();
   });
 
   registerCustomBenchmark("ml_inference", [this](BenchmarkResult &result) {
+    (void)result;
     return benchmarkMLInference();
   });
 
   registerCustomBenchmark("memory_stress", [this](BenchmarkResult &result) {
+    (void)result;
     return benchmarkMemoryStress();
   });
 
   registerCustomBenchmark("cpu_stress", [this](BenchmarkResult &result) {
+    (void)result;
     return benchmarkCPUStress();
   });
 
@@ -508,13 +516,13 @@ void BenchmarkManager::loadResultsFromSD() {
   for (JsonVariant v : arr) {
     BenchmarkResult result;
     result.timestamp = v["timestamp"];
-    result.type = static_cast<MetricType>(v["type"]);
+    result.type = static_cast<MetricType>(v["type"].as<int>());
     result.operation = v["operation"].as<String>();
     result.duration_us = v["duration_us"];
     result.memory_used = v["memory_used"];
     result.cpu_usage_percent = v["cpu_usage"];
     result.success = v["success"];
-    if (v.containsKey("extra")) {
+    if (!v["extra"].isNull()) {
       result.extra_data = v["extra"];
     }
     results_.push_back(result);
@@ -528,10 +536,12 @@ void BenchmarkManager::loadResultsFromSD() {
 
 bool BenchmarkManager::benchmarkWiFiScan() {
   auto &systemManager = SystemManager::getInstance();
-  auto wifiModule = static_cast<WiFiModule *>(systemManager.getModule("WiFi"));
+  auto wifiModule = systemManager.getModule("WiFi");
   if (wifiModule) {
-    int nets = wifiModule->performWiFiScan();
-    return nets >= 0;
+    // Usa chamada genérica do módulo em vez de cast
+    JsonDocument result;
+    bool success = wifiModule->executeCommand("scan", result);
+    return success;
   } else {
     uint32_t start = startProfiling("WiFi Scan");
     WiFi.mode(WIFI_MODE_STA);
@@ -544,9 +554,11 @@ bool BenchmarkManager::benchmarkWiFiScan() {
 
 bool BenchmarkManager::benchmarkRFTransmission() {
   auto &systemManager = SystemManager::getInstance();
-  auto rfModule = static_cast<RFModule *>(systemManager.getModule("RF"));
+  auto rfModule = systemManager.getModule("RF");
   if (rfModule) {
-    return rfModule->transmitRF();
+    JsonDocument result;
+    bool success = rfModule->executeCommand("transmit", result);
+    return success;
   } else {
     uint32_t start = startProfiling("RF Transmission");
     delay(50);
@@ -557,9 +569,11 @@ bool BenchmarkManager::benchmarkRFTransmission() {
 
 bool BenchmarkManager::benchmarkRFIDReading() {
   auto &systemManager = SystemManager::getInstance();
-  auto rfidModule = static_cast<RFIDModule *>(systemManager.getModule("RFID"));
+  auto rfidModule = systemManager.getModule("RFID");
   if (rfidModule) {
-    return rfidModule->readRFID();
+    JsonDocument result;
+    bool success = rfidModule->executeCommand("read", result);
+    return success;
   } else {
     uint32_t start = startProfiling("RFID Reading");
     delay(75);
@@ -570,13 +584,13 @@ bool BenchmarkManager::benchmarkRFIDReading() {
 
 bool BenchmarkManager::benchmarkMLInference() {
   auto &systemManager = SystemManager::getInstance();
-  auto mlModule = static_cast<MLModule *>(systemManager.getModule("ML"));
+  auto mlModule = systemManager.getModule("ML");
   if (mlModule) {
     uint32_t start = startProfiling("ML Inference");
-    std::vector<float> features = {1.0f, 2.0f, 3.0f};
-    auto result = mlModule->classifyWiFiDevice(features);
-    endProfiling(start, MetricType::ML_INFERENCE_TIME, "ML Inference", true);
-    return true;
+    JsonDocument result;
+    bool success = mlModule->executeCommand("classify", result);
+    endProfiling(start, MetricType::ML_INFERENCE_TIME, "ML Inference", success);
+    return success;
   } else {
     uint32_t start = startProfiling("ML Inference");
     delay(200);

@@ -9,6 +9,7 @@
 #include "core/powerSave.h"
 #include "core/serial_commands/cli.h"
 #include "core/wifi/wifi_common.h"
+#include "core/willy_logo.h"
 
 // Novos includes para arquitetura MVC e módulos
 #include "core/BenchmarkManager.h"
@@ -389,19 +390,52 @@ void setup_touch() {
  *********************************************************************/
 void boot_screen() {
   Serial.println("[BOOT] Inside boot_screen()...");
+
+  // Fundo escuro com borda Neon Aqua
+  tft.fillScreen(willyConfig.bgColor);
+  tft.drawRect(2, 2, tftWidth - 4, tftHeight - 4, willyConfig.priColor);
+
+  // Desenha logo ASCII "Willy" centralizado
   tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
-  tft.setTextSize(FM);
-  tft.drawPixel(0, 0, willyConfig.bgColor);
-  Serial.println("[BOOT] Drawing 'Willy' string...");
-  tft.drawCentreString("Willy", tftWidth / 2, 10, 1);
   tft.setTextSize(FP);
-  Serial.println("[BOOT] Drawing version string...");
-  tft.drawCentreString(WILLY_VERSION, tftWidth / 2, 25, 1);
+
+  // Posição inicial para o logo ASCII
+  int logoY = 15;
+  int logoX = tftWidth / 2;
+
+  // Desenha cada linha do logo ASCII
+  const char *logo = WILLY_LOGO_ASCII;
+  char line[50];
+  int lineIdx = 0;
+
+  tft.setTextDatum(MC_DATUM); // Centralizado
+
+  // Desenha o logo linha por linha
+  tft.drawString("      /\\ ", logoX, logoY);
+  tft.drawString("     /  \\ ", logoX, logoY + 8);
+  tft.drawString("    /____\\ ", logoX, logoY + 16);
+  tft.drawString("   /\\    /\\ ", logoX, logoY + 24);
+  tft.drawString("  /  \\  /  \\ ", logoX, logoY + 32);
+  tft.drawString(" |____||____| ", logoX, logoY + 40);
+  tft.drawString(" \\____/\\____/ ", logoX, logoY + 48);
+  tft.drawString("  \\____/____/ ", logoX, logoY + 56);
+  tft.drawString("   \\________/ ", logoX, logoY + 64);
+
+  // Texto "Willy" em destaque
   tft.setTextSize(FM);
-  Serial.println("[BOOT] Drawing 'WILLY FIRMWARE' string...");
-  tft.drawCentreString("WILLY FIRMWARE", tftWidth / 2, tftHeight + 2,
-                       1); // will draw outside the screen on non touch devices
-  Serial.println("[BOOT] Finished boot_screen().");
+  tft.setTextColor(willyConfig.secColor, willyConfig.bgColor);
+  tft.drawString("WILLY", logoX, logoY + 80);
+
+  // Versão
+  tft.setTextSize(FP);
+  tft.setTextColor(willyConfig.priColor, willyConfig.bgColor);
+  tft.drawString(WILLY_VERSION, logoX, logoY + 95);
+
+  // Rodapé
+  tft.setTextSize(FP);
+  tft.drawString("FUTURISTIC EDITION", logoX, tftHeight - 15);
+
+  Serial.println("[BOOT] Finished boot_screen() with ASCII logo.");
 }
 
 /*********************************************************************
@@ -613,9 +647,9 @@ void setup() {
     Serial.println("[ERROR] Failed to initialize some modules!");
   }
 
-  // Inicializar AdvancedLogger
+  // Inicializar AdvancedLogger (willyLogger)
   Serial.println("[BOOT] Initializing Advanced Logger...");
-  if (!advancedLogger.begin()) {
+  if (!willyLogger.begin()) {
     Serial.println("[ERROR] Failed to initialize Advanced Logger!");
   }
 

@@ -211,12 +211,13 @@ bool HardwareProfiles::loadProfilesFromFile(const String &path) {
   JsonArray profiles_array = doc["profiles"];
   for (JsonObject p : profiles_array) {
     HardwareProfile profile(p["name"], p["description"]);
-    profile.variant = static_cast<ESP32Variant>(p["variant"]);
+    profile.variant = static_cast<ESP32Variant>(p["variant"].as<int>());
 
     // Carrega pinos
     JsonArray pins = p["pins"];
     for (JsonObject pin_obj : pins) {
-      PinConfig pin(pin_obj["pin"], static_cast<PinMode>(pin_obj["mode"]),
+      PinConfig pin(pin_obj["pin"],
+                    static_cast<PinMode>(pin_obj["mode"].as<int>()),
                     pin_obj["inverted"], pin_obj["description"]);
       profile.pin_configs.push_back(pin);
     }
@@ -278,25 +279,25 @@ void HardwareProfiles::createESP32S3Profiles() {
 
   // Configuração de pinos para display ILI9341
   willy_s3.pin_configs.push_back(
-      PinConfig(10, PinMode::OUTPUT, false, "TFT_CS"));
+      PinConfig(10, PinMode::PIN_OUTPUT, false, "TFT_CS"));
   willy_s3.pin_configs.push_back(
-      PinConfig(11, PinMode::OUTPUT, false, "TFT_DC"));
+      PinConfig(11, PinMode::PIN_OUTPUT, false, "TFT_DC"));
   willy_s3.pin_configs.push_back(
-      PinConfig(12, PinMode::OUTPUT, false, "TFT_RST"));
+      PinConfig(12, PinMode::PIN_OUTPUT, false, "TFT_RST"));
   willy_s3.pin_configs.push_back(
-      PinConfig(13, PinMode::OUTPUT, false, "TFT_MOSI"));
+      PinConfig(13, PinMode::PIN_OUTPUT, false, "TFT_MOSI"));
   willy_s3.pin_configs.push_back(
-      PinConfig(14, PinMode::OUTPUT, false, "TFT_SCK"));
+      PinConfig(14, PinMode::PIN_OUTPUT, false, "TFT_SCK"));
 
   // Configuração de pinos para SD card
   willy_s3.pin_configs.push_back(
-      PinConfig(15, PinMode::OUTPUT, false, "SD_CS"));
+      PinConfig(15, PinMode::PIN_OUTPUT, false, "SD_CS"));
   willy_s3.pin_configs.push_back(
-      PinConfig(16, PinMode::INPUT, false, "SD_MOSI"));
+      PinConfig(16, PinMode::PIN_INPUT, false, "SD_MOSI"));
   willy_s3.pin_configs.push_back(
-      PinConfig(17, PinMode::OUTPUT, false, "SD_MISO"));
+      PinConfig(17, PinMode::PIN_OUTPUT, false, "SD_MISO"));
   willy_s3.pin_configs.push_back(
-      PinConfig(18, PinMode::OUTPUT, false, "SD_SCK"));
+      PinConfig(18, PinMode::PIN_OUTPUT, false, "SD_SCK"));
 
   // Configuração do periférico display
   JsonDocument display_config;
@@ -315,15 +316,15 @@ void HardwareProfiles::createESP32S3Profiles() {
   st7789_s3.variant = ESP32Variant::ESP32_S3;
 
   st7789_s3.pin_configs.push_back(
-      PinConfig(10, PinMode::OUTPUT, false, "TFT_CS"));
+      PinConfig(10, PinMode::PIN_OUTPUT, false, "TFT_CS"));
   st7789_s3.pin_configs.push_back(
-      PinConfig(11, PinMode::OUTPUT, false, "TFT_DC"));
+      PinConfig(11, PinMode::PIN_OUTPUT, false, "TFT_DC"));
   st7789_s3.pin_configs.push_back(
-      PinConfig(12, PinMode::OUTPUT, false, "TFT_RST"));
+      PinConfig(12, PinMode::PIN_OUTPUT, false, "TFT_RST"));
   st7789_s3.pin_configs.push_back(
-      PinConfig(13, PinMode::OUTPUT, false, "TFT_MOSI"));
+      PinConfig(13, PinMode::PIN_OUTPUT, false, "TFT_MOSI"));
   st7789_s3.pin_configs.push_back(
-      PinConfig(14, PinMode::OUTPUT, false, "TFT_SCK"));
+      PinConfig(14, PinMode::PIN_OUTPUT, false, "TFT_SCK"));
 
   JsonDocument st7789_config;
   st7789_config["type"] = "ST7789";
@@ -343,11 +344,11 @@ void HardwareProfiles::createESP32S2Profiles() {
 
   // Configuração básica
   s2_generic.pin_configs.push_back(
-      PinConfig(34, PinMode::OUTPUT, false, "TFT_CS"));
+      PinConfig(34, PinMode::PIN_OUTPUT, false, "TFT_CS"));
   s2_generic.pin_configs.push_back(
-      PinConfig(33, PinMode::OUTPUT, false, "TFT_DC"));
+      PinConfig(33, PinMode::PIN_OUTPUT, false, "TFT_DC"));
   s2_generic.pin_configs.push_back(
-      PinConfig(35, PinMode::OUTPUT, false, "TFT_RST"));
+      PinConfig(35, PinMode::PIN_OUTPUT, false, "TFT_RST"));
 
   profiles_[s2_generic.name] = s2_generic;
 }
@@ -360,11 +361,11 @@ void HardwareProfiles::createESP32C3Profiles() {
 
   // Configuração limitada para ESP32-C3
   c3_generic.pin_configs.push_back(
-      PinConfig(7, PinMode::OUTPUT, false, "TFT_CS"));
+      PinConfig(7, PinMode::PIN_OUTPUT, false, "TFT_CS"));
   c3_generic.pin_configs.push_back(
-      PinConfig(6, PinMode::OUTPUT, false, "TFT_DC"));
+      PinConfig(6, PinMode::PIN_OUTPUT, false, "TFT_DC"));
   c3_generic.pin_configs.push_back(
-      PinConfig(5, PinMode::OUTPUT, false, "TFT_RST"));
+      PinConfig(5, PinMode::PIN_OUTPUT, false, "TFT_RST"));
 
   profiles_[c3_generic.name] = c3_generic;
 }
@@ -373,19 +374,19 @@ void HardwareProfiles::createGenericProfiles() {
   HardwareProfile generic;
   generic.name = "esp32-generic";
   generic.description = "ESP32 genérico";
-  generic.variant = ESP32Variant::ESP32;
+  generic.variant = ESP32Variant::ESP32_CLASSIC;
 
   // Configuração padrão ESP32
   generic.pin_configs.push_back(
-      PinConfig(15, PinMode::OUTPUT, false, "TFT_CS"));
-  generic.pin_configs.push_back(PinConfig(2, PinMode::OUTPUT, false, "TFT_DC"));
+      PinConfig(15, PinMode::PIN_OUTPUT, false, "TFT_CS"));
+  generic.pin_configs.push_back(PinConfig(2, PinMode::PIN_OUTPUT, false, "TFT_DC"));
   generic.pin_configs.push_back(
-      PinConfig(4, PinMode::OUTPUT, false, "TFT_RST"));
+      PinConfig(4, PinMode::PIN_OUTPUT, false, "TFT_RST"));
   generic.pin_configs.push_back(
-      PinConfig(23, PinMode::OUTPUT, false, "TFT_MOSI"));
+      PinConfig(23, PinMode::PIN_OUTPUT, false, "TFT_MOSI"));
   generic.pin_configs.push_back(
-      PinConfig(18, PinMode::OUTPUT, false, "TFT_SCK"));
-  generic.pin_configs.push_back(PinConfig(5, PinMode::OUTPUT, false, "SD_CS"));
+      PinConfig(18, PinMode::PIN_OUTPUT, false, "TFT_SCK"));
+  generic.pin_configs.push_back(PinConfig(5, PinMode::PIN_OUTPUT, false, "SD_CS"));
 
   profiles_[generic.name] = generic;
 }

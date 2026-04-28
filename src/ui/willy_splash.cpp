@@ -16,7 +16,7 @@
 #include <Arduino.h>
 #include <LittleFS.h>
 
-#define ACCENT_COLOR 0x00FFFF
+#define ACCENT_COLOR 0x00E6FF
 
 // LVGL animation wrapper functions — lv_obj_set_style_* takes 3 args
 // (obj, value, selector) but lv_anim_exec_xcb_t passes only 2 (obj, value).
@@ -39,7 +39,10 @@ struct WillySplashConfig {
   int velocidade = 1; // 0 = lento, 1 = normal, 2 = rápido
   bool somAtivado = true;
   int tipoSom = 0;                 // 0 = rugido + esguicho, 1 = só esguicho
-  uint32_t corPrimaria = 0x9B00FF; // Roxo neon
+  uint32_t corPrimaria = 0x00E6FF; // Ciano neon futurista
+  int animationMode =
+      0; // 0 = Clássico, 1 = Quantum Flow, 2 = Circuit Flow, 3 = Neon Pulse
+  int effectIntensity = 5; // 1-10 intensidade dos efeitos
 };
 
 static WillySplashConfig willySplashCfg;
@@ -68,6 +71,17 @@ void load_willy_config() {
     willySplashCfg.tipoSom = f.readStringUntil('\n').toInt();
     willySplashCfg.corPrimaria =
         strtol(f.readStringUntil('\n').c_str(), NULL, 16);
+    // Novos campos - com valores padrão se não existirem
+    if (f.available()) {
+      willySplashCfg.animationMode = f.readStringUntil('\n').toInt();
+    } else {
+      willySplashCfg.animationMode = 0; // Clássico padrão
+    }
+    if (f.available()) {
+      willySplashCfg.effectIntensity = f.readStringUntil('\n').toInt();
+    } else {
+      willySplashCfg.effectIntensity = 5; // Intensidade média
+    }
     f.close();
   }
 }
@@ -79,6 +93,8 @@ void save_willy_config() {
     f.println(willySplashCfg.somAtivado ? "1" : "0");
     f.println(willySplashCfg.tipoSom);
     f.printf("%04lX\n", (unsigned long)willySplashCfg.corPrimaria);
+    f.println(willySplashCfg.animationMode);
+    f.println(willySplashCfg.effectIntensity);
     f.close();
   }
 }
@@ -117,7 +133,7 @@ static void create_orca(lv_obj_t *parent) {
   orca_body = lv_obj_create(orca_container);
   lv_obj_set_size(orca_body, 125, 65);
   lv_obj_set_pos(orca_body, 15, 18);
-  lv_obj_set_style_bg_color(orca_body, lv_color_hex(0x1A0033), 0);
+  lv_obj_set_style_bg_color(orca_body, lv_color_hex(0x061018), 0);
   lv_obj_set_style_border_color(orca_body,
                                 lv_color_hex(willySplashCfg.corPrimaria), 0);
   lv_obj_set_style_border_width(orca_body, 6, 0);
@@ -143,7 +159,7 @@ static void create_orca(lv_obj_t *parent) {
   orca_eye = lv_obj_create(orca_container);
   lv_obj_set_size(orca_eye, 18, 18);
   lv_obj_set_pos(orca_eye, 38, 28);
-  lv_obj_set_style_bg_color(orca_eye, lv_color_hex(0xFFFFFF), 0);
+  lv_obj_set_style_bg_color(orca_eye, lv_color_hex(0xE6F7FF), 0);
   lv_obj_set_style_radius(orca_eye, 50, 0);
 
   orca_glow = lv_obj_create(orca_eye);
@@ -152,7 +168,7 @@ static void create_orca(lv_obj_t *parent) {
   lv_obj_set_style_bg_color(orca_glow, lv_color_hex(ACCENT_COLOR), 0);
   lv_obj_set_style_radius(orca_glow, 50, 0);
   lv_obj_set_style_shadow_color(orca_glow, lv_color_hex(ACCENT_COLOR), 0);
-  lv_obj_set_style_shadow_width(orca_glow, 25, 0);
+  lv_obj_set_style_shadow_width(orca_glow, 30, 0);
   lv_obj_set_style_shadow_spread(orca_glow, 8, 0);
 
   // Textos
@@ -289,19 +305,169 @@ static void finish_splash(lv_timer_t *t) {
   lv_timer_del(t);
 }
 
+// ====================== NOVOS EFEITOS QUANTUM ======================
+static void create_quantum_particles(lv_obj_t *parent) {
+  // Criar partículas quânticas para o efeito Quantum Flow
+  int particleCount = willySplashCfg.effectIntensity * 3; // 15-30 partículas
+
+  for (int i = 0; i < particleCount; i++) {
+    lv_obj_t *particle = lv_obj_create(parent);
+    int size = random(2, 5);
+    lv_obj_set_size(particle, size, size);
+
+    // Posição inicial aleatória
+    int x = random(20, tftWidth - 20);
+    int y = random(20, tftHeight - 20);
+    lv_obj_set_pos(particle, x, y);
+
+    // Cor baseada no tema Neon Aqua
+    uint16_t color = (i % 2 == 0) ? 0x06FF : 0x03B5; // Neon Aqua futurista
+    lv_obj_set_style_bg_color(particle, lv_color_hex(color), 0);
+    lv_obj_set_style_radius(particle, 50, 0); // Circular
+    lv_obj_set_style_bg_opa(particle, LV_OPA_80, 0);
+
+    // Animação de movimento quântico
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, particle);
+
+    // Movimento caótico com oscilação
+    int targetX = x + random(-40, 40);
+    int targetY = y + random(-40, 40);
+
+    lv_anim_set_values(&a, x, targetX);
+    lv_anim_set_time(&a, 2000 + random(0, 1000));
+    lv_anim_set_exec_cb(&a, anim_set_x);
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_start(&a);
+
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, particle);
+    lv_anim_set_values(&a, y, targetY);
+    lv_anim_set_time(&a, 2000 + random(0, 1000));
+    lv_anim_set_exec_cb(&a, anim_set_y);
+    lv_anim_set_path_cb(&a, lv_anim_path_ease_in_out);
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_start(&a);
+
+    // Pulsar opacidade
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, particle);
+    lv_anim_set_values(&a, LV_OPA_40, LV_OPA_100);
+    lv_anim_set_time(&a, 1500);
+    lv_anim_set_exec_cb(&a, anim_set_opa);
+    lv_anim_set_playback_time(&a, 1500);
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_start(&a);
+  }
+}
+
+static void create_circuit_flow(lv_obj_t *parent) {
+  // Criar nós de circuito digital
+  int nodeCount = willySplashCfg.effectIntensity * 2; // 10-20 nós
+
+  for (int i = 0; i < nodeCount; i++) {
+    lv_obj_t *node = lv_obj_create(parent);
+    lv_obj_set_size(node, 4, 4);
+
+    // Posição em grid
+    int x = 30 + (i % 5) * ((tftWidth - 60) / 5);
+    int y = 40 + (i / 5) * ((tftHeight - 80) / 4);
+    lv_obj_set_pos(node, x, y);
+
+    lv_obj_set_style_bg_color(node, lv_color_hex(0x06FF), 0);
+    lv_obj_set_style_radius(node, 0, 0); // Quadrado
+    lv_obj_set_style_bg_opa(node, LV_OPA_60, 0);
+
+    // Animação de ativação sequencial
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, node);
+    lv_anim_set_values(&a, LV_OPA_20, LV_OPA_100);
+    lv_anim_set_time(&a, 800);
+    lv_anim_set_delay(&a, i * 100);
+    lv_anim_set_exec_cb(&a, anim_set_opa);
+    lv_anim_set_playback_time(&a, 800);
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_start(&a);
+  }
+}
+
+static void create_neon_pulse(lv_obj_t *parent) {
+  // Criar anéis concêntricos de pulso neon
+  int ringCount = 3;
+
+  for (int i = 0; i < ringCount; i++) {
+    lv_obj_t *ring = lv_obj_create(parent);
+    int size = 40 + (i * 25);
+    lv_obj_set_size(ring, size, size);
+    lv_obj_set_pos(ring, (tftWidth - size) / 2, (tftHeight - size) / 2);
+
+    lv_obj_set_style_bg_opa(ring, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(ring, 2, 0);
+    lv_obj_set_style_border_color(ring, lv_color_hex(0x06FF), 0);
+    lv_obj_set_style_radius(ring, size / 2, 0);
+
+    // Animação de pulso
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, ring);
+    lv_anim_set_values(&a, LV_OPA_20, LV_OPA_80);
+    lv_anim_set_time(&a, 1500);
+    lv_anim_set_delay(&a, i * 300);
+    lv_anim_set_exec_cb(&a, anim_set_opa);
+    lv_anim_set_playback_time(&a, 1500);
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_start(&a);
+
+    // Animação de escala
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, ring);
+    lv_anim_set_values(&a, size, size + 10);
+    lv_anim_set_time(&a, 1500);
+    lv_anim_set_delay(&a, i * 300);
+    lv_anim_set_exec_cb(&a, [](void *obj, int32_t v) {
+      lv_obj_set_size((lv_obj_t *)obj, v, v);
+      lv_obj_set_pos((lv_obj_t *)obj, (tftWidth - v) / 2, (tftHeight - v) / 2);
+    });
+    lv_anim_set_playback_time(&a, 1500);
+    lv_anim_set_repeat_count(&a, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_start(&a);
+  }
+}
+
 // ====================== FUNÇÃO PRINCIPAL ======================
 void show_willy_splash(lv_obj_t *parent) {
   load_willy_config();
 
   lv_obj_clean(parent);
-  lv_obj_set_style_bg_color(parent, lv_color_hex(0x0A001F), 0);
+  lv_obj_set_style_bg_color(parent, lv_color_hex(0x05070D), 0);
 
-  create_orca(parent);
-  create_particles(parent);
-  start_animations();
+  // Escolher efeito baseado no modo
+  switch (willySplashCfg.animationMode) {
+  case 1: // Quantum Flow
+    create_quantum_particles(parent);
+    break;
+
+  case 2: // Circuit Flow
+    create_circuit_flow(parent);
+    break;
+
+  case 3: // Neon Pulse
+    create_neon_pulse(parent);
+    break;
+
+  case 0: // Clássico (Orca) - padrão
+  default:
+    create_orca(parent);
+    create_particles(parent);
+    start_animations();
+    break;
+  }
 
   play_orca_boot_sound();
 
   // Transição suave para o menu após 4.8 segundos
-  lv_timer_create(finish_splash, 4800, parent);
+  lv_timer_create(finish_splash, 4200, parent);
 }

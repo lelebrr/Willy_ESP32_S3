@@ -21,6 +21,8 @@ public:
   void process() override;
   String getName() const override { return "RFID"; }
   bool isActive() const override { return active_; }
+  int getPriority() const override { return 90; }
+  bool executeCommand(const String &command, JsonDocument &result) override;
 
   // Funcionalidades RFID específicas
   bool readRFID();

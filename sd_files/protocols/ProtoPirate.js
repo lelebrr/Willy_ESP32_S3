@@ -9,7 +9,7 @@ var keyboardApi = require('keyboard');
 var subghz = require('subghz');
 var storage = require('storage');
 
-// Get function references (Bruce pattern)
+// Get function references (Willy pattern)
 var width = display.width;
 var height = display.height;
 var color = display.color;
@@ -158,11 +158,11 @@ function decodeKiaV0(pulses) {
     var dataHi = 0;
     var dataLo = 0;
     var bitCount = 0;
-    
+
     for (var i = 0; i < pulses.length; i++) {
         var level = pulses[i] > 0;
         var dur = abs(pulses[i]);
-        
+
         if (step === 0) {
             if (level && durMatch(dur, p.te_short, p.te_delta)) {
                 step = 1; teLast = dur; headerCount = 0;
@@ -210,13 +210,13 @@ function extractKiaV0(dataHi, dataLo, bitCount) {
     var button = (dataLo >>> 8) & 0x0F;
     var counter = ((dataHi << 24) | (dataLo >>> 8)) >>> 16 & 0xFFFF;
     var rxCrc = dataLo & 0xFF;
-    
+
     var crcBytes = [
         (dataHi >>> 16) & 0xFF, (dataHi >>> 8) & 0xFF, dataHi & 0xFF,
         (dataLo >>> 24) & 0xFF, (dataLo >>> 16) & 0xFF, (dataLo >>> 8) & 0xFF
     ];
     var calcCrc = kiaCrc8(crcBytes);
-    
+
     return {
         proto: "Kia V0", bits: bitCount, dataHi: dataHi, dataLo: dataLo,
         serial: serial, button: button, btnName: getButtonName("Kia V0", button),
@@ -237,11 +237,11 @@ function decodeKiaV1(pulses) {
     var dataLo = 0;
     var bitCount = 0;
     var manchesterState = 0;
-    
+
     for (var i = 0; i < pulses.length; i++) {
         var level = pulses[i] > 0;
         var dur = abs(pulses[i]);
-        
+
         if (step === 0) {
             if (level && durMatch(dur, p.te_long, p.te_delta)) {
                 step = 1; teLast = dur; headerCount = 0;
@@ -260,7 +260,7 @@ function decodeKiaV1(pulses) {
         } else if (step === 2) {
             var isShort = durMatch(dur, p.te_short, p.te_delta);
             var isLong = durMatch(dur, p.te_long, p.te_delta);
-            
+
             if (isShort || isLong) {
                 if (isShort) {
                     manchesterState++;
@@ -276,7 +276,7 @@ function decodeKiaV1(pulses) {
                     bitCount++;
                     manchesterState = 0;
                 }
-                
+
                 if (bitCount >= p.min_bits) {
                     return extractKiaV1(dataHi, dataLo, bitCount);
                 }
@@ -294,18 +294,18 @@ function extractKiaV1(dataHi, dataLo, bitCount) {
     var button = (dataLo >>> 16) & 0xFF;
     var counter = ((dataLo >>> 4) & 0xF) << 8 | ((dataLo >>> 8) & 0xFF);
     var rxCrc = dataLo & 0xF;
-    
+
     var cntHigh = (counter >>> 8) & 0xF;
     var charData = [
         (serial >>> 24) & 0xFF, (serial >>> 16) & 0xFF,
         (serial >>> 8) & 0xFF, serial & 0xFF,
         button, counter & 0xFF
     ];
-    
+
     var offset = 1;
     if (cntHigh === 0 && counter >= 0x98) offset = button;
     var calcCrc = kiaV1Crc4(charData, 6, offset);
-    
+
     return {
         proto: "Kia V1", bits: bitCount, dataHi: dataHi, dataLo: dataLo,
         serial: serial & 0xFFFFFF, button: button, btnName: getButtonName("Kia V1", button),
@@ -325,11 +325,11 @@ function decodeKiaV2(pulses) {
     var dataHi = 0;
     var dataLo = 0;
     var bitCount = 0;
-    
+
     for (var i = 0; i < pulses.length; i++) {
         var level = pulses[i] > 0;
         var dur = abs(pulses[i]);
-        
+
         if (step === 0) {
             if (level && durMatch(dur, p.te_long, p.te_delta)) {
                 step = 1; teLast = dur; headerCount = 0;
@@ -348,14 +348,14 @@ function decodeKiaV2(pulses) {
         } else if (step === 2) {
             var isShort = durMatch(dur, p.te_short, p.te_delta);
             var isLong = durMatch(dur, p.te_long, p.te_delta);
-            
+
             if (isShort || isLong) {
                 if (isLong) {
                     dataHi = (dataHi << 1) | (dataLo >>> 31);
                     dataLo = ((dataLo << 1) | (level ? 0 : 1)) >>> 0;
                     bitCount++;
                 }
-                
+
                 if (bitCount >= p.min_bits) {
                     return extractKiaV2(dataHi, dataLo, bitCount);
                 }
@@ -373,9 +373,9 @@ function extractKiaV2(dataHi, dataLo, bitCount) {
     var rawCount = (dataLo >>> 4) & 0xFFF;
     var counter = ((rawCount >>> 4) | (rawCount << 8)) & 0xFFF;
     var rxCrc = dataLo & 0x0F;
-    
+
     var calcCrc = kiaV2CalculateCrc(dataLo);
-    
+
     return {
         proto: "Kia V2", bits: bitCount, dataHi: dataHi, dataLo: dataLo,
         serial: serial, button: button, btnName: getButtonName("Kia V2", button),
@@ -395,11 +395,11 @@ function decodeStarLine(pulses) {
     var dataHi = 0;
     var dataLo = 0;
     var bitCount = 0;
-    
+
     for (var i = 0; i < pulses.length; i++) {
         var level = pulses[i] > 0;
         var dur = abs(pulses[i]);
-        
+
         if (step === 0) {
             if (level && durMatch(dur, p.te_long * 2, p.te_delta * 2)) {
                 step = 1; headerCount = 1;
@@ -424,7 +424,7 @@ function decodeStarLine(pulses) {
                     dataLo = ((dataLo << 1) | 1) >>> 0;
                     bitCount++;
                 }
-                
+
                 if (bitCount >= p.min_bits) {
                     return extractStarLine(dataHi, dataLo, bitCount);
                 }
@@ -441,10 +441,10 @@ function extractStarLine(dataHi, dataLo, bitCount) {
         revLo = (revLo << 1) | ((dataHi >>> i) & 1);
         revHi = (revHi << 1) | ((dataLo >>> i) & 1);
     }
-    
+
     var serial = revHi & 0x00FFFFFF;
     var button = revHi >>> 24;
-    
+
     return {
         proto: "StarLine", bits: bitCount, dataHi: dataHi, dataLo: dataLo,
         serial: serial, button: button, btnName: getButtonName("StarLine", button),
@@ -464,11 +464,11 @@ function decodeScherKhan(pulses) {
     var dataHi = 0;
     var dataLo = 0;
     var bitCount = 0;
-    
+
     for (var i = 0; i < pulses.length; i++) {
         var level = pulses[i] > 0;
         var dur = abs(pulses[i]);
-        
+
         if (step === 0) {
             if (level && durMatch(dur, p.te_short * 2, p.te_delta)) {
                 step = 1; teLast = dur; headerCount = 0;
@@ -519,7 +519,7 @@ function decodeScherKhan(pulses) {
 function extractScherKhan(dataHi, dataLo, bitCount) {
     var protoName = "Scher-Khan";
     var serial = 0, button = 0, counter = 0;
-    
+
     if (bitCount === 51) {
         protoName = "MAGIC CODE";
         serial = ((dataLo >>> 24) & 0xFFFFFF0) | ((dataLo >>> 20) & 0x0F);
@@ -528,7 +528,7 @@ function extractScherKhan(dataHi, dataLo, bitCount) {
     } else if (bitCount === 35) {
         protoName = "MAGIC Static";
     }
-    
+
     return {
         proto: protoName, bits: bitCount, dataHi: dataHi, dataLo: dataLo,
         serial: serial, button: button, btnName: getButtonName("Scher-Khan", button),
@@ -548,11 +548,11 @@ function decodeSubaru(pulses) {
     var dataHi = 0;
     var dataLo = 0;
     var bitCount = 0;
-    
+
     for (var i = 0; i < pulses.length; i++) {
         var level = pulses[i] > 0;
         var dur = abs(pulses[i]);
-        
+
         if (step === 0) {
             if (level && durMatch(dur, p.te_long, p.te_delta)) {
                 step = 1; teLast = dur; headerCount = 1;
@@ -593,7 +593,7 @@ function decodeSubaru(pulses) {
                 } else if (dur > 3000 && bitCount >= p.min_bits) {
                     return extractSubaru(dataHi, dataLo, bitCount);
                 }
-                
+
                 if (bitCount >= p.min_bits) {
                     return extractSubaru(dataHi, dataLo, bitCount);
                 }
@@ -608,10 +608,10 @@ function extractSubaru(dataHi, dataLo, bitCount) {
     var b1 = (dataHi >>> 16) & 0xFF;
     var b2 = (dataHi >>> 8) & 0xFF;
     var b3 = dataHi & 0xFF;
-    
+
     var serial = (b1 << 16) | (b2 << 8) | b3;
     var button = b0 & 0x0F;
-    
+
     return {
         proto: "Subaru", bits: bitCount, dataHi: dataHi, dataLo: dataLo,
         serial: serial, button: button, btnName: getButtonName("Subaru", button),
@@ -632,11 +632,11 @@ function decodeFiatV0(pulses) {
     var dataLo = 0;
     var bitCount = 0;
     var manchesterState = 0;
-    
+
     for (var i = 0; i < pulses.length; i++) {
         var level = pulses[i] > 0;
         var dur = abs(pulses[i]);
-        
+
         if (step === 0) {
             if (level && durMatch(dur, p.te_short, p.te_delta)) {
                 step = 1; teLast = dur; headerCount = 0;
@@ -658,7 +658,7 @@ function decodeFiatV0(pulses) {
         } else if (step === 2) {
             var isShort = durMatch(dur, p.te_short, p.te_delta);
             var isLong = durMatch(dur, p.te_long, p.te_delta);
-            
+
             if (isShort || isLong) {
                 if (isShort) {
                     manchesterState++;
@@ -674,7 +674,7 @@ function decodeFiatV0(pulses) {
                     bitCount++;
                     manchesterState = 0;
                 }
-                
+
                 if (bitCount >= p.min_bits) {
                     return extractFiatV0(dataHi, dataLo, bitCount);
                 }
@@ -693,7 +693,7 @@ function extractFiatV0(dataHi, dataLo, bitCount) {
     var counter = dataHi;
     var serial = dataLo;
     var button = 0;
-    
+
     return {
         proto: "Fiat V0", bits: bitCount, dataHi: dataHi, dataLo: dataLo,
         serial: serial, button: button, btnName: getButtonName("Fiat V0", button),
@@ -714,11 +714,11 @@ function decodeKiaV3V4(pulses) {
     var dataLo = 0;
     var bitCount = 0;
     var isV3 = false;
-    
+
     for (var i = 0; i < pulses.length; i++) {
         var level = pulses[i] > 0;
         var dur = abs(pulses[i]);
-        
+
         if (step === 0) {
             if (level && durMatch(dur, p.te_short, p.te_delta)) {
                 step = 1; teLast = dur; headerCount = 1;
@@ -761,7 +761,7 @@ function decodeKiaV3V4(pulses) {
                     dataLo = ((dataLo << 1) | 1) >>> 0;
                     bitCount++;
                 } else { step = 0; }
-                
+
                 if (bitCount >= p.min_bits + 4) {
                     return extractKiaV3V4(dataHi, dataLo, bitCount, isV3);
                 }
@@ -780,16 +780,16 @@ function reverse8(b) {
 
 function extractKiaV3V4(dataHi, dataLo, bitCount, isV3) {
     var protoName = isV3 ? "Kia V3" : "Kia V4";
-    
+
     var b4 = (dataLo >>> 24) & 0xFF;
     var b5 = (dataLo >>> 16) & 0xFF;
     var b6 = (dataLo >>> 8) & 0xFF;
     var b7 = dataLo & 0xFF;
-    
+
     var serial = ((reverse8(b7) & 0xF0) << 20) | (reverse8(b6) << 16) | (reverse8(b5) << 8) | reverse8(b4);
     serial = serial & 0x0FFFFFFF;
     var button = (reverse8(b7) & 0xF0) >>> 4;
-    
+
     return {
         proto: protoName, bits: bitCount, dataHi: dataHi, dataLo: dataLo,
         serial: serial, button: button, btnName: getButtonName("Kia V3/V4", button),
@@ -805,10 +805,10 @@ function decodeChrysler(pulses) {
     // Try multiple decoding strategies for Chrysler
     var result = decodeChryslerStrict(pulses);
     if (result) return result;
-    
+
     result = decodeChryslerLoose(pulses);
     if (result) return result;
-    
+
     return null;
 }
 
@@ -818,18 +818,18 @@ function decodeChryslerStrict(pulses) {
     var dataHi = 0;
     var dataLo = 0;
     var bitCount = 0;
-    
+
     // Chrysler GQ43VT17T: ~200us short, ~400us long
     var teShortMin = 120, teShortMax = 280;
     var teLongMin = 300, teLongMax = 500;
-    
+
     for (var i = 0; i < pulses.length; i++) {
         var level = pulses[i] > 0;
         var dur = abs(pulses[i]);
-        
+
         // Skip noise (very short pulses < 50us)
         if (dur < 50) continue;
-        
+
         // Skip sync pulses (> 600us)
         if (dur > 600) {
             if (bitCount >= 56) {
@@ -839,7 +839,7 @@ function decodeChryslerStrict(pulses) {
             step = 0;
             continue;
         }
-        
+
         if (step === 0) {
             if (level && dur >= teShortMin && dur <= teLongMax) {
                 step = 1; teLast = dur;
@@ -851,7 +851,7 @@ function decodeChryslerStrict(pulses) {
                 var pulseLong = (teLast >= teLongMin && teLast <= teLongMax);
                 var gapShort = (dur >= teShortMin && dur <= teShortMax);
                 var gapLong = (dur >= teLongMin && dur <= teLongMax);
-                
+
                 if (pulseShort && gapLong) {
                     // Bit 0
                     dataHi = (dataHi << 1) | (dataLo >>> 31);
@@ -871,7 +871,7 @@ function decodeChryslerStrict(pulses) {
             }
         }
     }
-    
+
     if (bitCount >= 56) {
         return extractChrysler(dataHi, dataLo, bitCount);
     }
@@ -883,7 +883,7 @@ function decodeChryslerLoose(pulses) {
     var dataHi = 0;
     var dataLo = 0;
     var bitCount = 0;
-    
+
     // Find pulses in the 100-500us range and try to decode
     var validPulses = [];
     for (var i = 0; i < pulses.length; i++) {
@@ -892,9 +892,9 @@ function decodeChryslerLoose(pulses) {
             validPulses.push(pulses[i]);
         }
     }
-    
+
     if (validPulses.length < 20) return null;
-    
+
     // Calculate average to determine short vs long threshold
     var sum = 0;
     for (var i = 0; i < validPulses.length; i++) {
@@ -902,12 +902,12 @@ function decodeChryslerLoose(pulses) {
     }
     var avg = sum / validPulses.length;
     var threshold = avg;  // Use average as threshold
-    
+
     // Decode using threshold
     for (var i = 0; i < validPulses.length - 1; i += 2) {
         var pulse = abs(validPulses[i]);
         var gap = abs(validPulses[i + 1]);
-        
+
         if (validPulses[i] > 0) {  // pulse is high
             if (pulse < threshold && gap > threshold) {
                 // Short-Long = 0
@@ -922,7 +922,7 @@ function decodeChryslerLoose(pulses) {
             }
         }
     }
-    
+
     if (bitCount >= 40) {  // Lower threshold for loose decoder
         return extractChrysler(dataHi, dataLo, bitCount);
     }
@@ -935,7 +935,7 @@ function extractChrysler(dataHi, dataLo, bitCount) {
     var encrypted = dataHi;
     var serial = (dataLo >>> 4) & 0x0FFFFFFF;
     var button = dataLo & 0x0F;
-    
+
     return {
         proto: "Chrysler",
         bits: bitCount,
@@ -962,11 +962,11 @@ function decodeGenericPWM(pulses, proto) {
     var dataHi = 0;
     var dataLo = 0;
     var bitCount = 0;
-    
+
     for (var i = 0; i < pulses.length; i++) {
         var level = pulses[i] > 0;
         var dur = abs(pulses[i]);
-        
+
         if (step === 0) {
             if (level && durMatch(dur, p.te_short, p.te_delta)) {
                 step = 1; teLast = dur; headerCount = 0;
@@ -1095,7 +1095,7 @@ function scanForFiles() {
     loadedFiles = [];
     // Try to list .sub files from common directories
     var dirs = ["/", "/WillyRF/", "/subghz/"];
-    
+
     for (var d = 0; d < dirs.length; d++) {
         try {
             var files = storage.readdir(dirs[d]);
@@ -1119,7 +1119,7 @@ function scanForFiles() {
 
 function loadAndDecodeFile(filepath) {
     drawMessage("Loading...\n" + filepath, YELLOW);
-    
+
     try {
         var content = storage.read(filepath);
         if (!content || content.length < 20) {
@@ -1127,14 +1127,14 @@ function loadAndDecodeFile(filepath) {
             delay(1500);
             return false;
         }
-        
+
         // Extract frequency from file
         var fileFreq = extractFrequency(content);
         if (fileFreq) {
             frequency = fileFreq;
             subghz.setFrequency(frequency);
         }
-        
+
         // Extract RAW_Data from file
         var rawStr = extractRawData(content);
         if (!rawStr || rawStr.length < 10) {
@@ -1142,7 +1142,7 @@ function loadAndDecodeFile(filepath) {
             delay(1500);
             return false;
         }
-        
+
         // Parse and decode
         var pulses = parseRaw(rawStr);
         if (pulses.length < 20) {
@@ -1150,7 +1150,7 @@ function loadAndDecodeFile(filepath) {
             delay(1500);
             return false;
         }
-        
+
         var result = tryDecode(pulses);
         if (result) {
             lastResult = result;
@@ -1177,7 +1177,7 @@ function drawLoadMenu() {
     setTextSize(2); setTextColor(CYAN);
     drawString("Load Signal", 10, 5);
     setTextSize(1);
-    
+
     if (loadedFiles.length === 0) {
         setTextColor(RED);
         drawString("No .sub files found!", 10, 35);
@@ -1188,19 +1188,19 @@ function drawLoadMenu() {
     } else {
         setTextColor(WHITE);
         drawString("Found " + loadedFiles.length + " file(s)", 10, 30);
-        
+
         // Show current file
         var y = 50;
         var startIdx = Math.max(0, loadFileIndex - 2);
         var endIdx = Math.min(loadedFiles.length, startIdx + 5);
-        
+
         for (var i = startIdx; i < endIdx; i++) {
             var fname = loadedFiles[i];
             // Shorten filename for display
             if (fname.length > 28) {
                 fname = ".." + fname.substring(fname.length - 26);
             }
-            
+
             if (i === loadFileIndex) {
                 drawFillRect(5, y - 2, screenWidth - 10, 14, GRAY);
                 setTextColor(CYAN);
@@ -1211,7 +1211,7 @@ function drawLoadMenu() {
             y += 16;
         }
     }
-    
+
     setTextColor(YELLOW);
     drawString("[PREV/NEXT] [SEL] Load [ESC]", 5, screenHeight - 12);
 }
@@ -1222,11 +1222,11 @@ function handleLoadMenu() {
         drawMenu();
         return;
     }
-    
+
     if (loadedFiles.length === 0) {
         return;
     }
-    
+
     if (getPrevPress()) {
         loadFileIndex--;
         if (loadFileIndex < 0) loadFileIndex = loadedFiles.length - 1;
@@ -1255,16 +1255,16 @@ function saveSignal() {
         delay(1500);
         return;
     }
-    
+
     drawMessage("Saving signal...", YELLOW);
-    
+
     var r = lastResult;
     saveCounter++;
-    
+
     // Create filename - use counter since Date.now may not work
     var protoName = r.proto.replace(/[\s\/]/g, "_");
     var filename = "pp_" + protoName + "_" + saveCounter + ".sub";
-    
+
     // Build file content
     var content = "Filetype: Willy SubGhz File\n";
     content += "Version: 1\n";
@@ -1275,17 +1275,17 @@ function saveSignal() {
     content += "# Serial: " + toHex(r.serial, 7) + " Button: " + r.btnName + "\n";
     content += "# Counter: " + toHex(r.counter, 4) + " CRC: " + (r.crcOk ? "OK" : "FAIL") + "\n";
     content += "RAW_Data: " + lastRawData + "\n";
-    
+
     var saved = false;
     var savePath = "";
-    
+
     // Try multiple paths
     var paths = [
         "/" + filename,
         "/WillyRF/" + filename,
         "/subghz/" + filename
     ];
-    
+
     for (var i = 0; i < paths.length; i++) {
         try {
             storage.write(paths[i], content);
@@ -1296,7 +1296,7 @@ function saveSignal() {
             // Try next path
         }
     }
-    
+
     if (saved) {
         clearScreen();
         setTextSize(2); setTextColor(GREEN);
@@ -1317,7 +1317,7 @@ function saveSignal() {
         drawMessage("Save FAILED!\nCheck SD card", RED);
         delay(2000);
     }
-    
+
     drawResult(lastResult);
 }
 
@@ -1537,12 +1537,12 @@ function handleMenu() {
     if (getNextPress()) { menuIndex++; if (menuIndex >= menuItems.length) menuIndex = 0; drawMenu(); }
     if (getSelPress()) {
         if (menuIndex === 0) { setLongPress(true); appState = "receive"; drawReceive(); }
-        else if (menuIndex === 1) { 
+        else if (menuIndex === 1) {
             drawMessage("Scanning for files...", YELLOW);
             scanForFiles();
             loadFileIndex = 0;
-            appState = "load"; 
-            drawLoadMenu(); 
+            appState = "load";
+            drawLoadMenu();
         }
         else if (menuIndex === 2) { appState = "freq"; drawFreqSelect(); }
         else if (menuIndex === 3) { appState = "info"; drawInfo(); }
@@ -1588,7 +1588,7 @@ function handleReceive() {
             if (getSelPress()) { setLongPress(true); break; }
             delay(50);
         }
-        
+
         var rawStr = extractRawData(rawContent);
         // If no RAW_Data found, try using content directly
         if (!rawStr && rawContent.indexOf(" ") > 0) {
@@ -1614,12 +1614,12 @@ function handleReceive() {
                     // Store raw data so user can still save it
                     lastRawData = rawStr;
                     setLongPress(false);
-                    
+
                     clearScreen();
                     setTextSize(1); setTextColor(YELLOW);
                     drawString("Signal captured!", 10, 5);
                     drawString("Pulses: " + pulses.length + " @ " + frequency + "MHz", 10, 18);
-                    
+
                     // Show first few pulse timings for debug
                     setTextColor(WHITE);
                     var debugStr = "";
@@ -1627,17 +1627,17 @@ function handleReceive() {
                         debugStr += pulses[d] + " ";
                     }
                     drawString(debugStr, 10, 32);
-                    
+
                     setTextColor(RED);
                     drawString("Unknown protocol", 10, 50);
                     setTextColor(WHITE);
                     drawString("Freq: " + frequency + " MHz", 10, 65);
                     drawString("Try different frequency", 10, 78);
                     drawString("or press key closer", 10, 91);
-                    
+
                     setTextColor(YELLOW);
                     drawString("[SEL] Retry  [ESC] Menu", 5, screenHeight - 12);
-                    
+
                     // Wait for button press instead of fixed delay
                     while (true) {
                         if (getEscPress()) {
@@ -1671,24 +1671,24 @@ function handleResult() {
         drawMenu();
         return;
     }
-    if (getEscPress()) { 
+    if (getEscPress()) {
         delay(200);
-        resultMenuIndex = 0; 
-        setLongPress(true); 
-        appState = "receive"; 
-        drawReceive(); 
-        return; 
+        resultMenuIndex = 0;
+        setLongPress(true);
+        appState = "receive";
+        drawReceive();
+        return;
     }
-    if (getPrevPress()) { 
-        resultMenuIndex--; 
-        if (resultMenuIndex < 0) resultMenuIndex = 2; 
-        drawResult(lastResult); 
+    if (getPrevPress()) {
+        resultMenuIndex--;
+        if (resultMenuIndex < 0) resultMenuIndex = 2;
+        drawResult(lastResult);
         delay(150);
     }
-    if (getNextPress()) { 
-        resultMenuIndex++; 
-        if (resultMenuIndex > 2) resultMenuIndex = 0; 
-        drawResult(lastResult); 
+    if (getNextPress()) {
+        resultMenuIndex++;
+        if (resultMenuIndex > 2) resultMenuIndex = 0;
+        drawResult(lastResult);
         delay(150);
     }
     if (getSelPress()) {
@@ -1707,9 +1707,9 @@ function handleInfo() { if (getEscPress()) { appState = "menu"; drawMenu(); } }
 
 clearScreen();
 setTextSize(2); setTextColor(CYAN);
-drawString("ProtoPirate", 30, screenHeight/2 - 15);
+drawString("ProtoPirate", 30, screenHeight / 2 - 15);
 setTextSize(1); setTextColor(WHITE);
-drawString("Car Key Decoder v2.1", 25, screenHeight/2 + 10);
+drawString("Car Key Decoder v2.1", 25, screenHeight / 2 + 10);
 delay(1500);
 
 subghz.setFrequency(frequency);
@@ -1727,5 +1727,5 @@ while (appState !== "exit") {
 
 clearScreen();
 setTextColor(WHITE);
-drawString("Goodbye!", screenWidth/2 - 25, screenHeight/2);
+drawString("Goodbye!", screenWidth / 2 - 25, screenHeight / 2);
 delay(800);

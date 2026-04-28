@@ -283,7 +283,7 @@ void SystemView::initDoubleBuffering() {
     backBuffer_ = new TFT_eSprite(&tft);
     if (backBuffer_->createSprite(tftWidth, tftHeight)) {
       backBuffer_->setColorDepth(16);
-      backBuffer_->fillSprite(DEEP_BLACK);
+      backBuffer_->fillSprite(willyConfig.bgColor);
       AdvancedLogger::getInstance().info(LogModule::SYSTEM,
                                          "Double buffering inicializado");
     } else {
@@ -304,14 +304,14 @@ void SystemView::initSpriteCache() {
   memset(iconCache_, 0, sizeof(iconCache_));
 
   // Carregar ícones comuns no cache
-  loadIconToCache(0, wifi_icon_32x32, 32, 32);     // WiFi
-  loadIconToCache(1, rfid_icon_32x32, 32, 32);     // RFID
-  loadIconToCache(2, rf_icon_32x32, 32, 32);       // RF
-  loadIconToCache(3, ble_icon_32x32, 32, 32);      // Bluetooth
-  loadIconToCache(4, gps_icon_32x32, 32, 32);      // GPS
-  loadIconToCache(5, ir_icon_32x32, 32, 32);       // IR
-  loadIconToCache(6, ethernet_icon_32x32, 32, 32); // Ethernet
-  loadIconToCache(7, lora_icon_32x32, 32, 32);     // LoRa
+  loadIconToCache(0, wifi_icon_32x32, 32, 32);      // WiFi
+  loadIconToCache(1, rfid_icon_32x32, 32, 32);      // RFID
+  loadIconToCache(2, rf_icon_32x32, 32, 32);        // RF
+  loadIconToCache(3, bluetooth_icon_32x32, 32, 32); // Bluetooth
+  loadIconToCache(4, gps_icon_32x32, 32, 32);       // GPS
+  loadIconToCache(5, ir_icon_32x32, 32, 32);        // IR
+  loadIconToCache(6, ethernet_icon_32x32, 32, 32);  // Ethernet
+  loadIconToCache(7, lora_icon_32x32, 32, 32);      // LoRa
 
   AdvancedLogger::getInstance().info(LogModule::SYSTEM,
                                      "Cache de sprites inicializado");
@@ -370,7 +370,7 @@ void SystemView::updateDisplayOptimized() {
   // Renderizar no back buffer se double buffering ativo
   if (doubleBufferingEnabled_ && backBuffer_) {
     // Limpar back buffer
-    backBuffer_->fillSprite(DEEP_BLACK);
+    backBuffer_->fillSprite(willyConfig.bgColor);
 
     // Renderizar elementos no back buffer
     // (Aqui seria chamado o código de renderização dos menus/itens)

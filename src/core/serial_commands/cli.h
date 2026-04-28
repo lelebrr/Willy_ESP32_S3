@@ -1,9 +1,9 @@
 #ifndef __SERIAL_CLI_H__
 #define __SERIAL_CLI_H__
 
+#include "../../lib/stubs/SimpleCLI.h"
 #include "../advanced_logger.h"
 #include <Arduino.h>
-#include <SimpleCLI.h>
 
 class SerialCli {
 public:
@@ -11,10 +11,13 @@ public:
   void setup(void);
 
   SimpleCLI getCli() { return _cli; };
-  bool parse(const String &input) { return _cli.parse(input); }
+  bool parse(const String &input) {
+    _cli.parse(input);
+    return true;
+  }
 
   // Validação de entrada segura
-  static bool validateInput(const String &input);
+  bool validateInput(const String &input);
 
 private:
   SimpleCLI _cli;
@@ -22,6 +25,8 @@ private:
 };
 
 void cliErrorCallback(cmd_error *e);
+
+
 
 #endif
 

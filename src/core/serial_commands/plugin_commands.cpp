@@ -24,14 +24,14 @@ uint32_t pluginListCallback(cmd *c) {
   auto available = pm.listAvailablePlugins();
   serialDevice->println("\nPlugins disponíveis:");
   for (const String &name : available) {
-    bool loaded = false;
+    bool isLoaded = false;
     for (const String &loadedName : loaded) {
       if (loadedName == name) {
-        loaded = true;
+        isLoaded = true;
         break;
       }
     }
-    if (!loaded) {
+    if (!isLoaded) {
       serialDevice->printf("  %s (não carregado)\n", name.c_str());
     }
   }
@@ -43,13 +43,14 @@ uint32_t pluginLoadCallback(cmd *c) {
   Command cmd(c);
   AdvancedLogger &logger = AdvancedLogger::getInstance();
 
-  if (cmd.getArgs().size() < 1) {
+  Argument nameArg = cmd.getArgument(0);
+  if (nameArg.getValue().length() == 0) {
     logger.warning(LogModule::SYSTEM, "Plugin load command missing arguments");
     serialDevice->println("Uso: plugin load <nome> [config_json]");
     return false;
   }
 
-  String name = cmd.getArgs()[0];
+  String name = nameArg.getValue();
 
   // Validações de segurança
   if (name.length() == 0 || name.length() > 50) {
@@ -72,8 +73,9 @@ uint32_t pluginLoadCallback(cmd *c) {
 
   JsonDocument config;
 
-  if (cmd.getArgs().size() >= 2) {
-    String configStr = cmd.getArgs()[1];
+  Argument configArg = cmd.getArgument(1);
+  if (configArg.getValue().length() > 0) {
+    String configStr = configArg.getValue();
     // Limitar tamanho do JSON
     if (configStr.length() > 2048) {
       logger.warning(LogModule::SYSTEM, "Config JSON too large: %d bytes",
@@ -108,12 +110,13 @@ uint32_t pluginLoadCallback(cmd *c) {
 uint32_t pluginUnloadCallback(cmd *c) {
   Command cmd(c);
 
-  if (cmd.getArgs().size() < 1) {
+  Argument unloadNameArg = cmd.getArgument(0);
+  if (unloadNameArg.getValue().length() == 0) {
     serialDevice->println("Uso: plugin unload <nome>");
     return false;
   }
 
-  String name = cmd.getArgs()[0];
+  String name = unloadNameArg.getValue();
 
   auto &pm = PluginManager::getInstance();
   if (pm.unloadPlugin(name)) {
@@ -138,12 +141,13 @@ uint32_t pluginReloadCallback(cmd *c) {
 uint32_t pluginInfoCallback(cmd *c) {
   Command cmd(c);
 
-  if (cmd.getArgs().size() < 1) {
+  Argument infoNameArg = cmd.getArgument(0);
+  if (infoNameArg.getValue().length() == 0) {
     serialDevice->println("Uso: plugin info <nome>");
     return false;
   }
 
-  String name = cmd.getArgs()[0];
+  String name = infoNameArg.getValue();
 
   auto &pm = PluginManager::getInstance();
   auto plugin = pm.getPlugin(name);

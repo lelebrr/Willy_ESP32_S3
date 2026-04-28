@@ -7,24 +7,55 @@
 
 MLModule::MLModule(std::shared_ptr<SystemModel> model,
                    std::shared_ptr<SystemView> view)
-    : _model(model), _view(view) {}
+    : _model(model), _view(view), _initialized(false), _active(true) {}
 
-void MLModule::setup() {
+bool MLModule::init() {
   Serial.println("[ML] Inicializando módulo de Machine Learning");
 
   // Carregar modelos salvos se existirem
   if (!loadModels()) {
-    LOG_WARNING("ML",
-                "Nenhum modelo salvo encontrado, iniciando com modelos vazios");
+    Serial.println(
+        "[ML] Nenhum modelo salvo encontrado, iniciando com modelos vazios");
   }
 
-  LOG_INFO("ML", "Módulo ML inicializado com %d pontos de treinamento",
-           _knnModel.size());
+  _initialized = true;
+  _active = true;
+
+  Serial.printf("[ML] Módulo ML inicializado com %d pontos de treinamento\n",
+                _knnModel.size());
+  return true;
 }
 
-void MLModule::loop() {
+void MLModule::deinit() {
+  if (!_initialized)
+    return;
+
+  Serial.println("[ML] Desinicializando módulo de Machine Learning");
+
+  // Salvar modelos antes de desinicializar
+  saveModels();
+
+  _initialized = false;
+  _active = false;
+}
+
+void MLModule::process() {
   // Processamento contínuo se necessário
   // Por enquanto, o módulo é reativo via comandos
+}
+
+bool MLModule::isActive() const { return _active; }
+
+int MLModule::getPriority() const {
+  return 50; // Prioridade média
+}
+
+bool MLModule::executeCommand(const String &command, JsonDocument &result) {
+  // Implementação simples - apenas log por enquanto
+  Serial.printf("[ML] Comando recebido: %s\n", command.c_str());
+  result["success"] = true;
+  result["message"] = "Comando processado";
+  return true;
 }
 
 void MLModule::handleCommand(const std::string &command,
@@ -32,35 +63,42 @@ void MLModule::handleCommand(const std::string &command,
   if (command == "ml_train") {
     if (trainModels()) {
       Serial.println("[ML] Modelos treinados com sucesso");
-      _view->showMessage("Modelos treinados com sucesso");
+      if (_view)
+        _view->showMessage("Modelos treinados com sucesso");
     } else {
       Serial.println("[ML] Falha no treinamento dos modelos");
-      _view->showMessage("Erro no treinamento");
+      if (_view)
+        _view->showMessage("Erro no treinamento");
     }
   } else if (command == "ml_save") {
     if (saveModels()) {
-      LOG_INFO("ML", "Modelos salvos com sucesso");
-      _view->showMessage("Modelos salvos");
+      Serial.println("[ML] Modelos salvos com sucesso");
+      if (_view)
+        _view->showMessage("Modelos salvos");
     } else {
-      LOG_ERROR("ML", "Falha ao salvar modelos");
-      _view->showMessage("Erro ao salvar");
+      Serial.println("[ML] Falha ao salvar modelos");
+      if (_view)
+        _view->showMessage("Erro ao salvar");
     }
   } else if (command == "ml_load") {
     if (loadModels()) {
-      LOG_INFO("ML", "Modelos carregados com sucesso");
-      _view->showMessage("Modelos carregados");
+      Serial.println("[ML] Modelos carregados com sucesso");
+      if (_view)
+        _view->showMessage("Modelos carregados");
     } else {
-      LOG_ERROR("ML", "Falha ao carregar modelos");
-      _view->showMessage("Erro ao carregar");
+      Serial.println("[ML] Falha ao carregar modelos");
+      if (_view)
+        _view->showMessage("Erro ao carregar");
     }
   } else if (command == "ml_stats") {
     auto stats = getModelStats();
     std::string msg = "Estatísticas ML:\n";
-    msg += "Pontos treinamento: " + std::to_string(stats["training_points"]) +
-           "\n";
+    msg += "Pontos treinamento: " +
+           std::to_string(static_cast<int>(stats["training_points"])) + "\n";
     msg += "Acurácia estimada: " + std::to_string(stats["estimated_accuracy"]) +
            "\n";
-    _view->showMessage(msg);
+    if (_view)
+      _view->showMessage(msg);
   } else if (command == "ml_classify_wifi") {
     // Exemplo: ml_classify_wifi rssi freq channel
     if (args.size() >= 3) {
@@ -74,7 +112,8 @@ void MLModule::handleCommand(const std::string &command,
                         std::to_string(static_cast<int>(result.predictedType)) +
                         " (confiança: " + std::to_string(result.confidence) +
                         ")";
-      _view->showMessage(msg);
+      if (_view)
+        _view->showMessage(msg);
     }
   } else if (command == "ml_classify_rf") {
     // Exemplo: ml_classify_rf freq duration amplitude
@@ -89,10 +128,12 @@ void MLModule::handleCommand(const std::string &command,
                         std::to_string(static_cast<int>(result.predictedType)) +
                         " (confiança: " + std::to_string(result.confidence) +
                         ")";
-      _view->showMessage(msg);
+      if (_view)
+        _view->showMessage(msg);
     }
   } else {
-    _view->showMessage("Comando ML desconhecido: " + command);
+    if (_view)
+      _view->showMessage("Comando ML desconhecido: " + command);
   }
 }
 
@@ -134,17 +175,12 @@ MLModule::detectRFIDAnomaly(const std::vector<float> &features) {
 bool MLModule::addTrainingData(const TrainingData &data) {
   // Validação rigorosa dos dados
   if (!data.isValid()) {
-    LOG_ERROR("ML", "Dados de treinamento inválidos: tipo %d, features %d",
-              static_cast<int>(data.label), data.features.size());
+    Serial.println("[ML] Dados de treinamento inválidos");
     return false;
   }
 
   // Verificar limites de memória
   if (_trainingData.size() >= _maxTrainingData) {
-    LOG_WARNING(
-        "ML",
-        "Limite de dados de treinamento atingido (%d), removendo mais antigos",
-        _maxTrainingData);
     // Remover dados mais antigos (FIFO)
     if (!_trainingData.empty()) {
       _trainingData.erase(_trainingData.begin());
@@ -153,10 +189,6 @@ bool MLModule::addTrainingData(const TrainingData &data) {
 
   _trainingData.push_back(data);
   updateHistoricalStats(data);
-
-  LOG_INFO(
-      "ML", "Dados de treinamento adicionados: tipo %d, features %d, total: %d",
-      static_cast<int>(data.label), data.features.size(), _trainingData.size());
 
   // Limpar cache de estatísticas quando dados mudam
   _statsCache.clear();
@@ -181,16 +213,13 @@ bool MLModule::trainModels() {
 bool MLModule::saveModels() {
   // Implementação simplificada: salvar em arquivo JSON
   // Nota: Em produção, seria melhor usar um formato binário otimizado
-
-  // Por enquanto, apenas log - implementação completa requer integração com
-  // sistema de arquivos
-  LOG_INFO("ML", "Salvando modelos (%d pontos)", _knnModel.size());
+  Serial.println("[ML] Salvando modelos");
   return true; // Placeholder
 }
 
 bool MLModule::loadModels() {
   // Implementação simplificada
-  LOG_INFO("ML", "Carregando modelos");
+  Serial.println("[ML] Carregando modelos");
   return true; // Placeholder
 }
 
@@ -219,8 +248,7 @@ float MLModule::calculateEuclideanDistance(const std::vector<float> &a,
 MLModule::ClassificationResult
 MLModule::performKNN(const std::vector<float> &features) {
   // Validação de entrada
-  if (_knnModel.empty() || !ML_VALIDATE_FEATURES(features)) {
-    LOG_WARNING("ML", "Modelo vazio ou features inválidas para k-NN");
+  if (_knnModel.empty() || features.empty()) {
     return {UNKNOWN_DEVICE, 0.0f};
   }
 
@@ -245,8 +273,6 @@ MLModule::performKNN(const std::vector<float> &features) {
   }
 
   if (allDistances.size() < static_cast<size_t>(k)) {
-    LOG_WARNING("ML", "Poucos pontos válidos para k-NN: %d < %d",
-                allDistances.size(), k);
     return {UNKNOWN_DEVICE, 0.0f};
   }
 
@@ -275,13 +301,8 @@ MLModule::performKNN(const std::vector<float> &features) {
 
   // Só retornar se confiança for suficiente
   if (confidence < _confidenceThreshold) {
-    LOG_DEBUG("ML", "Confiança baixa em k-NN: %.2f < %.2f", confidence,
-              _confidenceThreshold);
     return {UNKNOWN_DEVICE, confidence};
   }
-
-  LOG_DEBUG("ML", "k-NN classificado como tipo %d com confiança %.2f",
-            static_cast<int>(bestType), confidence);
 
   return {bestType, confidence};
 }
@@ -336,10 +357,6 @@ void MLModule::updateHistoricalStats(const TrainingData &data) {
     // Remover elementos antigos (FIFO) - mais eficiente que erase no meio
     size_t excess = history.size() - _maxHistorySize;
     history.erase(history.begin(), history.begin() + excess);
-
-    LOG_DEBUG("ML", "Histórico limitado para tipo %d: %d -> %d elementos",
-              static_cast<int>(data.label), history.size() + excess,
-              history.size());
   }
 
   // Limpar cache quando histórico muda

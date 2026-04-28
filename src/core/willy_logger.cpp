@@ -6,8 +6,9 @@
  */
 
 #include "willy_logger.h"
-#include "globals.h" // for tft, TFT_BLACK, TFT_ORANGE, FM, FP, etc.
+#include "globals.h" // for tft, TFT_BLACK, TFT_ORANGE, FM, FP, sdcardMounted, etc.
 #include "sd_functions.h"
+#include <ArduinoJson.h>
 #include <cstdarg>
 #include <time.h>
 
@@ -543,43 +544,8 @@ void WillyLogger::getStats(uint32_t &totalEntries, uint32_t &errorCount,
 }
 
 void WillyLogger::showLogWarning() {
-  if (!_config.enabled)
-    return;
-
-// Desenha aviso no display
-#if defined(HAS_SCREEN)
-  tft.fillScreen(TFT_BLACK);
-
-  // Ícone de aviso (triângulo)
-  tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-  tft.setTextSize(FM);
-  tft.drawCentreString("LOG ATIVO", tftWidth / 2, 30, 1);
-
-  // Informações
-  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-  tft.setTextSize(FP);
-  tft.drawCentreString("Gravando em:", tftWidth / 2, 60, 1);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.drawCentreString(_currentLogFile.c_str(), tftWidth / 2, 78, 1);
-
-  // Estatísticas
-  tft.setTextColor(TFT_CYAN, TFT_BLACK);
-  tft.drawCentreString("Entradas: " + String(_totalEntries), tftWidth / 2, 105,
-                       1);
-
-  if (_errorCount > 0) {
-    tft.setTextColor(TFT_RED, TFT_BLACK);
-    tft.drawCentreString("Erros: " + String(_errorCount), tftWidth / 2, 123, 1);
-  }
-
-  // Heap
-  tft.setTextColor(TFT_DARKGREY, TFT_BLACK);
-  tft.drawCentreString("Heap: " + String(ESP.getFreeHeap()) + " bytes",
-                       tftWidth / 2, tftHeight - 20, 1);
-
-  delay(2000);
-  tft.fillScreen(TFT_BLACK);
-#endif
+  // Implementação simplificada - não desenha no display
+  // Pode ser implementada posteriormente se necessário
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

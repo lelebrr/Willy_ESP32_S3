@@ -208,7 +208,7 @@ bool DynamicConfigManager::validateConfig(const JsonDocument &config) {
   }
 
   // Validação padrão: verifica campos conhecidos
-  JsonObjectConst obj = config.as<JsonObjectConst>();
+  config.as<JsonObjectConst>();
 
   // Campos obrigatórios podem ser adicionados aqui
   // Por exemplo:

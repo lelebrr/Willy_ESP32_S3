@@ -23,6 +23,8 @@ public:
   void process() override;
   String getName() const override { return "RF"; }
   bool isActive() const override { return active_; }
+  int getPriority() const override { return 80; }
+  bool executeCommand(const String &command, JsonDocument &result) override;
 
   // Funcionalidades RF específicas otimizadas
   bool transmitRF();

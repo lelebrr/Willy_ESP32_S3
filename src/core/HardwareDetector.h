@@ -3,9 +3,11 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <map>
 #include <esp_chip_info.h>
 #include <esp_system.h>
 #include <soc/efuse_reg.h>
+#include <esp_mac.h>
 #include <soc/soc.h>
 
 /**
@@ -18,6 +20,7 @@ enum class ESP32Variant {
   ESP32_C3,
   ESP32_C6,
   ESP32_H2,
+  ESP32, // Adicionado para compatibilidade
   UNKNOWN
 };
 

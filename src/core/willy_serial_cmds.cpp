@@ -9,9 +9,12 @@ QueueHandle_t cmdQueue = nullptr;
 QueueHandle_t rspQueue = nullptr;
 TaskHandle_t serialcmdsTaskHandle;
 
+// NÃO declarar serialDevice aqui - já está em globals.h
+
 struct CmdPacket {
   char text[SAFE_STACK_BUFFER_SIZE];
 };
+
 bool parseSerialCommand(const String &command, bool waitForResponse) {
   if (!cmdQueue || !rspQueue) {
     Serial.println("Command or response queue not initialized");
@@ -82,21 +85,18 @@ void startSerialCommandsHandlerTask(bool initQueues) {
     rspQueue = xQueueCreate(2, sizeof(bool));
   }
 
-  xTaskCreatePinnedToCore(
-      _serialCmdsTaskLoop,         // Function to implement the task
-      "serialcmds",                // Name of the task (any string)
-      SERIAL_CMDS_TASK_STACK_SIZE, // Stack size in bytes
-      NULL, // This is a pointer to the parameter that will be passed to the new
-            // task. We are not using it here and therefore it is set to NULL.
-      1, // Priority of the task (Lowered to avoid UI starvation)
-      &serialcmdsTaskHandle, // Task handle (optional, can be NULL).
+  xTaskCreatePinnedToCore(_serialCmdsTaskLoop, // Function to implement the task
+                          "serialcmds",        // Name of the task (any string)
+                          SERIAL_CMDS_TASK_STACK_SIZE, // Stack size in bytes
+                          NULL,                        // Task parameters
+                          1,                           // Priority
+                          &serialcmdsTaskHandle,       // Task handle
 #if SOC_CPU_CORES_NUM > 1
-      1 // Core where the task should run. By default, all your Arduino code
-        // runs on Core 1 and the Wi-Fi and RF functions
+                          1 // Core 1
 #else
-      0 // Core where the task should run. ESP32-C5 has only one core
+                          0 // Core 0
 #endif
-  ); // (these are usually hidden from the Arduino environment) use the Core 0.
+  );
   if (!serialcmdsTaskHandle) {
     Serial.println("Failed to create Serial Commands Handler task");
   }

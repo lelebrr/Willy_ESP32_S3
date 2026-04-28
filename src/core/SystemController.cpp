@@ -3,9 +3,9 @@
 #include "SystemModel.h"
 #include "SystemView.h"
 #include "advanced_logger.h"
+#include "hardware_optimizer.h"
 #include "main_menu.h"   // Para acessar MainMenu
 #include "startup_app.h" // Para StartupApp
-
 
 SystemController &SystemController::getInstance() {
   static SystemController instance;
@@ -21,6 +21,9 @@ bool SystemController::init() {
 
   AdvancedLogger::getInstance().info(LogModule::SYSTEM,
                                      "Inicializando SystemController...");
+
+  // Otimizar para o hardware detectado
+  HardwareOptimizer::getInstance().autoOptimize();
 
   // Inicializar componentes do MVC
   bool success = true;

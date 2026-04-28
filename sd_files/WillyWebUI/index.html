@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Willy 2.1 - Offensive Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="glass-container">
+        <div class="bg-aurora"></div>
         <header>
-            <div class="logo">WILLY <span>2.1</span></div>
+            <div class="logo">
+                <span class="logo-mark" aria-hidden="true"></span>
+                WILLY <span>2.1</span>
+            </div>
             <div class="status-bar">
                 <span id="uptime">Uptime: 00:00</span>
                 <span id="battery">Bat: --%</span>
@@ -33,11 +39,12 @@
 
             <section class="card actions">
                 <h2>Quick Actions</h2>
-                <button onclick="reboot()">Reboot Device</button>
-                <button onclick="clearLogs()">Clear Logs</button>
+                <button class="btn-primary" onclick="reboot()">Reboot Device</button>
+                <button class="btn-ghost" onclick="clearLogs()">Clear Logs</button>
             </section>
         </main>
     </div>
     <script src="main.js"></script>
 </body>
+
 </html>

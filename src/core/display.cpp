@@ -50,12 +50,8 @@ void my_disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area,
     tft.startWrite();
     tft.setAddrWindow(area->x1, area->y1, w, h);
 
-    // Para ESP32-S3, usar pushColors com DMA para regiões grandes
-    if (w * h > 1024) { // Threshold para usar DMA
-      tft.pushColorsDMA((uint16_t *)&color_p->full, w * h);
-    } else {
-      tft.pushColors((uint16_t *)&color_p->full, w * h, false);
-    }
+    // Usar pushColors padrão (TFT_eSPI não tem pushColorsDMA)
+    tft.pushColors((uint16_t *)&color_p->full, w * h);
 
     tft.endWrite();
     xSemaphoreGive(spiMutex);
@@ -322,12 +318,12 @@ void printSubtitle(String subtitle, bool withLine) {
   // Quebra de linha automática para texto longo
   int maxCharsPerLine = (tftWidth - 2 * BORDER_PAD_X) /
                         6; // Aproximadamente 6 pixels por caractere
-  if (subtitle.length() > maxCharsPerLine) {
+  if ((int)subtitle.length() > maxCharsPerLine) {
     String remaining = subtitle;
     int yOffset = 0;
     while (remaining.length() > 0) {
       String line;
-      if (remaining.length() <= maxCharsPerLine) {
+      if ((int)remaining.length() <= maxCharsPerLine) {
         line = remaining;
         remaining = "";
       } else {

@@ -1,7 +1,7 @@
 #ifndef __HELPERS_JS_H__
 #define __HELPERS_JS_H__
 #if !defined(LITE_VERSION) && !defined(DISABLE_INTERPRETER)
-#include "core/serial_commands/cli.h"
+#include "core/willy_serial_cmds.h"
 #include <FS.h>
 
 extern "C" {

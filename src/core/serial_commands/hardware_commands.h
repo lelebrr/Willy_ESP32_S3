@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include <functional>
 #include <vector>
+#include <ArduinoJson.h>
+#include "PinAbstraction.h"
 
 
 /**

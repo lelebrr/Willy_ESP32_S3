@@ -19,28 +19,38 @@
 #include <globals.h>
 
 void cliErrorCallback(cmd_error *e) {
-  CommandError cmdError(e); // Create wrapper object
-
+  CommandError err(e);
   // Usar AdvancedLogger para logging estruturado
   AdvancedLogger &logger = AdvancedLogger::getInstance();
   logger.error(LogModule::SYSTEM, "CLI command error: %s",
-               cmdError.toString().c_str());
+               err.toString().c_str());
 
   serialDevice->print("ERROR: ");
-  serialDevice->println(cmdError.toString());
+  serialDevice->println(err.toString());
 
-  if (cmdError.hasCommand()) {
+  if (err.hasCommand()) {
     serialDevice->print("Did you mean \"");
-    serialDevice->print(cmdError.getCommand().toString());
+    serialDevice->print(err.getCommand().toString());
     serialDevice->println("\"?");
   } else {
     serialDevice->println("Type 'help' for a list of available commands.");
   }
 }
 
-SerialCli::SerialCli() { setup(); }
+SerialCli::SerialCli() {
+  LOG_DEBUG(LogModule::SYSTEM, "SerialCli constructor called");
+  setup();
+}
 
 void SerialCli::setup() {
+  LOG_DEBUG(LogModule::SYSTEM, "SerialCli::setup() starting");
+
+  if (!serialDevice) {
+    LOG_ERROR(LogModule::SYSTEM,
+              "serialDevice is null! CLI initialization aborted");
+    return;
+  }
+
   _cli.setOnError(cliErrorCallback);
 
   createBenchmarkCommands(&_cli);
@@ -75,6 +85,7 @@ bool SerialCli::validateInput(const String &input) {
   // Verificar comprimento máximo para evitar buffer overflow
   const size_t MAX_INPUT_LENGTH = 1024;
   if (input.length() > MAX_INPUT_LENGTH) {
+    AdvancedLogger &logger = AdvancedLogger::getInstance();
     logger.error(LogModule::SYSTEM, "Input too long: %d characters (max: %d)",
                  input.length(), MAX_INPUT_LENGTH);
     return false;
@@ -86,6 +97,7 @@ bool SerialCli::validateInput(const String &input) {
     char c = input[i];
     if (!isalnum(c) && c != ' ' && c != '-' && c != '_' && c != '.' &&
         c != '/' && c != '"' && c != '\r' && c != '\n') {
+      AdvancedLogger &logger = AdvancedLogger::getInstance();
       logger.warning(LogModule::SYSTEM,
                      "Invalid character in input: '%c' (ASCII: %d)", c, (int)c);
       return false;
@@ -94,6 +106,7 @@ bool SerialCli::validateInput(const String &input) {
 
   // Verificar se não contém sequências perigosas
   if (input.indexOf("..") != -1 || input.indexOf("//") != -1) {
+    AdvancedLogger &logger = AdvancedLogger::getInstance();
     logger.warning(LogModule::SYSTEM,
                    "Potentially dangerous path sequence detected");
     return false;

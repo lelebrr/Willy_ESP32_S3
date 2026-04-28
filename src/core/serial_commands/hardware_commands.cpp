@@ -67,11 +67,11 @@ void HardwareCommands::cmdHardwareInfo(const std::vector<String> &args) {
 
   Serial.println("=== INFORMAÇÕES DE HARDWARE ===");
   Serial.printf("Modelo: %s\n", info.chip_model.c_str());
-  Serial.printf("Revisão: %d\n", info.chip_revision);
-  Serial.printf("Cores: %d\n", info.cores);
-  Serial.printf("CPU: %d MHz\n", info.cpu_freq_mhz);
-  Serial.printf("Flash: %d MB\n", info.flash_size / (1024 * 1024));
-  Serial.printf("PSRAM: %d MB\n", info.psram_size / (1024 * 1024));
+  Serial.printf("Revisão: %lu\n", info.chip_revision);
+  Serial.printf("Cores: %u\n", info.cores);
+  Serial.printf("CPU: %lu MHz\n", info.cpu_freq_mhz);
+  Serial.printf("Flash: %lu MB\n", info.flash_size / (1024 * 1024));
+  Serial.printf("PSRAM: %lu MB\n", info.psram_size / (1024 * 1024));
   Serial.printf("WiFi: %s\n", info.has_wifi ? "Sim" : "Não");
   Serial.printf("Bluetooth: %s\n", info.has_bluetooth ? "Sim" : "Não");
   Serial.printf("MAC: %s\n", info.mac_address.c_str());
@@ -117,24 +117,28 @@ void HardwareCommands::cmdConfigurePin(const std::vector<String> &args) {
   }
 
   int pin = args[0].toInt();
-  String mode_str = args[1].toLowerCase();
-  bool inverted = (args.size() > 2)
-                      ? (args[2] == "1" || args[2].toLowerCase() == "true")
-                      : false;
+  String mode_str = args[1];
+  mode_str.toLowerCase();
+  bool inverted = false;
+  if (args.size() > 2) {
+    String arg2 = args[2];
+    arg2.toLowerCase();
+    inverted = (args[2] == "1" || arg2 == "true");
+  }
   String description =
       (args.size() > 3) ? args[3] : "Pino configurado via serial";
 
   PinMode mode;
   if (mode_str == "input")
-    mode = PinMode::INPUT;
+    mode = PinMode::PIN_INPUT;
   else if (mode_str == "output")
-    mode = PinMode::OUTPUT;
+    mode = PinMode::PIN_OUTPUT;
   else if (mode_str == "input_pullup")
-    mode = PinMode::INPUT_PULLUP;
+    mode = PinMode::PIN_INPUT_PULLUP;
   else if (mode_str == "input_pulldown")
-    mode = PinMode::INPUT_PULLDOWN;
+    mode = PinMode::PIN_INPUT_PULLDOWN;
   else if (mode_str == "analog")
-    mode = PinMode::ANALOG_INPUT;
+    mode = PinMode::PIN_ANALOG_INPUT;
   else {
     Serial.println("Modo inválido. Use: input, output, input_pullup, "
                    "input_pulldown, analog");
@@ -156,21 +160,22 @@ void HardwareCommands::cmdTestPin(const std::vector<String> &args) {
   }
 
   int pin = args[0].toInt();
-  String operation = args[1].toLowerCase();
+  String operation = args[1];
+  operation.toLowerCase();
 
   if (operation == "read") {
     PinState state = PinAbstraction::digitalRead(pin);
     Serial.printf("GPIO%d = %s\n", pin,
-                  state == PinState::HIGH ? "HIGH" : "LOW");
+                  state == PinState::PIN_HIGH ? "HIGH" : "LOW");
   } else if (operation == "write") {
     if (args.size() < 3) {
       printUsage("testpin <pin> write <0|1>");
       return;
     }
-    PinState state = (args[2] == "1") ? PinState::HIGH : PinState::LOW;
+    PinState state = (args[2] == "1") ? PinState::PIN_HIGH : PinState::PIN_LOW;
     PinAbstraction::digitalWrite(pin, state);
     Serial.printf("GPIO%d definido como %s\n", pin,
-                  state == PinState::HIGH ? "HIGH" : "LOW");
+                  state == PinState::PIN_HIGH ? "HIGH" : "LOW");
   } else {
     Serial.println("Operação inválida. Use: read ou write");
   }

@@ -9,19 +9,17 @@ bool _setupPsramFs() {
     return true; // avoid reinit
 
 #ifdef BOARD_HAS_PSRAM
-  PSRamFS.setPartitionSize(ESP.getFreePsram() / 2); // use half of psram
+  // PSRamFS.setPartitionSize(ESP.getFreePsram() / 2); // use half of psram
+  // PSRamFS.begin() requires specific ESP32-PSRamFS library which may not be available
+  // Using standard LittleFS or SPIFFS instead when PSRamFS is not available
+  serialDevice->println("PSRamFS not available, using standard filesystem");
+  psRamFSMounted = false;
+  return false;
 #else
-  PSRamFS.setPartitionSize(SAFE_STACK_BUFFER_SIZE);
+  // Use standard filesystem
+  psRamFSMounted = false;
+  return false;
 #endif
-
-  if (!PSRamFS.begin()) {
-    serialDevice->println("PSRamFS Mount Failed");
-    psRamFSMounted = false;
-    return false;
-  }
-  // else
-  psRamFSMounted = true;
-  return true;
 }
 
 char *_readFileFromSerial(size_t fileSizeChar) {

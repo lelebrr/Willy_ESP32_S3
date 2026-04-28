@@ -126,8 +126,8 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text,
   lv_obj_set_style_border_color(btn, accent, 0);
   lv_obj_set_style_border_width(btn, 3, 0);
   lv_obj_set_style_shadow_color(btn, accent, 0);
-  lv_obj_set_style_shadow_width(btn, 15, 0);
-  lv_obj_set_style_shadow_opa(btn, LV_OPA_60, 0);
+  lv_obj_set_style_shadow_width(btn, 18, 0);
+  lv_obj_set_style_shadow_opa(btn, LV_OPA_70, 0);
 
   // Use a single static style shared by all icons to avoid memory leak.
   // Previously each icon allocated a dynamic lv_style_t that was never freed.
@@ -147,7 +147,7 @@ lv_obj_t *create_cyber_icon(lv_obj_t *parent, const char *icon_text,
   lv_obj_t *text = lv_label_create(btn);
   lv_label_set_text(text, icon_text);
   lv_obj_align(text, LV_ALIGN_BOTTOM_MID, 0, 8); // Adjusted alignment
-  lv_obj_set_style_text_color(text, lv_color_white(), 0);
+  lv_obj_set_style_text_color(text, lv_color_hex(0xE6F7FF), 0);
   lv_obj_set_style_text_font(text, &lv_font_montserrat_14, 0);
 
   // Animation 1: Cascade Fade-in
@@ -219,7 +219,7 @@ lv_obj_t *create_notification_bar(lv_obj_t *parent) {
   lv_obj_t *bar = lv_obj_create(parent);
   lv_obj_set_size(bar, LV_PCT(100), 40);
   lv_obj_set_pos(bar, 0, 0);
-  lv_obj_set_style_bg_color(bar, lv_color_hex(0x001122), 0);
+  lv_obj_set_style_bg_color(bar, lv_color_hex(0x05070D), 0);
   lv_obj_set_style_radius(bar, 0, 0);
   lv_obj_set_style_border_width(bar, 0, 0);
 
@@ -227,29 +227,29 @@ lv_obj_t *create_notification_bar(lv_obj_t *parent) {
   lv_obj_t *time_label = lv_label_create(bar);
   lv_label_set_text(time_label, "--:--");
   lv_obj_align(time_label, LV_ALIGN_LEFT_MID, 10, 0);
-  lv_obj_set_style_text_color(time_label, lv_color_white(), 0);
+  lv_obj_set_style_text_color(time_label, lv_color_hex(0xE6F7FF), 0);
 
   // Battery label
   lv_obj_t *battery = lv_label_create(bar);
   lv_label_set_text(battery, "--%");
   lv_obj_align(battery, LV_ALIGN_RIGHT_MID, -10, 0);
-  lv_obj_set_style_text_color(battery, lv_color_white(), 0);
+  lv_obj_set_style_text_color(battery, lv_color_hex(0xE6F7FF), 0);
 
   // Connectivity icons
   lv_obj_t *wifi_icon = lv_label_create(bar);
   lv_label_set_text(wifi_icon, LV_SYMBOL_WIFI);
   lv_obj_align(wifi_icon, LV_ALIGN_CENTER, -30, 0);
-  lv_obj_set_style_text_color(wifi_icon, lv_color_hex(0x00FF00), 0);
+  lv_obj_set_style_text_color(wifi_icon, lv_color_hex(0x00E6FF), 0);
 
   lv_obj_t *ble_icon = lv_label_create(bar);
   lv_label_set_text(ble_icon, LV_SYMBOL_BLUETOOTH);
   lv_obj_align(ble_icon, LV_ALIGN_CENTER, 30, 0);
-  lv_obj_set_style_text_color(ble_icon, lv_color_hex(0x0000FF), 0);
+  lv_obj_set_style_text_color(ble_icon, lv_color_hex(0x7A5CFF), 0);
 
   // Notification popup
   lv_obj_t *notify = lv_label_create(bar);
   lv_label_set_text(notify, "System Ready");
-  lv_obj_set_style_text_color(notify, lv_color_hex(0xFF0000), 0);
+  lv_obj_set_style_text_color(notify, lv_color_hex(0x00E6FF), 0);
   lv_obj_align(notify, LV_ALIGN_CENTER, 0, 0);
   lv_obj_set_style_opa(notify, LV_OPA_0, 0);
 
@@ -306,7 +306,7 @@ static void update_bar_timer_cb(lv_timer_t *timer) {
 }
 
 void setup_cyber_menu(lv_obj_t *menu) {
-  lv_obj_set_style_bg_color(menu, lv_color_hex(0x001122), 0);
+  lv_obj_set_style_bg_color(menu, lv_color_hex(0x05070D), 0);
   lv_obj_set_size(menu, LV_PCT(100), LV_PCT(100));
 
   // Top bar fixed at 40px
@@ -370,7 +370,7 @@ void setup_cyber_menu(lv_obj_t *menu) {
   // Create arrows attached to body so they don't move with tiles
   lv_obj_t *left_arrow = lv_label_create(body);
   lv_label_set_text(left_arrow, LV_SYMBOL_LEFT);
-  lv_obj_set_style_text_color(left_arrow, lv_color_white(), 0);
+  lv_obj_set_style_text_color(left_arrow, lv_color_hex(0xE6F7FF), 0);
   lv_obj_set_style_text_font(left_arrow, &lv_font_montserrat_28, 0);
   lv_obj_align(left_arrow, LV_ALIGN_LEFT_MID, 5, -20);
   lv_obj_set_size(left_arrow, 50, 80);
@@ -381,7 +381,7 @@ void setup_cyber_menu(lv_obj_t *menu) {
 
   lv_obj_t *right_arrow = lv_label_create(body);
   lv_label_set_text(right_arrow, LV_SYMBOL_RIGHT);
-  lv_obj_set_style_text_color(right_arrow, lv_color_white(), 0);
+  lv_obj_set_style_text_color(right_arrow, lv_color_hex(0xE6F7FF), 0);
   lv_obj_set_style_text_font(right_arrow, &lv_font_montserrat_28, 0);
   lv_obj_align(right_arrow, LV_ALIGN_RIGHT_MID, -5, -20);
   lv_obj_set_size(right_arrow, 50, 80);
@@ -397,7 +397,7 @@ void setup_cyber_menu(lv_obj_t *menu) {
     // Primary/secondary theme colors
     lv_color_t primary = lv_color_hex(willyConfig.priColor);
     lv_color_t secondary = lv_color_hex(willyConfig.secColor);
-    lv_color_t accent = lv_color_hex(0x00FFFF);
+    lv_color_t accent = lv_color_hex(0x00E6FF);
 
     lv_obj_t *btn =
         create_cyber_icon(tile, labels[i], shapes[i], counts[i], primary,

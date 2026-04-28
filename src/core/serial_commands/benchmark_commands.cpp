@@ -3,13 +3,13 @@
 #include "../SecurityUtils.h"
 #include "../SystemManager.h"
 #include <Arduino.h>
+#include <globals.h>
+#include <ArduinoJson.h>
 #include <vector>
-
 
 // Constantes de segurança
 constexpr size_t MAX_COMMAND_ARGS = 10;
-constexpr uint32_t COMMAND_RATE_LIMIT_MS = 1000; // 1 comando por segundo
-static uint32_t lastCommandTime = 0;
+
 
 /**
  * @brief Implementação dos comandos seriais para BenchmarkManager
@@ -21,14 +21,15 @@ static BenchmarkManager *benchmarkManager = nullptr;
 /**
  * @brief Callback para comando benchmark_run
  */
-void benchmarkRunCallback(cmd *c) {
+uint32_t benchmarkRunCallback(cmd *c) {
+  (void)c; // Unused parameter
   Command cmd(c);
   AdvancedLogger &logger = AdvancedLogger::getInstance();
 
   if (!benchmarkManager) {
     logger.error(LogModule::SYSTEM, "BenchmarkManager not available");
     serialDevice->println("ERROR: BenchmarkManager not available");
-    return;
+    return 0;
   }
 
   String benchmarkName = cmd.getArgument(0).getValue();
@@ -38,7 +39,7 @@ void benchmarkRunCallback(cmd *c) {
                    benchmarkName.length());
     serialDevice->println("ERROR: Benchmark name required (1-50 chars)");
     serialDevice->println("Usage: benchmark_run <name>");
-    return;
+    return 0;
   }
 
   // Sanitizar nome (apenas alfanumérico e underscore)
@@ -48,7 +49,7 @@ void benchmarkRunCallback(cmd *c) {
                      "Invalid character in benchmark name: %c", ch);
       serialDevice->println(
           "ERROR: Benchmark name contains invalid characters");
-      return;
+      return 0;
     }
   }
 
@@ -59,19 +60,21 @@ void benchmarkRunCallback(cmd *c) {
                        success ? "SUCCESS" : "FAILED");
   logger.info(LogModule::SYSTEM, "Benchmark %s completed: %s",
               benchmarkName.c_str(), success ? "SUCCESS" : "FAILED");
+  return success ? 1 : 0;
 }
 
 /**
  * @brief Callback para comando benchmark_report
  */
-void benchmarkReportCallback(cmd *c) {
+uint32_t benchmarkReportCallback(cmd *c) {
+  (void)c; // Unused parameter
   Command cmd(c);
   AdvancedLogger &logger = AdvancedLogger::getInstance();
 
   if (!benchmarkManager) {
     logger.error(LogModule::SYSTEM, "BenchmarkManager not available");
     serialDevice->println("ERROR: BenchmarkManager not available");
-    return;
+    return 0;
   }
 
   bool includeHistorical = cmd.getArgument(0).getValue() == "full";
@@ -83,19 +86,21 @@ void benchmarkReportCallback(cmd *c) {
   serialDevice->println("=== PERFORMANCE REPORT ===");
   serialDevice->println(report);
   serialDevice->println("==========================");
+  return 1;
 }
 
 /**
  * @brief Callback para comando benchmark_stress
  */
-void benchmarkStressCallback(cmd *c) {
+uint32_t benchmarkStressCallback(cmd *c) {
+  (void)c; // Unused parameter
   Command cmd(c);
   AdvancedLogger &logger = AdvancedLogger::getInstance();
 
   if (!benchmarkManager) {
     logger.error(LogModule::SYSTEM, "BenchmarkManager not available");
     serialDevice->println("ERROR: BenchmarkManager not available");
-    return;
+    return 0;
   }
 
   String testName = cmd.getArgument(0).getValue();
@@ -107,21 +112,21 @@ void benchmarkStressCallback(cmd *c) {
                    testName.length());
     serialDevice->println("ERROR: Test name required (1-50 chars)");
     serialDevice->println("Usage: benchmark_stress <name> <duration_ms>");
-    return;
+    return 0;
   }
 
   if (durationStr.length() == 0) {
     logger.warning(LogModule::SYSTEM, "Duration not provided");
     serialDevice->println("ERROR: Duration required");
     serialDevice->println("Usage: benchmark_stress <name> <duration_ms>");
-    return;
+    return 0;
   }
 
   uint32_t duration = durationStr.toInt();
   if (duration == 0 || duration > 3600000) { // Máximo 1 hora
     logger.warning(LogModule::SYSTEM, "Invalid duration: %u", duration);
     serialDevice->println("ERROR: Invalid duration (1-3600000 ms)");
-    return;
+    return 0;
   }
 
   // Sanitizar nome
@@ -130,7 +135,7 @@ void benchmarkStressCallback(cmd *c) {
       logger.warning(LogModule::SYSTEM, "Invalid character in test name: %c",
                      ch);
       serialDevice->println("ERROR: Test name contains invalid characters");
-      return;
+      return 0;
     }
   }
 
@@ -144,17 +149,19 @@ void benchmarkStressCallback(cmd *c) {
                        success ? "SUCCESS" : "FAILED");
   logger.info(LogModule::SYSTEM, "Stress test %s completed: %s",
               testName.c_str(), success ? "SUCCESS" : "FAILED");
+  return success ? 1 : 0;
 }
 
 /**
  * @brief Callback para comando benchmark_clear
  */
-void benchmarkClearCallback(cmd *c) {
+uint32_t benchmarkClearCallback(cmd *c) {
+  (void)c; // Unused parameter
   Command cmd(c);
 
   if (!benchmarkManager) {
     Serial.println("ERROR: BenchmarkManager not available");
-    return;
+    return 0;
   }
 
   String maxAgeStr = cmd.getArgument(0).getValue();
@@ -162,102 +169,116 @@ void benchmarkClearCallback(cmd *c) {
       maxAgeStr.length() > 0 ? maxAgeStr.toInt() : 86400000; // 24h default
 
   benchmarkManager->clearOldResults(maxAge);
-  Serial.printf("Old results cleared (max age: %u ms)\n", maxAge);
+  Serial.printf("Old results cleared (max age: %lu ms)\n", maxAge);
+  return 1;
 }
 
 /**
  * @brief Callback para comando benchmark_stats
  */
-void benchmarkStatsCallback(cmd *c) {
+uint32_t benchmarkStatsCallback(cmd *c) {
+  (void)c; // Unused parameter
   Command cmd(c);
   AdvancedLogger &logger = AdvancedLogger::getInstance();
 
   if (!benchmarkManager) {
     logger.error(LogModule::SYSTEM, "BenchmarkManager not available");
     serialDevice->println("ERROR: BenchmarkManager not available");
-    return;
+    return 0;
   }
 
   logger.info(LogModule::SYSTEM, "Retrieving benchmark statistics");
   auto stats = benchmarkManager->getStatistics();
 
   serialDevice->println("=== BENCHMARK STATISTICS ===");
-  serialDevice->printf("Total Results: %u\n",
+  serialDevice->printf("Total Results: %lu\n",
                        stats["total_results"].as<uint32_t>());
-  serialDevice->printf("Memory Usage: %u bytes\n",
+  serialDevice->printf("Memory Usage: %lu bytes\n",
                        stats["memory_usage"].as<uint32_t>());
-  serialDevice->printf("Uptime: %u ms\n", stats["uptime"].as<uint32_t>());
+  serialDevice->printf("Uptime: %lu ms\n", stats["uptime"].as<uint32_t>());
 
-  if (stats.containsKey("type_counts")) {
+  if (stats["type_counts"].is<JsonObject>()) {
     serialDevice->println("Results by Type:");
     JsonObject counts = stats["type_counts"];
     for (JsonPair kv : counts) {
-      serialDevice->printf("  %s: %u\n", kv.key().c_str(),
+      serialDevice->printf("  %s: %lu\n", kv.key().c_str(),
                            kv.value().as<uint32_t>());
     }
   }
   serialDevice->println("============================");
+  return 1;
 }
 
 /**
  * @brief Callback para comando benchmark_config
  */
-void benchmarkConfigCallback(cmd *c) {
+uint32_t benchmarkConfigCallback(cmd *c) {
+  (void)c; // Unused parameter
   Command cmd(c);
 
   if (!benchmarkManager) {
     Serial.println("ERROR: BenchmarkManager not available");
-    return;
+    return 0;
   }
 
   String param = cmd.getArgument(0).getValue();
   String value = cmd.getArgument(1).getValue();
 
   if (param == "auto_run") {
-    benchmarkManager->getConfig().auto_run = value == "1" || value == "true";
+    auto config = benchmarkManager->getConfig();
+    config.auto_run = value == "1" || value == "true";
     Serial.printf("Auto run set to: %s\n",
                   benchmarkManager->getConfig().auto_run ? "true" : "false");
   } else if (param == "interval") {
     uint32_t interval = value.toInt();
-    benchmarkManager->getConfig().interval_ms = interval;
-    Serial.printf("Interval set to: %u ms\n", interval);
+    auto config = benchmarkManager->getConfig();
+    config.interval_ms = interval;
+    Serial.printf("Interval set to: %lu ms\n", interval);
   } else if (param == "log_sd") {
-    benchmarkManager->getConfig().log_to_sd = value == "1" || value == "true";
+    auto config = benchmarkManager->getConfig();
+    config.log_to_sd = value == "1" || value == "true";
     Serial.printf("Log to SD set to: %s\n",
                   benchmarkManager->getConfig().log_to_sd ? "true" : "false");
   } else {
     Serial.println("Unknown parameter. Available: auto_run, interval, log_sd");
   }
+  return 1;
 }
 
 /**
  * @brief Callback para comando benchmark_start_auto
  */
-void benchmarkStartAutoCallback(cmd *c) {
+uint32_t benchmarkStartAutoCallback(cmd *c) {
+  (void)c; // Unused parameter
   Command cmd(c);
 
   if (!benchmarkManager) {
     Serial.println("ERROR: BenchmarkManager not available");
-    return;
+    return 0;
   }
 
-  benchmarkManager->getConfig().auto_run = true;
+  auto config = benchmarkManager->getConfig();
+  config.auto_run = true;
   Serial.println("Auto benchmark started");
+  return 1;
 }
 
 /**
  * @brief Callback para comando benchmark_stop_auto
  */
-void benchmarkStopAutoCallback(cmd *c) {
+uint32_t benchmarkStopAutoCallback(cmd *c) {
+  (void)c; // Unused parameter
   Command cmd(c);
 
   if (!benchmarkManager) {
     Serial.println("ERROR: BenchmarkManager not available");
-    return;
+    return 0;
   }
 
-  benchmarkManager->getConfig().auto_run = false;
+  auto config = benchmarkManager->getConfig();
+  config.auto_run = false;
   Serial.println("Auto benchmark stopped");
+  return 1;
 }
 
 /**
@@ -283,8 +304,7 @@ void createBenchmarkCommands(SimpleCLI *cli) {
   // Comando benchmark_report
   Command benchmarkReportCmd =
       cli->addCommand("benchmark_report", benchmarkReportCallback);
-  benchmarkReportCmd.addArgument("full", "Include historical data (optional)",
-                                 "");
+  benchmarkReportCmd.addArgument("full", "Include historical data (optional)");
 
   // Comando benchmark_stress
   Command benchmarkStressCmd =
@@ -296,7 +316,7 @@ void createBenchmarkCommands(SimpleCLI *cli) {
   Command benchmarkClearCmd =
       cli->addCommand("benchmark_clear", benchmarkClearCallback);
   benchmarkClearCmd.addArgument("max_age",
-                                "Maximum age in ms (default: 86400000)", "");
+                                "Maximum age in ms (default: 86400000)");
 
   // Comando benchmark_stats
   Command benchmarkStatsCmd =

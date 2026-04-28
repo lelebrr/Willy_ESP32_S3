@@ -670,6 +670,44 @@ Periféricos & Expansão:
 
 📖 **Documentação completa:** [hardware_cyd_3248s035.md](../docs/hardware_cyd_3248s035.md)
 
+### ESP32-S3-WROOM-1-N8R2
+
+Placa ESP32-S3 com 8MB Flash e 2MB PSRAM:
+
+| Especificação | Detalhes |
+|---------------|----------|
+| **MCU** | ESP32-S3 Dual Core 240MHz |
+| **Flash** | 8MB QSPI |
+| **PSRAM** | 2MB OPI |
+| **USB** | USB-C com CDC |
+| **Display** | TFT ILI9341 320x240 |
+| **Touch** | XPT2046 Resistivo |
+| **SD Card** | SPI Slot |
+| **RF** | NRF24L01, CC1101 |
+| **GPS** | NEO-6M UART |
+| **IR** | YS-IRTM UART |
+| **I2S** | INMP441 Microfone |
+| **Joystick** | KY-023 Analógico |
+
+### ESP32-S3-WROOM-1-N16R8
+
+Placa ESP32-S3 com 16MB Flash e 8MB PSRAM:
+
+| Especificação | Detalhes |
+|---------------|----------|
+| **MCU** | ESP32-S3 Dual Core 240MHz |
+| **Flash** | 16MB QSPI |
+| **PSRAM** | 8MB OPI |
+| **USB** | USB-C com CDC |
+| **Display** | TFT ILI9341 320x240 |
+| **Touch** | XPT2046 Resistivo |
+| **SD Card** | SPI Slot |
+| **RF** | NRF24L01, CC1101 |
+| **GPS** | NEO-6M UART |
+| **IR** | YS-IRTM UART |
+| **I2S** | INMP441 Microfone |
+| **Joystick** | KY-023 Analógico |
+
 ### ESP-General
 
 Configuração genérica para qualquer ESP32:

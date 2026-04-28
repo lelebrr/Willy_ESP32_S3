@@ -11,7 +11,7 @@ std::map<String, std::vector<PinConfig>>
     PeripheralAbstraction::peripheral_pins_;
 
 PeripheralAbstraction &PeripheralAbstraction::getInstance() {
-  static PeripheralAbstraction instance;
+  static PeripheralAbstraction instance{}; // Usando construtor padrão
   return instance;
 }
 
@@ -225,7 +225,8 @@ bool PeripheralAbstraction::savePeripheralConfig(const String &config_path) {
     JsonObject p = peripherals_config.add<JsonObject>();
     p["name"] = pair.first;
     p["type"] = static_cast<int>(pair.second->getType());
-    p["enabled"] = (pair.second->getStatus() != PeripheralStatus::DISABLED);
+    p["enabled"] =
+        (pair.second->getStatus() != PeripheralStatus::PERIPH_DISABLED);
     p["status"] = static_cast<int>(pair.second->getStatus());
     p["available"] = pair.second->isAvailable();
   }
